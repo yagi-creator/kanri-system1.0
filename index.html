@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>営業支援ダッシュボード v5.2 - 美化＆自動計算版</title>
+    <title>営業支援ダッシュボード v5.3 - 完全機能版</title>
     <style>
         * {
             margin: 0;
@@ -38,7 +38,7 @@
             box-shadow: 0 0 15px rgba(0,0,0,0.08);
         }
 
-        /* ヘッダー（パターン背景追加） */
+        /* ヘッダー（ストライプパターン背景） */
         .header-section {
             background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
             padding: 12px 20px;
@@ -46,7 +46,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            /* 軽量ストライプパターン */
             background-image: 
                 linear-gradient(135deg, #1f2937 0%, #374151 100%),
                 repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px);
@@ -62,15 +61,33 @@
             opacity: 0.9;
         }
 
-        /* 上段：進捗エリア（パターン背景追加） */
+        /* 上段：進捗エリア（月別粗利進捗による色変化） */
         .progress-section {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             padding: 16px;
             color: white;
-            /* 軽量横線パターン */
+            transition: background 0.5s ease;
             background-image: 
-                linear-gradient(135deg, #4facfe 0%, #00f2fe 100%),
                 repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(255,255,255,0.05) 8px, rgba(255,255,255,0.05) 16px);
+        }
+
+        /* 月別粗利進捗による6段階色分け */
+        .progress-section.monthly-level-0 { 
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); /* 0-19%: 赤 */
+        }
+        .progress-section.monthly-level-1 { 
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); /* 20-39%: オレンジ */
+        }
+        .progress-section.monthly-level-2 { 
+            background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); /* 40-59%: 黄 */
+        }
+        .progress-section.monthly-level-3 { 
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); /* 60-79%: 緑 */
+        }
+        .progress-section.monthly-level-4 { 
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); /* 80-99%: シアン */
+        }
+        .progress-section.monthly-level-5 { 
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); /* 100%+: 紫 */
         }
 
         .progress-cards {
@@ -263,11 +280,31 @@
             cursor: pointer;
         }
 
-        /* 塾カード一覧（パターン背景追加） */
+        /* 並び替えセクション（新規追加） */
+        .sort-section {
+            margin-bottom: 12px;
+        }
+
+        .sort-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+
+        .sort-select:focus {
+            border-color: #4facfe;
+            outline: none;
+        }
+
+        /* 塾カード一覧（縦線パターン背景） */
         .cards-section {
             padding: 0 15px 15px;
             background: #f8fafc;
-            /* 軽量縦線パターン */
             background-image: 
                 linear-gradient(to bottom, #f8fafc, #f1f5f9),
                 repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.02) 40px, rgba(0,0,0,0.02) 41px);
@@ -298,6 +335,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
             border: 1px solid #e5e7eb;
             transition: all 0.2s ease;
+            position: relative;
         }
 
         .card:hover {
@@ -305,25 +343,30 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.12);
         }
 
-        /* カード色分け（濃いめグラデーション） */
+        /* カード色分け（さらに濃く＋左側ライン） */
         .card-level-0, .card-level-1 { 
-            background: #ffffff; 
+            background: #ffffff;
+            border-left: 4px solid #d1d5db;
         }
         .card-level-2 { 
-            background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%);
-            border-color: #60a5fa;
+            background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
+            border-color: #2563eb;
+            border-left: 4px solid #1d4ed8;
         }
         .card-level-3 { 
-            background: linear-gradient(135deg, #86efac 0%, #dcfce7 100%);
-            border-color: #4ade80;
+            background: linear-gradient(135deg, #4ade80 0%, #86efac 100%);
+            border-color: #16a34a;
+            border-left: 4px solid #15803d;
         }
         .card-level-4 { 
-            background: linear-gradient(135deg, #fdba74 0%, #fed7aa 100%);
-            border-color: #fb923c;
+            background: linear-gradient(135deg, #fb923c 0%, #fdba74 100%);
+            border-color: #ea580c;
+            border-left: 4px solid #c2410c;
         }
         .card-level-5 { 
-            background: linear-gradient(135deg, #f87171 0%, #fca5a5 100%);
-            border-color: #ef4444;
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            border-color: #dc2626;
+            border-left: 4px solid #b91c1c;
         }
 
         .card-header {
@@ -366,14 +409,14 @@
         }
 
         .metric {
-            background: rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.9);
             padding: 6px;
             border-radius: 4px;
             border: 1px solid rgba(0,0,0,0.05);
         }
 
         .metric-auto {
-            background: rgba(224,242,254,0.9);
+            background: rgba(224,242,254,0.95);
             border: 1px solid #0284c7;
         }
 
@@ -553,6 +596,39 @@
             gap: 10px;
         }
 
+        /* 12ヶ月データ入力 */
+        .monthly-data-section {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .monthly-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 20px;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .month-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #374151;
+            text-align: center;
+        }
+
+        .monthly-input {
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: right;
+        }
+
         .settings-section {
             margin-bottom: 16px;
             padding: 12px;
@@ -646,8 +722,8 @@
             <div class="current-date-header" id="currentDateHeader">2025年8月</div>
         </div>
 
-        <!-- 上段：4カード進捗エリア -->
-        <div class="progress-section">
+        <!-- 上段：4カード進捗エリア（月別粗利進捗による色変化） -->
+        <div class="progress-section" id="progressSection">
             <div class="progress-cards">
                 <!-- 月別目標（粗利） -->
                 <div class="progress-card">
@@ -738,9 +814,21 @@
                 <button class="btn btn-secondary" onclick="exportToExcel()">
                     📄 Excel出力
                 </button>
-                <button class="btn btn-secondary" onclick="toggleSort()">
-                    📊 並び替え
+                <button class="btn btn-secondary" onclick="clearFilters()">
+                    🔄 フィルタクリア
                 </button>
+            </div>
+
+            <!-- 並び替えセクション（新規追加） -->
+            <div class="sort-section">
+                <select class="sort-select" id="sortSelect" onchange="applySorting()">
+                    <option value="updated-desc">📅 最終更新日順（新→古）</option>
+                    <option value="updated-asc">📅 最終更新日順（古→新）</option>
+                    <option value="sales-desc">💰 年間売上増目標順（大→小）</option>
+                    <option value="sales-asc">💰 年間売上増目標順（小→大）</option>
+                    <option value="probability-desc">📈 受注確率順（高→低）</option>
+                    <option value="probability-asc">📈 受注確率順（低→高）</option>
+                </select>
             </div>
 
             <div class="filter-section">
@@ -771,7 +859,7 @@
         <div class="cards-section">
             <div class="section-header">
                 <div class="section-title">塾一覧</div>
-                <div class="sort-info">最終更新日順（新→古）</div>
+                <div class="sort-info" id="sortInfo">最終更新日順（新→古）</div>
             </div>
 
             <div id="cardsContainer">
@@ -825,6 +913,13 @@
                     <div class="form-group">
                         <label class="form-label">年間進捗調整値（円）</label>
                         <input type="number" class="form-input" value="0" id="yearlyProgressOverride">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h4>月別粗利実績（会計年度：10月〜9月）</h4>
+                    <div class="monthly-data-section" id="monthlyProfitContainer">
+                        <!-- 月別粗利実績は JavaScript で動的に生成されます -->
                     </div>
                 </div>
                 
@@ -1011,15 +1106,20 @@
         let nextCardId = 1;
         let progressCache = null;
         let lastRenderTime = 0;
+        let lastMonthlyColorLevel = -1;
         
-        // パーソナル設定
+        // パーソナル設定（月別粗利実績を12ヶ月分対応）
         let personalSettings = {
             userName: '担当者',
             profitRate: 30,
             yearlyProfitTarget: 13000000,
             yearlyProfitIncreaseTarget: 1200000,
             otherCurrentMonthProfit: 0,
-            yearlyProgressOverride: 0
+            yearlyProgressOverride: 0,
+            monthlyProfitActuals: {
+                10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+                4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+            }
         };
 
         // ユーティリティ関数
@@ -1037,7 +1137,6 @@
             return Math.round(salesIncreaseTarget * profitRate);
         }
 
-        // 年間粗利実績自動計算（年間売上実績 × 粗利率）
         function calculateAnnualProfitActual(annualSalesActual) {
             const profitRate = personalSettings.profitRate / 100;
             return Math.round(annualSalesActual * profitRate);
@@ -1050,6 +1149,15 @@
             if (salesIncreaseTarget <= 1000000) return 3;
             if (salesIncreaseTarget <= 2000000) return 4;
             return 5;
+        }
+
+        // 確率の数値変換（ソート用）
+        function getProbabilityValue(probability) {
+            if (probability === '80+') return 4;
+            if (probability === '60-80') return 3;
+            if (probability === '50-60') return 2;
+            if (probability === '50-') return 1;
+            return 0;
         }
 
         // データ管理
@@ -1099,6 +1207,24 @@
                     setTimeout(() => toast.remove(), 200);
                 }, 2500);
             });
+        }
+
+        // 月別粗利進捗による上部4カード色変化
+        function updateMonthlyProgressColor(monthlyRate) {
+            const colorLevel = Math.min(Math.floor(monthlyRate / 20), 5);
+            
+            if (colorLevel === lastMonthlyColorLevel) return;
+            
+            const progressSection = document.getElementById('progressSection');
+            
+            // 既存のレベルクラスを削除
+            progressSection.classList.remove(...Array.from(progressSection.classList)
+                .filter(cls => cls.startsWith('monthly-level-')));
+            
+            // 新しいレベルクラスを追加
+            progressSection.classList.add(`monthly-level-${colorLevel}`);
+            
+            lastMonthlyColorLevel = colorLevel;
         }
 
         // カード作成
@@ -1165,7 +1291,7 @@
             return div.innerHTML;
         }
 
-        // 進捗計算（年間粗利実績を含む改良版）
+        // 進捗計算（月別粗利実績12ヶ月対応）
         function calculateAllProgress() {
             const now = Date.now();
             if (progressCache && (now - lastRenderTime) < 1000) {
@@ -1174,16 +1300,23 @@
 
             const currentMonth = getCurrentMonth();
             
-            // 月間進捗
+            // 月間進捗（当月の粗利実績合計）
             const monthlyTarget = 450000;
-            const monthlyActual = personalSettings.otherCurrentMonthProfit || 0;
+            const monthlyActualFromSettings = personalSettings.monthlyProfitActuals[currentMonth] || 0;
+            const monthlyActual = monthlyActualFromSettings + (personalSettings.otherCurrentMonthProfit || 0);
             const monthlyDifference = monthlyActual - monthlyTarget;
             const monthlyRate = monthlyTarget > 0 ? (monthlyActual / monthlyTarget) * 100 : 0;
             
-            // 年間進捗（各塾の年間粗利実績を合算）
+            // 年間進捗
             const yearlyTarget = personalSettings.yearlyProfitTarget;
             let yearlyActualCalculated = cardsData.reduce((sum, card) => sum + (card.annualProfitActual || 0), 0);
+            
+            // 12ヶ月の粗利実績を合算
+            Object.values(personalSettings.monthlyProfitActuals).forEach(monthlyProfit => {
+                yearlyActualCalculated += monthlyProfit;
+            });
             yearlyActualCalculated += (personalSettings.otherCurrentMonthProfit || 0);
+            
             const yearlyActual = personalSettings.yearlyProgressOverride !== 0 ? personalSettings.yearlyProgressOverride : yearlyActualCalculated;
             const yearlyRate = yearlyTarget > 0 ? (yearlyActual / yearlyTarget) * 100 : 0;
             
@@ -1227,6 +1360,9 @@
         // ダッシュボード更新
         function updateDashboard() {
             const progress = calculateAllProgress();
+            
+            // 月別粗利進捗による色変化
+            updateMonthlyProgressColor(progress.monthly.rate);
             
             // 1. 月別目標
             document.getElementById('monthlyTargetDisplay').textContent = formatManYen(progress.monthly.target);
@@ -1281,6 +1417,59 @@
             renderCards();
         }
 
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = 'all';
+            document.getElementById('probabilityFilter').value = 'all';
+            document.getElementById('cityFilter').value = 'all';
+            document.getElementById('sortSelect').value = 'updated-desc';
+            renderCards();
+            showToast('フィルタをクリアしました', 'info');
+        }
+
+        // 並び替え機能（プルダウン対応）
+        function applySorting() {
+            renderCards();
+        }
+
+        function getSortedCards(cards) {
+            const sortType = document.getElementById('sortSelect').value;
+            const sortedCards = [...cards];
+            
+            switch (sortType) {
+                case 'updated-desc':
+                    return sortedCards.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+                case 'updated-asc':
+                    return sortedCards.sort((a, b) => new Date(a.lastUpdated) - new Date(b.lastUpdated));
+                case 'sales-desc':
+                    return sortedCards.sort((a, b) => (b.annualSalesIncreaseTarget || 0) - (a.annualSalesIncreaseTarget || 0));
+                case 'sales-asc':
+                    return sortedCards.sort((a, b) => (a.annualSalesIncreaseTarget || 0) - (b.annualSalesIncreaseTarget || 0));
+                case 'probability-desc':
+                    return sortedCards.sort((a, b) => getProbabilityValue(b.probability) - getProbabilityValue(a.probability));
+                case 'probability-asc':
+                    return sortedCards.sort((a, b) => getProbabilityValue(a.probability) - getProbabilityValue(b.probability));
+                default:
+                    return sortedCards;
+            }
+        }
+
+        function updateSortInfo() {
+            const sortType = document.getElementById('sortSelect').value;
+            const sortInfo = document.getElementById('sortInfo');
+            
+            const sortLabels = {
+                'updated-desc': '最終更新日順（新→古）',
+                'updated-asc': '最終更新日順（古→新）',
+                'sales-desc': '年間売上増目標順（大→小）',
+                'sales-asc': '年間売上増目標順（小→大）',
+                'probability-desc': '受注確率順（高→低）',
+                'probability-asc': '受注確率順（低→高）'
+            };
+            
+            sortInfo.textContent = sortLabels[sortType] || '最終更新日順（新→古）';
+        }
+
         function renderCards() {
             const container = document.getElementById('cardsContainer');
             
@@ -1292,7 +1481,7 @@
             const probabilityFilter = document.getElementById('probabilityFilter').value;
             const cityFilter = document.getElementById('cityFilter').value;
 
-            const filteredCards = cardsData.filter(cardData => {
+            let filteredCards = cardsData.filter(cardData => {
                 const title = cardData.jukuName.toLowerCase();
                 const status = cardData.status;
                 const probability = cardData.probability;
@@ -1305,6 +1494,9 @@
                 if (cityFilter !== 'all' && !city.includes(cityFilter)) show = false;
                 return show;
             });
+
+            // 並び替え適用
+            filteredCards = getSortedCards(filteredCards);
 
             filteredCards.forEach((cardData, index) => {
                 let cardElement = container.querySelector(`[data-card-id="${cardData.id}"]`);
@@ -1326,6 +1518,8 @@
                 }
             });
             
+            updateSortInfo();
+            
             if (Date.now() - lastRenderTime > 2000) {
                 progressCache = null;
                 updateDashboard();
@@ -1335,16 +1529,6 @@
         function filterByProbability(probability) {
             document.getElementById('probabilityFilter').value = probability;
             applyFilters();
-        }
-
-        function toggleSort() {
-            cardsData.reverse();
-            saveCardsData();
-            renderCards();
-            
-            const sortInfo = document.querySelector('.sort-info');
-            sortInfo.textContent = sortInfo.textContent.includes('新→古') ? 
-                '最終更新日順（古→新）' : '最終更新日順（新→古）';
         }
 
         // モーダル制御
@@ -1375,6 +1559,28 @@
             document.getElementById('yearlyProfitIncreaseTarget').value = personalSettings.yearlyProfitIncreaseTarget;
             document.getElementById('otherCurrentMonthProfit').value = personalSettings.otherCurrentMonthProfit;
             document.getElementById('yearlyProgressOverride').value = personalSettings.yearlyProgressOverride;
+            
+            // 12ヶ月の粗利実績設定
+            const monthlyContainer = document.getElementById('monthlyProfitContainer');
+            const fiscalMonths = [
+                {num: 10, name: '10月'}, {num: 11, name: '11月'}, {num: 12, name: '12月'},
+                {num: 1, name: '1月'}, {num: 2, name: '2月'}, {num: 3, name: '3月'},
+                {num: 4, name: '4月'}, {num: 5, name: '5月'}, {num: 6, name: '6月'},
+                {num: 7, name: '7月'}, {num: 8, name: '8月'}, {num: 9, name: '9月'}
+            ];
+            
+            monthlyContainer.innerHTML = '';
+            
+            fiscalMonths.forEach(month => {
+                const monthDiv = document.createElement('div');
+                monthDiv.className = 'monthly-row';
+                monthDiv.innerHTML = `
+                    <div class="month-name">${month.name}</div>
+                    <input type="number" class="monthly-input" placeholder="粗利実績" id="monthlyProfit${month.num}" value="${personalSettings.monthlyProfitActuals[month.num] || 0}">
+                    <div style="font-size: 10px; color: #6b7280; text-align: center;">円</div>
+                `;
+                monthlyContainer.appendChild(monthDiv);
+            });
             
             openModal('personalSettingsModal');
         }
@@ -1588,6 +1794,15 @@
             personalSettings.otherCurrentMonthProfit = parseInt(document.getElementById('otherCurrentMonthProfit').value) || 0;
             personalSettings.yearlyProgressOverride = parseInt(document.getElementById('yearlyProgressOverride').value) || 0;
             
+            // 12ヶ月の粗利実績保存
+            const fiscalMonths = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            fiscalMonths.forEach(month => {
+                const profitInput = document.getElementById(`monthlyProfit${month}`);
+                if (profitInput) {
+                    personalSettings.monthlyProfitActuals[month] = parseInt(profitInput.value) || 0;
+                }
+            });
+            
             savePersonalSettings();
             
             // 粗利率が変更された場合、全カードの粗利を再計算
@@ -1597,6 +1812,7 @@
             });
             saveCardsData();
             progressCache = null;
+            lastMonthlyColorLevel = -1; // 色変化強制更新
             renderCards();
             
             showToast('個人設定を保存しました！', 'success');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>営業支援ダッシュボード v7.0 - スタイリッシュ版</title>
+    <title>営業支援ダッシュボード v7.1 - 完全リファクタリング版</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -17,7 +17,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1A237E 0%, #0D47A1 100%);
             min-height: 100vh;
-            color: #E0E0E0;
+            color: #FFFFFF;
             background-image: 
                 radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 2px, transparent 2px),
                 radial-gradient(circle at 75% 75%, rgba(255,255,255,0.04) 2px, transparent 2px);
@@ -41,9 +41,9 @@
         }
 
         .header-section {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             padding: 16px 20px;
-            color: white;
+            color: #FFFFFF;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -62,7 +62,7 @@
 
         .progress-section {
             padding: 16px;
-            color: white;
+            color: #FFFFFF;
             transition: background 0.5s ease;
         }
 
@@ -74,20 +74,21 @@
         }
 
         .progress-card {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             border-radius: 8px;
             padding: 12px;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.25);
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
-            backdrop-filter: blur(3px);
+            backdrop-filter: blur(5px);
         }
 
         .progress-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            background: rgba(255,255,255,0.2);
         }
 
         .progress-card::after {
@@ -105,23 +106,27 @@
         }
 
         .progress-card h3 {
-            font-size: 12px;
+            font-size: 13px;
             margin-bottom: 6px;
-            opacity: 0.9;
+            opacity: 0.95;
             line-height: 1.2;
             min-height: 2.4em;
+            font-weight: 600;
+            color: #FFFFFF;
         }
 
         .progress-value {
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 3px;
+            color: #FFFFFF;
         }
 
         .progress-detail {
-            font-size: 10px;
-            opacity: 0.8;
+            font-size: 11px;
+            opacity: 0.9;
             margin-bottom: 3px;
+            color: #FFFFFF;
         }
 
         .progress-rate {
@@ -154,18 +159,19 @@
 
         .funnel-item {
             flex: 1;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             border-radius: 6px;
             padding: 6px;
             text-align: center;
             cursor: pointer;
             transition: background 0.2s ease;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
             box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+            backdrop-filter: blur(3px);
         }
 
         .funnel-item:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.25);
         }
 
         .funnel-excluded {
@@ -175,18 +181,20 @@
         .funnel-label {
             font-size: 10px;
             margin-bottom: 3px;
+            color: #FFFFFF;
         }
 
         .funnel-value {
             font-size: 11px;
             font-weight: bold;
+            color: #FFFFFF;
         }
 
         .control-section {
             padding: 15px;
             background: rgba(255,255,255,0.1);
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            color: #E0E0E0;
+            color: #FFFFFF;
             backdrop-filter: blur(5px);
         }
 
@@ -203,16 +211,17 @@
             font-size: 16px;
             outline: none;
             transition: border-color 0.2s ease;
-            background: rgba(255,255,255,0.05);
-            color: #E0E0E0;
+            background: rgba(255,255,255,0.1);
+            color: #FFFFFF;
         }
 
         .search-input::placeholder {
-            color: rgba(255,255,255,0.5);
+            color: rgba(255,255,255,0.6);
         }
 
         .search-input:focus {
             border-color: #00B0FF;
+            background: rgba(255,255,255,0.15);
         }
 
         .search-icon {
@@ -241,7 +250,7 @@
             padding: 8px 10px;
             border: none;
             border-radius: 6px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             display: flex;
@@ -254,18 +263,18 @@
 
         .btn-primary {
             background: linear-gradient(135deg, #00B0FF 0%, #00E5FF 100%);
-            color: white;
+            color: #FFFFFF;
         }
 
         .btn-secondary {
-            background: rgba(255,255,255,0.1);
-            color: #E0E0E0;
+            background: rgba(255,255,255,0.15);
+            color: #FFFFFF;
             border: 1px solid rgba(255,255,255,0.2);
         }
 
         .btn-settings {
             background: linear-gradient(135deg, #FFD700 0%, #FFEA00 100%);
-            color: #333;
+            color: #333333;
         }
 
         .btn:hover {
@@ -284,8 +293,8 @@
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 6px;
             font-size: 13px;
-            background: rgba(255,255,255,0.05);
-            color: #E0E0E0;
+            background: rgba(255,255,255,0.1);
+            color: #FFFFFF;
             cursor: pointer;
         }
 
@@ -303,8 +312,8 @@
 
         .cards-section {
             padding: 0 15px 15px;
-            background: rgba(255,255,255,0.03);
-            color: #E0E0E0;
+            background: rgba(255,255,255,0.05);
+            color: #FFFFFF;
             backdrop-filter: blur(3px);
         }
 
@@ -316,14 +325,14 @@
         }
 
         .section-title {
-            font-size: 16px;
+            font-size: 17px;
             font-weight: bold;
-            color: #E0E0E0;
+            color: #FFFFFF;
         }
 
         .sort-info {
-            font-size: 11px;
-            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
         }
 
         .card {
@@ -331,37 +340,38 @@
             padding: 16px;
             margin-bottom: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
             transition: all 0.2s ease;
             position: relative;
-            background: rgba(255,255,255,0.07);
-            backdrop-filter: blur(3px);
-            color: #E0E0E0;
+            background: rgba(255,255,255,0.18);
+            backdrop-filter: blur(5px);
+            color: #FFFFFF;
         }
 
         .card:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            background: rgba(255,255,255,0.22);
         }
 
         .card-level-0, .card-level-1 { 
-            background: rgba(255,255,255,0.07);
-            border-left: 4px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.18);
+            border-left: 4px solid rgba(255,255,255,0.5);
         }
         .card-level-2 { 
-            background: linear-gradient(135deg, rgba(30, 136, 229, 0.7) 0%, rgba(66, 165, 245, 0.7) 100%);
+            background: linear-gradient(135deg, rgba(30, 136, 229, 0.3) 0%, rgba(66, 165, 245, 0.3) 100%);
             border-left: 4px solid #1976D2;
         }
         .card-level-3 { 
-            background: linear-gradient(135deg, rgba(67, 160, 71, 0.7) 0%, rgba(102, 187, 106, 0.7) 100%);
+            background: linear-gradient(135deg, rgba(67, 160, 71, 0.3) 0%, rgba(102, 187, 106, 0.3) 100%);
             border-left: 4px solid #388E3C;
         }
         .card-level-4 { 
-            background: linear-gradient(135deg, rgba(255, 193, 7, 0.7) 0%, rgba(255, 213, 79, 0.7) 100%);
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 213, 79, 0.3) 100%);
             border-left: 4px solid #FFC107;
         }
         .card-level-5 { 
-            background: linear-gradient(135deg, rgba(229, 57, 53, 0.7) 0%, rgba(244, 67, 54, 0.7) 100%);
+            background: linear-gradient(135deg, rgba(229, 57, 53, 0.3) 0%, rgba(244, 67, 54, 0.3) 100%);
             border-left: 4px solid #D32F2F;
         }
 
@@ -375,25 +385,40 @@
         .card-title {
             font-size: 16px;
             font-weight: bold;
-            color: #E0E0E0;
+            color: #FFFFFF;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
 
         .card-badge {
-            padding: 3px 6px;
+            padding: 4px 8px;
             border-radius: 4px;
             font-size: 10px;
-            font-weight: 500;
+            font-weight: 600;
             white-space: nowrap;
+            text-shadow: none;
         }
 
-        .badge-new { background: rgba(0,184,212,0.3); color: #00E5FF; }
-        .badge-existing { background: rgba(100,221,23,0.3); color: #CDDC39; }
-        .badge-former { background: rgba(255,179,0,0.3); color: #FFEB3B; }
+        .badge-new { 
+            background: rgba(0,184,212,0.4); 
+            color: #FFFFFF; 
+            border: 1px solid rgba(0,184,212,0.6);
+        }
+        .badge-existing { 
+            background: rgba(100,221,23,0.4); 
+            color: #FFFFFF; 
+            border: 1px solid rgba(100,221,23,0.6);
+        }
+        .badge-former { 
+            background: rgba(255,179,0,0.4); 
+            color: #FFFFFF; 
+            border: 1px solid rgba(255,179,0,0.6);
+        }
 
         .card-location {
             font-size: 12px;
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.9);
             margin-bottom: 12px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
 
         .card-metrics {
@@ -404,34 +429,37 @@
         }
 
         .metric {
-            background: rgba(255,255,255,0.07);
-            padding: 6px;
+            background: rgba(255,255,255,0.25);
+            padding: 8px;
             border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #E0E0E0;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #FFFFFF;
+            backdrop-filter: blur(3px);
         }
 
         .metric-auto {
-            background: rgba(0,184,212,0.1);
-            border: 1px solid rgba(0,184,212,0.3);
+            background: rgba(0,184,212,0.2);
+            border: 1px solid rgba(0,184,212,0.4);
         }
 
         .metric-auto .metric-label::after {
             content: ' (自動計算)';
-            color: #00B0FF;
+            color: #00E5FF;
             font-size: 7px;
         }
 
         .metric-label {
             font-size: 10px;
-            color: rgba(255,255,255,0.7);
-            margin-bottom: 1px;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 2px;
+            font-weight: 500;
         }
 
         .metric-value {
             font-size: 13px;
             font-weight: bold;
-            color: #E0E0E0;
+            color: #FFFFFF;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
 
         .card-footer {
@@ -439,12 +467,12 @@
             justify-content: space-between;
             align-items: center;
             padding-top: 10px;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.2);
         }
 
         .last-updated {
             font-size: 11px;
-            color: rgba(255,255,255,0.6);
+            color: rgba(255,255,255,0.8);
             cursor: pointer;
         }
 
@@ -458,8 +486,8 @@
             height: 44px;
             border: none;
             border-radius: 6px;
-            background: rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.9);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -467,11 +495,12 @@
             font-size: 16px;
             transition: all 0.2s ease;
             box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+            backdrop-filter: blur(3px);
         }
 
         .action-btn:hover {
             background: #00B0FF;
-            color: white;
+            color: #FFFFFF;
             transform: translateY(-1px);
             box-shadow: 0 3px 8px rgba(0,0,0,0.25);
         }
@@ -492,7 +521,7 @@
         }
 
         .modal-content {
-            background: rgba(255,255,255,0.95);
+            background: rgba(255,255,255,0.98);
             border-radius: 12px;
             padding: 20px;
             max-width: 380px;
@@ -500,7 +529,8 @@
             max-height: 80vh;
             overflow-y: auto;
             box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-            color: #333;
+            color: #333333;
+            backdrop-filter: blur(10px);
         }
 
         .modal-graph {
@@ -518,7 +548,7 @@
         .modal-title {
             font-size: 18px;
             font-weight: bold;
-            color: #333;
+            color: #333333;
         }
 
         .close-btn {
@@ -554,8 +584,8 @@
             font-size: 16px;
             outline: none;
             transition: border-color 0.2s ease;
-            background: white;
-            color: #333;
+            background: #FFFFFF;
+            color: #333333;
         }
 
         .form-input:focus, .form-select:focus {
@@ -599,11 +629,12 @@
         }
 
         .month-data-section {
-            background: rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.1);
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 14px;
-            color: #E0E0E0;
+            color: #FFFFFF;
+            backdrop-filter: blur(3px);
         }
 
         .month-data-header {
@@ -616,12 +647,12 @@
         .month-label {
             font-size: 14px;
             font-weight: bold;
-            color: #E0E0E0;
+            color: #FFFFFF;
         }
 
         .current-month-indicator {
             background: #00B0FF;
-            color: white;
+            color: #FFFFFF;
             padding: 2px 6px;
             border-radius: 3px;
             font-size: 10px;
@@ -634,13 +665,14 @@
         }
 
         .monthly-data-section {
-            background: rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.1);
             border-radius: 10px;
             padding: 12px;
             margin-bottom: 14px;
             max-height: 300px;
             overflow-y: auto;
-            color: #E0E0E0;
+            color: #FFFFFF;
+            backdrop-filter: blur(3px);
         }
 
         .monthly-row {
@@ -654,41 +686,43 @@
         .month-name {
             font-size: 12px;
             font-weight: 500;
-            color: #E0E0E0;
+            color: #FFFFFF;
             text-align: center;
         }
 
         .monthly-input {
             padding: 6px 8px;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
             border-radius: 4px;
             font-size: 14px;
             text-align: right;
-            background: rgba(255,255,255,0.05);
-            color: #E0E0E0;
+            background: rgba(255,255,255,0.15);
+            color: #FFFFFF;
         }
 
         .monthly-input::placeholder {
-            color: rgba(255,255,255,0.5);
+            color: rgba(255,255,255,0.6);
         }
 
         .monthly-input:focus {
             outline: none;
             border-color: #00B0FF;
+            background: rgba(255,255,255,0.2);
         }
 
         .settings-section {
             margin-bottom: 16px;
             padding: 12px;
-            background: rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.1);
             border-radius: 8px;
-            color: #E0E0E0;
+            color: #FFFFFF;
+            backdrop-filter: blur(3px);
         }
 
         .settings-section h4 {
             font-size: 15px;
             margin-bottom: 10px;
-            color: #E0E0E0;
+            color: #FFFFFF;
         }
         
         .settings-excel-buttons {
@@ -707,7 +741,7 @@
             background: linear-gradient(135deg, #00B0FF 0%, #00E5FF 100%);
             border: none;
             border-radius: 50%;
-            color: white;
+            color: #FFFFFF;
             font-size: 24px;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,176,255,0.4);
@@ -726,7 +760,7 @@
             right: 20px;
             padding: 12px 20px;
             border-radius: 6px;
-            color: white;
+            color: #FFFFFF;
             font-size: 14px;
             font-weight: 500;
             z-index: 10000;
@@ -792,7 +826,7 @@
                 <!-- 月別目標（粗利） -->
                 <div class="progress-card" onclick="openProgressGraphModal(0)">
                     <h3>月別目標（粗利）</h3>
-                    <div class="progress-value" id="monthlyTargetDisplay">¥0万円</div>
+                    <div class="progress-value" id="monthlyTargetDisplay">¥0万</div>
                     <div class="progress-detail" id="monthlyDetail">¥0/¥0（0.0%）</div>
                     <div class="progress-rate" id="monthlyRate">差分: ¥0</div>
                     <div class="progress-chart">
@@ -803,7 +837,7 @@
                 <!-- 年間目標（粗利） -->
                 <div class="progress-card" onclick="openProgressGraphModal(1)">
                     <h3>年間目標（粗利）</h3>
-                    <div class="progress-value" id="yearlyTargetDisplay">¥0万円</div>
+                    <div class="progress-value" id="yearlyTargetDisplay">¥0万</div>
                     <div class="progress-detail" id="yearlyDetail">¥0/¥0（0.0%）</div>
                     <div class="progress-rate" id="yearlyRate">0.0%達成</div>
                     <div class="progress-chart">
@@ -814,9 +848,9 @@
                 <!-- 目標粗利増 -->
                 <div class="progress-card" onclick="openProgressGraphModal(2)">
                     <h3>目標粗利増</h3>
-                    <div class="progress-value" id="profitIncreaseDisplay">¥0万円</div>
+                    <div class="progress-value" id="profitIncreaseDisplay">¥0万</div>
                     <div class="progress-detail" id="profitIncreaseDetail">¥0/¥0（0.0%）</div>
-                    <div class="progress-rate" id="profitIncreaseRate">期待: 0.0%</div>
+                    <div class="progress-rate" id="profitIncreaseRate">期待: ¥0</div>
                     <div class="progress-chart">
                         <div class="progress-bar" id="profitIncreaseBar" style="width: 0%; background: #60a5fa;"></div>
                     </div>
@@ -825,7 +859,7 @@
                 <!-- 年間粗利増予定（営業見込） -->
                 <div class="progress-card" onclick="openProgressGraphModal(3)">
                     <h3>年間粗利増予定<br>（営業見込）</h3>
-                    <div class="progress-value" id="prospectTotalDisplay">¥0万円</div>
+                    <div class="progress-value" id="prospectTotalDisplay">¥0万</div>
                     <div class="progress-detail" id="prospectDetail">対目標0.0%</div>
                     <div class="progress-rate" id="prospectRate">追加営業必要</div>
                     <div class="progress-chart">
@@ -838,19 +872,19 @@
             <div class="funnel-section">
                 <div class="funnel-item" onclick="filterByProbability('80+')">
                     <div class="funnel-label">80%以上</div>
-                    <div class="funnel-value" id="prob80Plus">¥0万円</div>
+                    <div class="funnel-value" id="prob80Plus">¥0万</div>
                 </div>
                 <div class="funnel-item" onclick="filterByProbability('60-80')">
                     <div class="funnel-label">60-80%</div>
-                    <div class="funnel-value" id="prob6080">¥0万円</div>
+                    <div class="funnel-value" id="prob6080">¥0万</div>
                 </div>
                 <div class="funnel-item funnel-excluded" onclick="filterByProbability('50-60')">
                     <div class="funnel-label">50-60%</div>
-                    <div class="funnel-value" id="prob5060">¥0万円</div>
+                    <div class="funnel-value" id="prob5060">¥0万</div>
                 </div>
                 <div class="funnel-item funnel-excluded" onclick="filterByProbability('50-')">
                     <div class="funnel-label">50%未満</div>
-                    <div class="funnel-value" id="probUnder50">¥0万円</div>
+                    <div class="funnel-value" id="probUnder50">¥0万</div>
                 </div>
             </div>
         </div>
@@ -958,11 +992,11 @@
                 <div class="settings-section">
                     <h4>年間目標</h4>
                     <div class="form-group">
-                        <label class="form-label">年間粗利目標（円）</label>
+                        <label class="form-label">年間粗利目標</label>
                         <input type="number" class="form-input" value="13000000" id="yearlyProfitTarget">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">目標粗利増（円）</label>
+                        <label class="form-label">目標粗利増</label>
                         <input type="number" class="form-input" value="1200000" id="yearlyProfitIncreaseTarget">
                     </div>
                 </div>
@@ -972,8 +1006,8 @@
                     <div class="monthly-data-section">
                         <div class="monthly-row" style="font-weight: bold; margin-bottom: 8px;">
                             <div class="month-name">月</div>
-                            <div style="text-align: center; font-size: 11px;">実績（円）</div>
-                            <div style="text-align: center; font-size: 11px;">目標（円）</div>
+                            <div style="text-align: center; font-size: 11px;">実績</div>
+                            <div style="text-align: center; font-size: 11px;">目標</div>
                             <div></div>
                         </div>
                         <div id="monthlyProfitContainer">
@@ -1069,19 +1103,19 @@
                     </div>
                     <div class="month-data-grid">
                         <div class="form-group">
-                            <label class="form-label">年間売上増目標（円）</label>
+                            <label class="form-label">年間売上増目標</label>
                             <input type="number" class="form-input" placeholder="300000" id="newSalesIncreaseTarget">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">年間粗利増予定（円）- 自動計算</label>
+                            <label class="form-label">年間粗利増予定 - 自動計算</label>
                             <input type="number" class="form-input" placeholder="90000" id="newProfitIncreaseExpected" readonly>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">年間売上実績（円）</label>
+                            <label class="form-label">年間売上実績</label>
                             <input type="number" class="form-input" placeholder="0" id="newSalesActual">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">年間粗利実績（円）- 自動計算</label>
+                            <label class="form-label">年間粗利実績 - 自動計算</label>
                             <input type="number" class="form-input" placeholder="0" id="newProfitActual" readonly>
                         </div>
                         <div class="form-group">
@@ -1164,19 +1198,19 @@
                     </div>
                     <div class="month-data-grid">
                         <div class="form-group">
-                            <label class="form-label">年間売上増目標（円）</label>
+                            <label class="form-label">年間売上増目標</label>
                             <input type="number" class="form-input" id="editSalesIncreaseTarget">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">年間粗利増予定（円）- 自動計算</label>
+                            <label class="form-label">年間粗利増予定 - 自動計算</label>
                             <input type="number" class="form-input" id="editProfitIncreaseExpected" readonly>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">年間売上実績（円）</label>
+                            <label class="form-label">年間売上実績</label>
                             <input type="number" class="form-input" id="editSalesActual">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">年間粗利実績（円）- 自動計算</label>
+                            <label class="form-label">年間粗利実績 - 自動計算</label>
                             <input type="number" class="form-input" id="editProfitActual" readonly>
                         </div>
                         <div class="form-group">
@@ -1229,14 +1263,19 @@
             }
         };
 
-        // ユーティリティ関数
+        // ユーティリティ関数（通貨表記統一）
         function getCurrentMonth() { return new Date().getMonth() + 1; }
+        
         function formatManYen(amount, decimals = 1) {
-            const manYen = amount / 10000;
-            return `¥${manYen.toFixed(decimals)}万円`;
+            const manYen = (amount || 0) / 10000;
+            return `¥${manYen.toFixed(decimals)}万`;
         }
-        function parseAmount(text) { return parseInt(String(text).replace(/[¥,]/g, '')) || 0; }
-        function formatAmount(amount) { return `¥${amount.toLocaleString()}`; }
+        
+        function parseAmount(text) { return parseInt(String(text).replace(/[¥,万]/g, '')) || 0; }
+        
+        function formatAmount(amount) { 
+            return `¥${(amount || 0).toLocaleString()}`;
+        }
 
         // 粗利計算
         function calculateProfitIncrease(salesIncreaseTarget) {
@@ -1358,7 +1397,7 @@
             });
         }
 
-        // カード作成（確率表示追加）
+        // カード作成（確率表示追加・視認性改善）
         function createNewCardElement(cardData) {
             const displayDate = cardData.lastUpdated.replace(/-/g, '/');
             
@@ -1523,7 +1562,7 @@
             document.getElementById('profitIncreaseDetail').textContent = 
                 `${formatAmount(progress.profitIncrease.actual)}/${formatAmount(progress.profitIncrease.target)}（${progress.profitIncrease.rate.toFixed(1)}%）`;
             document.getElementById('profitIncreaseRate').textContent = `累積差分: ${formatAmount(progress.profitIncrease.actual)}`;
-            document.getElementById('profitIncreaseBar').style.width = `${Math.min(progress.profitIncrease.rate, 100)}%`;
+            document.getElementById('profitIncreaseBar').style.width = `${Math.min(Math.abs(progress.profitIncrease.rate), 100)}%`;
             
             // 4. 営業見込総額
             document.getElementById('prospectTotalDisplay').textContent = formatManYen(progress.prospect.total);
@@ -1552,7 +1591,7 @@
             };
         }
 
-        // 会計年度データ生成
+        // 会計年度データ生成（修正版）
         function generateFiscalYearData(graphType) {
             const { months, labels, currentMonthIndex } = getFiscalYearStructure();
             
@@ -1586,7 +1625,7 @@
                         actualData.push(isPastMonth ? cumActual : null);
                         break;
                         
-                    case 2: // 目標粗利増 - ±棒グラフ
+                    case 2: // 目標粗利増 - ±棒グラフ（修正版）
                         const profitTarget = personalSettings.monthlyProfitTargets[month] || 0;
                         const profitActual = isPastMonth ? (personalSettings.monthlyProfitActuals[month] || 0) : 0;
                         const profitDiff = profitActual - profitTarget;
@@ -1872,7 +1911,7 @@
         }
 
         function importPersonalExcelData() {
-            if (!personalExcelImportData || personalExcelImportData.length < 3) {
+            if (!personalExcelImportData || personalExcelImportData.length < 4) {
                 showToast('読み込む個人設定データがありません。テンプレートを使用してください。', 'error');
                 return;
             }
@@ -2099,7 +2138,7 @@
                     <div class="month-name">${month.name}</div>
                     <input type="number" class="monthly-input" placeholder="実績" id="monthlyProfitActual${month.num}" value="${actualDisplay}">
                     <input type="number" class="monthly-input" placeholder="目標" id="monthlyProfitTarget${month.num}" value="${targetDisplay}">
-                    <div style="font-size: 10px; color: rgba(255,255,255,0.7); text-align: center;">円</div>
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.7); text-align: center;"></div>
                 `;
                 monthlyContainer.appendChild(monthDiv);
             });

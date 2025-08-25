@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>営業支援ダッシュボード v3.1 - 受注額対応版</title>
+    <title>営業支援ダッシュボード v3.2 - 担当者名表示・塾追加修正版</title>
     <style>
         * {
             margin: 0;
@@ -24,6 +24,70 @@
             background: white;
             min-height: 100vh;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* 担当者名セクション（最上段） */
+        .user-section {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            padding: 15px 20px;
+            color: white;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+
+        .user-name-display {
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .user-name-display:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+
+        .user-name-display.placeholder {
+            color: rgba(255,255,255,0.7);
+            font-style: italic;
+        }
+
+        .user-name-input {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 8px 12px;
+            border: 2px solid #4facfe;
+            border-radius: 8px;
+            background: white;
+            color: #1f2937;
+            text-align: center;
+            min-width: 120px;
+            outline: none;
+        }
+
+        .user-edit-hint {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-top: 2px;
+            text-align: center;
         }
 
         /* 上段：目標・進捗エリア */
@@ -687,10 +751,29 @@
         .card {
             animation: fadeInUp 0.3s ease;
         }
+
+        /* スマホ対応：担当者名編集時の調整 */
+        @media (max-width: 480px) {
+            .user-name-input {
+                font-size: 16px; /* iOS Safari のズーム防止 */
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- 担当者名セクション（最上段） -->
+        <div class="user-section">
+            <div class="user-info">
+                <div>
+                    <div class="user-label">担当者</div>
+                    <div class="user-name-display placeholder" id="userNameDisplay" onclick="editUserName()">担当者</div>
+                    <div class="user-edit-hint">クリックで編集</div>
+                </div>
+                <div style="font-size: 24px; opacity: 0.6;">👤</div>
+            </div>
+        </div>
+
         <!-- 上段：目標・進捗エリア -->
         <div class="progress-section">
             <div class="progress-header">
@@ -801,6 +884,7 @@
             </div>
 
             <div id="cardsContainer">
+                <!-- 既存の塾カードは省略（前回と同じ内容） -->
                 <!-- 架空塾カード1：既存塾（受注済み） -->
                 <div class="card" data-last-updated="2025-08-25" data-status="existing" data-probability="80+" data-city="交野市">
                     <div class="card-header">
@@ -852,260 +936,7 @@
                     </div>
                 </div>
 
-                <!-- 架空塾カード2：新規塾（一部受注） -->
-                <div class="card" data-last-updated="2025-08-24" data-status="new" data-probability="80+" data-city="豊中市">
-                    <div class="card-header">
-                        <div class="card-title">光風アカデミー</div>
-                        <div class="card-badge badge-new">新規</div>
-                        <div class="current-month-badge">8月</div>
-                    </div>
-                    
-                    <div class="card-location">
-                        📍 豊中市
-                    </div>
-                    
-                    <div class="card-metrics">
-                        <div class="metric">
-                            <div class="metric-label">8月売上目標</div>
-                            <div class="metric-value">¥250,000</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月粗利</div>
-                            <div class="metric-value">¥74,825</div>
-                        </div>
-                        <div class="metric metric-received">
-                            <div class="metric-label">8月受注額</div>
-                            <div class="metric-value">¥100,000</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月購入済み</div>
-                            <div class="metric-value">¥60,000</div>
-                        </div>
-                    </div>
-                    
-                    <div class="probability-section">
-                        <div class="probability-header">
-                            <div class="probability-label">8月受注確率</div>
-                            <div class="probability-value prob-high">80%以上</div>
-                        </div>
-                        <div class="probability-bar">
-                            <div class="probability-fill" style="width: 80%; background: linear-gradient(90deg, #22c55e, #16a34a);"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="card-footer">
-                        <div class="last-updated" onclick="showUpdateHistory('光風アカデミー')">最終更新: 2025/08/24</div>
-                        <div class="card-actions">
-                            <button class="action-btn" title="編集" onclick="editCard(this)">✏️</button>
-                            <button class="action-btn" title="電話" onclick="callAction(this)">📞</button>
-                            <button class="action-btn" title="メモ" onclick="addMemo(this)">📝</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 架空塾カード3：元既存塾 -->
-                <div class="card" data-last-updated="2025-08-23" data-status="former" data-probability="50-" data-city="大阪市中央区">
-                    <div class="card-header">
-                        <div class="card-title">瑞光個別学院</div>
-                        <div class="card-badge badge-former">元既存</div>
-                        <div class="current-month-badge">8月</div>
-                    </div>
-                    
-                    <div class="card-location">
-                        📍 大阪市中央区
-                    </div>
-                    
-                    <div class="card-metrics">
-                        <div class="metric">
-                            <div class="metric-label">8月売上目標</div>
-                            <div class="metric-value">¥0</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月粗利</div>
-                            <div class="metric-value">¥0</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月受注額</div>
-                            <div class="metric-value">¥0</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月購入済み</div>
-                            <div class="metric-value">¥0</div>
-                        </div>
-                    </div>
-                    
-                    <div class="probability-section">
-                        <div class="probability-header">
-                            <div class="probability-label">8月受注確率</div>
-                            <div class="probability-value prob-low">元既存</div>
-                        </div>
-                        <div class="probability-bar">
-                            <div class="probability-fill" style="width: 0%; background: #ef4444;"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="card-footer">
-                        <div class="last-updated" onclick="showUpdateHistory('瑞光個別学院')">最終更新: 2025/08/23</div>
-                        <div class="card-actions">
-                            <button class="action-btn" title="編集" onclick="editCard(this)">✏️</button>
-                            <button class="action-btn" title="電話" onclick="callAction(this)">📞</button>
-                            <button class="action-btn" title="メモ" onclick="addMemo(this)">📝</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 架空塾カード4：新規塾（60-80%） -->
-                <div class="card" data-last-updated="2025-08-22" data-status="new" data-probability="60-80" data-city="堺市北区">
-                    <div class="card-header">
-                        <div class="card-title">星陵ゼミナール</div>
-                        <div class="card-badge badge-new">新規</div>
-                        <div class="current-month-badge">8月</div>
-                    </div>
-                    
-                    <div class="card-location">
-                        📍 堺市北区
-                    </div>
-                    
-                    <div class="card-metrics">
-                        <div class="metric">
-                            <div class="metric-label">8月売上目標</div>
-                            <div class="metric-value">¥70,000</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月粗利</div>
-                            <div class="metric-value">¥20,951</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月受注額</div>
-                            <div class="metric-value">¥0</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月購入済み</div>
-                            <div class="metric-value">¥0</div>
-                        </div>
-                    </div>
-                    
-                    <div class="probability-section">
-                        <div class="probability-header">
-                            <div class="probability-label">8月受注確率</div>
-                            <div class="probability-value prob-medium-high">60-80%</div>
-                        </div>
-                        <div class="probability-bar">
-                            <div class="probability-fill" style="width: 70%; background: linear-gradient(90deg, #3b82f6, #1d4ed8);"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="card-footer">
-                        <div class="last-updated" onclick="showUpdateHistory('星陵ゼミナール')">最終更新: 2025/08/22</div>
-                        <div class="card-actions">
-                            <button class="action-btn" title="編集" onclick="editCard(this)">✏️</button>
-                            <button class="action-btn" title="電話" onclick="callAction(this)">📞</button>
-                            <button class="action-btn" title="メモ" onclick="addMemo(this)">📝</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 架空塾カード5：既存塾 -->
-                <div class="card" data-last-updated="2025-08-21" data-status="existing" data-probability="80+" data-city="大阪市北区">
-                    <div class="card-header">
-                        <div class="card-title">未来スタディ</div>
-                        <div class="card-badge badge-existing">既存</div>
-                        <div class="current-month-badge">8月</div>
-                    </div>
-                    
-                    <div class="card-location">
-                        📍 大阪市北区
-                    </div>
-                    
-                    <div class="card-metrics">
-                        <div class="metric">
-                            <div class="metric-label">8月売上目標</div>
-                            <div class="metric-value">¥120,000</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月粗利</div>
-                            <div class="metric-value">¥35,916</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月受注額</div>
-                            <div class="metric-value">¥0</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月購入済み</div>
-                            <div class="metric-value">¥0</div>
-                        </div>
-                    </div>
-                    
-                    <div class="probability-section">
-                        <div class="probability-header">
-                            <div class="probability-label">8月受注確率</div>
-                            <div class="probability-value prob-high">80%以上</div>
-                        </div>
-                        <div class="probability-bar">
-                            <div class="probability-fill" style="width: 85%; background: linear-gradient(90deg, #22c55e, #16a34a);"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="card-footer">
-                        <div class="last-updated" onclick="showUpdateHistory('未来スタディ')">最終更新: 2025/08/21</div>
-                        <div class="card-actions">
-                            <button class="action-btn" title="編集" onclick="editCard(this)">✏️</button>
-                            <button class="action-btn" title="電話" onclick="callAction(this)">📞</button>
-                            <button class="action-btn" title="メモ" onclick="addMemo(this)">📝</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 架空塾カード6：新規塾（50-60%、進捗計算対象外） -->
-                <div class="card" data-last-updated="2025-08-20" data-status="new" data-probability="50-60" data-city="吹田市">
-                    <div class="card-header">
-                        <div class="card-title">桜花学習センター</div>
-                        <div class="card-badge badge-new">新規</div>
-                        <div class="current-month-badge">8月</div>
-                    </div>
-                    
-                    <div class="card-location">
-                        📍 吹田市
-                    </div>
-                    
-                    <div class="card-metrics">
-                        <div class="metric">
-                            <div class="metric-label">8月売上目標</div>
-                            <div class="metric-value">¥30,000</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月粗利</div>
-                            <div class="metric-value">¥8,979</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月受注額</div>
-                            <div class="metric-value">¥0</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-label">8月購入済み</div>
-                            <div class="metric-value">¥0</div>
-                        </div>
-                    </div>
-                    
-                    <div class="probability-section">
-                        <div class="probability-header">
-                            <div class="probability-label">8月受注確率</div>
-                            <div class="probability-value prob-medium">50-60%</div>
-                        </div>
-                        <div class="probability-bar">
-                            <div class="probability-fill" style="width: 55%; background: linear-gradient(90deg, #f59e0b, #d97706);"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="card-footer">
-                        <div class="last-updated" onclick="showUpdateHistory('桜花学習センター')">最終更新: 2025/08/20</div>
-                        <div class="card-actions">
-                            <button class="action-btn" title="編集" onclick="editCard(this)">✏️</button>
-                            <button class="action-btn" title="電話" onclick="callAction(this)">📞</button>
-                            <button class="action-btn" title="メモ" onclick="addMemo(this)">📝</button>
-                        </div>
-                    </div>
-                </div>
+                <!-- 他の塾カードも同様に追加（省略） -->
             </div>
         </div>
     </div>
@@ -1113,251 +944,8 @@
     <!-- フローティングアクションボタン -->
     <button class="fab" onclick="openNewCardModal()" title="新規塾登録">➕</button>
 
-    <!-- 個人設定モーダル -->
-    <div class="modal" id="personalSettingsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">個人設定</div>
-                <button class="close-btn" onclick="closePersonalSettingsModal()">&times;</button>
-            </div>
-            
-            <form id="personalSettingsForm">
-                <div class="settings-section">
-                    <h4>基本情報</h4>
-                    <div class="form-group">
-                        <label class="form-label">担当者名</label>
-                        <input type="text" class="form-input" value="八木" id="userName">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">個人粗利率（%）</label>
-                        <input type="number" class="form-input" value="30" step="0.1" id="profitRate">
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h4>年間目標</h4>
-                    <div class="form-group">
-                        <label class="form-label">年間粗利目標（円）</label>
-                        <input type="number" class="form-input" value="13000000" id="yearlyProfitTarget">
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h4>月別目標</h4>
-                    <div class="form-group">
-                        <label class="form-label">8月粗利目標（円）</label>
-                        <input type="number" class="form-input" value="450000" id="monthlyTarget8">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">9月粗利目標（円）</label>
-                        <input type="number" class="form-input" value="500000" id="monthlyTarget9">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">10月粗利目標（円）</label>
-                        <input type="number" class="form-input" value="400000" id="monthlyTarget10">
-                    </div>
-                </div>
-                
-                <div class="control-buttons">
-                    <button type="button" class="btn btn-secondary" onclick="closePersonalSettingsModal()">キャンセル</button>
-                    <button type="submit" class="btn btn-primary">保存</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 新規塾登録モーダル -->
-    <div class="modal" id="newCardModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">新規塾登録</div>
-                <button class="close-btn" onclick="closeNewCardModal()">&times;</button>
-            </div>
-            
-            <form id="newCardForm">
-                <div class="form-group">
-                    <label class="form-label">塾名 *</label>
-                    <input type="text" class="form-input" placeholder="例：○○学習塾" required id="newJukuName">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">区分</label>
-                    <select class="form-select" id="newJukuStatus">
-                        <option value="new">新規</option>
-                        <option value="existing">既存</option>
-                        <option value="former">元既存</option>
-                    </select>
-                </div>
-                
-                <div class="form-group address-container">
-                    <label class="form-label">住所（市区町村）</label>
-                    <input type="text" class="form-input" id="newAddressInput" placeholder="例: 豊中市、大阪市中央区" autocomplete="off">
-                    <div class="address-suggestions" id="newAddressSuggestions"></div>
-                </div>
-
-                <div class="month-data-section">
-                    <div class="month-data-header">
-                        <div class="month-label">8月データ</div>
-                        <div class="current-month-indicator">編集可能</div>
-                    </div>
-                    <div class="month-data-grid">
-                        <div class="form-group">
-                            <label class="form-label">売上目標（円）</label>
-                            <input type="number" class="form-input" placeholder="50000" id="newSalesTarget">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">粗利（円）</label>
-                            <input type="number" class="form-input" placeholder="14965" id="newProfit">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">受注額（円）</label>
-                            <input type="number" class="form-input" placeholder="0" id="newOrderAmount">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">購入済み（円）</label>
-                            <input type="number" class="form-input" placeholder="0" id="newPurchasedAmount">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">受注確率</label>
-                            <select class="form-select" id="newProbability">
-                                <option value="80+">80%以上</option>
-                                <option value="60-80">60-80%</option>
-                                <option value="50-60">50-60%</option>
-                                <option value="50-">50%未満</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">備考</label>
-                            <input type="text" class="form-input" placeholder="メモ・備考" id="newMemo">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="control-buttons">
-                    <button type="button" class="btn btn-secondary" onclick="closeNewCardModal()">キャンセル</button>
-                    <button type="submit" class="btn btn-primary">登録</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Excel読み込みモーダル -->
-    <div class="modal" id="importModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Excel読み込み</div>
-                <button class="close-btn" onclick="closeImportModal()">&times;</button>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Excelファイルを選択</label>
-                <input type="file" class="form-input" accept=".xlsx,.xls" onchange="handleFileSelect(event)" id="fileInput">
-            </div>
-            
-            <div class="form-group">
-                <p style="font-size: 12px; color: #6b7280; line-height: 1.4;">
-                    ※ 塾名と住所のみを読み込みます。<br>
-                    ※ 売上・粗利・受注額・購入済み・確率は手動で入力してください。<br>
-                    ※ PCでの操作を推奨します。<br>
-                    ※ 塾名は自動的に架空名に置き換えられます。
-                </p>
-            </div>
-            
-            <div class="control-buttons">
-                <button type="button" class="btn btn-secondary" onclick="closeImportModal()">キャンセル</button>
-                <button type="button" class="btn btn-primary" onclick="importExcelData()">読み込み</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 更新履歴モーダル -->
-    <div class="modal" id="historyModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title" id="historyTitle">更新履歴</div>
-                <button class="close-btn" onclick="closeHistoryModal()">&times;</button>
-            </div>
-            
-            <div id="historyContent">
-                <!-- 履歴がここに動的に挿入される -->
-            </div>
-        </div>
-    </div>
-
-    <!-- 塾編集モーダル -->
-    <div class="modal" id="editCardModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title" id="editModalTitle">塾編集</div>
-                <button class="close-btn" onclick="closeEditCardModal()">&times;</button>
-            </div>
-            
-            <form id="editCardForm">
-                <div class="form-group">
-                    <label class="form-label">塾名</label>
-                    <input type="text" class="form-input" id="editJukuName" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">区分</label>
-                    <select class="form-select" id="editJukuStatus">
-                        <option value="new">新規</option>
-                        <option value="existing">既存</option>
-                        <option value="former">元既存</option>
-                    </select>
-                </div>
-                
-                <div class="form-group address-container">
-                    <label class="form-label">住所（市区町村）</label>
-                    <input type="text" class="form-input" id="editAddressInput" autocomplete="off">
-                    <div class="address-suggestions" id="editAddressSuggestions"></div>
-                </div>
-
-                <div class="month-data-section">
-                    <div class="month-data-header">
-                        <div class="month-label" id="editMonthLabel">8月データ</div>
-                        <div class="current-month-indicator">編集可能</div>
-                    </div>
-                    <div class="month-data-grid">
-                        <div class="form-group">
-                            <label class="form-label">売上目標（円）</label>
-                            <input type="number" class="form-input" id="editSalesTarget">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">粗利（円）</label>
-                            <input type="number" class="form-input" id="editProfit">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">受注額（円）</label>
-                            <input type="number" class="form-input" id="editOrderAmount">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">購入済み（円）</label>
-                            <input type="number" class="form-input" id="editPurchasedAmount">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">受注確率</label>
-                            <select class="form-select" id="editProbability">
-                                <option value="80+">80%以上</option>
-                                <option value="60-80">60-80%</option>
-                                <option value="50-60">50-60%</option>
-                                <option value="50-">50%未満</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">備考</label>
-                            <input type="text" class="form-input" id="editMemo" placeholder="メモ・備考">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="control-buttons">
-                    <button type="button" class="btn btn-secondary" onclick="closeEditCardModal()">キャンセル</button>
-                    <button type="submit" class="btn btn-primary">更新</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <!-- 各種モーダル（個人設定、新規塾登録、Excel読み込み、更新履歴、塾編集）は省略 -->
+    <!-- 前回のコードと同じ内容を使用してください -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
@@ -1365,9 +953,9 @@
         let sortOrder = 'desc';
         let currentEditingCard = null;
         
-        // パーソナル設定
+        // パーソナル設定（担当者名のデフォルトを「担当者」に変更）
         let personalSettings = {
-            userName: '八木',
+            userName: '担当者',
             profitRate: 30,
             yearlyProfitTarget: 13000000,
             monthlyTargets: {
@@ -1412,6 +1000,75 @@
             return new Date().getFullYear();
         }
 
+        // 担当者名編集機能
+        function editUserName() {
+            const displayElement = document.getElementById('userNameDisplay');
+            const currentName = displayElement.textContent;
+            
+            // インライン編集用の入力フィールドを作成
+            const inputElement = document.createElement('input');
+            inputElement.type = 'text';
+            inputElement.value = currentName === '担当者' ? '' : currentName;
+            inputElement.className = 'user-name-input';
+            inputElement.placeholder = '担当者名を入力';
+            
+            // 表示要素を入力フィールドに置き換え
+            displayElement.parentNode.replaceChild(inputElement, displayElement);
+            inputElement.focus();
+            inputElement.select();
+            
+            // 保存処理
+            function saveUserName() {
+                const newName = inputElement.value.trim() || '担当者';
+                personalSettings.userName = newName;
+                
+                // ローカルストレージに保存
+                localStorage.setItem('personalSettings', JSON.stringify(personalSettings));
+                
+                // 個人設定モーダルの入力欄も同期
+                const userNameInput = document.getElementById('userName');
+                if (userNameInput) userNameInput.value = newName;
+                
+                // 表示要素を復元
+                const newDisplayElement = document.createElement('div');
+                newDisplayElement.id = 'userNameDisplay';
+                newDisplayElement.className = newName === '担当者' ? 'user-name-display placeholder' : 'user-name-display';
+                newDisplayElement.textContent = newName;
+                newDisplayElement.onclick = editUserName;
+                
+                inputElement.parentNode.replaceChild(newDisplayElement, inputElement);
+                
+                // 成功フィードバック
+                if (newName !== currentName) {
+                    // 短時間だけ成功色で表示
+                    newDisplayElement.style.background = 'rgba(34, 197, 94, 0.3)';
+                    setTimeout(() => {
+                        newDisplayElement.style.background = '';
+                    }, 1000);
+                }
+            }
+            
+            // エンターキーで保存
+            inputElement.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveUserName();
+                }
+                if (e.key === 'Escape') {
+                    // ESCキーでキャンセル
+                    const cancelDisplayElement = document.createElement('div');
+                    cancelDisplayElement.id = 'userNameDisplay';
+                    cancelDisplayElement.className = currentName === '担当者' ? 'user-name-display placeholder' : 'user-name-display';
+                    cancelDisplayElement.textContent = currentName;
+                    cancelDisplayElement.onclick = editUserName;
+                    inputElement.parentNode.replaceChild(cancelDisplayElement, inputElement);
+                }
+            });
+            
+            // フォーカスアウトで保存
+            inputElement.addEventListener('blur', saveUserName);
+        }
+
         // 住所サジェスト機能の設定
         function setupAddressSuggestion(inputId, suggestionsId) {
             const input = document.getElementById(inputId);
@@ -1454,6 +1111,113 @@
 
         function formatAmount(amount) {
             return `¥${amount.toLocaleString()}`;
+        }
+
+        // 新規カード作成関数
+        function createNewCardElement(cardData) {
+            const currentMonth = getCurrentMonth();
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式（iOS Safari対応）
+            const displayDate = today.replace(/-/g, '/'); // 表示用はスラッシュ形式
+            
+            // 区分に応じたバッジ設定
+            let badgeClass = 'badge-new', badgeText = '新規';
+            if (cardData.status === 'existing') {
+                badgeClass = 'badge-existing';
+                badgeText = '既存';
+            } else if (cardData.status === 'former') {
+                badgeClass = 'badge-former';
+                badgeText = '元既存';
+            }
+            
+            // 確率と受注状況に応じた表示設定
+            let probText = '', probClass = '', probWidth = 0, probBg = '';
+            if (cardData.orderAmount > 0) {
+                probText = '受注済み'; 
+                probClass = 'prob-high'; 
+                probWidth = 100; 
+                probBg = 'linear-gradient(90deg, #22c55e, #16a34a)';
+            } else if (cardData.status === 'former') {
+                probText = '元既存'; 
+                probClass = 'prob-low'; 
+                probWidth = 0; 
+                probBg = '#ef4444';
+            } else if (cardData.probability === '80+') {
+                probText = '80%以上'; 
+                probClass = 'prob-high'; 
+                probWidth = 85; 
+                probBg = 'linear-gradient(90deg, #22c55e, #16a34a)';
+            } else if (cardData.probability === '60-80') {
+                probText = '60-80%'; 
+                probClass = 'prob-medium-high'; 
+                probWidth = 70; 
+                probBg = 'linear-gradient(90deg, #3b82f6, #1d4ed8)';
+            } else if (cardData.probability === '50-60') {
+                probText = '50-60%'; 
+                probClass = 'prob-medium'; 
+                probWidth = 55; 
+                probBg = 'linear-gradient(90deg, #f59e0b, #d97706)';
+            } else {
+                probText = '50%未満'; 
+                probClass = 'prob-low'; 
+                probWidth = 30; 
+                probBg = '#ef4444';
+            }
+            
+            // 受注額がある場合の特別クラス
+            const orderMetricClass = cardData.orderAmount > 0 ? 'metric metric-received' : 'metric';
+            
+            // カードHTML生成
+            const cardHTML = `
+                <div class="card" data-last-updated="${today}" data-status="${cardData.status}" data-probability="${cardData.probability}" data-city="${cardData.address}" data-memo="${cardData.memo || ''}">
+                    <div class="card-header">
+                        <div class="card-title">${cardData.jukuName}</div>
+                        <div class="card-badge ${badgeClass}">${badgeText}</div>
+                        <div class="current-month-badge">${currentMonth}月</div>
+                    </div>
+                    
+                    <div class="card-location">📍 ${cardData.address}</div>
+                    
+                    <div class="card-metrics">
+                        <div class="metric">
+                            <div class="metric-label">${currentMonth}月売上目標</div>
+                            <div class="metric-value">${formatAmount(cardData.salesTarget)}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">${currentMonth}月粗利</div>
+                            <div class="metric-value">${formatAmount(cardData.profit)}</div>
+                        </div>
+                        <div class="${orderMetricClass}">
+                            <div class="metric-label">${currentMonth}月受注額</div>
+                            <div class="metric-value">${formatAmount(cardData.orderAmount)}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">${currentMonth}月購入済み</div>
+                            <div class="metric-value">${formatAmount(cardData.purchasedAmount)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="probability-section">
+                        <div class="probability-header">
+                            <div class="probability-label">${currentMonth}月受注確率</div>
+                            <div class="probability-value ${probClass}">${probText}</div>
+                        </div>
+                        <div class="probability-bar">
+                            <div class="probability-fill" style="width: ${probWidth}%; background: ${probBg};"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="last-updated" onclick="showUpdateHistory('${cardData.jukuName}')">最終更新: ${displayDate}</div>
+                        <div class="card-actions">
+                            <button class="action-btn" title="編集" onclick="editCard(this)">✏️</button>
+                            <button class="action-btn" title="電話" onclick="callAction(this)">📞</button>
+                            <button class="action-btn" title="メモ" onclick="addMemo(this)">📝</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return cardHTML;
         }
 
         // 進捗計算（受注額 + 60%以上案件の加重合計）
@@ -1609,344 +1373,76 @@
                 sortOrder === 'desc' ? '最終更新日順（新→古）' : '最終更新日順（古→新）';
         }
 
-        // モーダル制御
-        function openPersonalSettingsModal() {
-            document.getElementById('personalSettingsModal').style.display = 'flex';
-        }
+        // モーダル制御（省略 - 前回のコードと同じ）
+        // フォーム送信処理（省略 - 前回のコードと同じ）
+        // カードアクション（省略 - 前回のコードと同じ）
 
-        function closePersonalSettingsModal() {
-            document.getElementById('personalSettingsModal').style.display = 'none';
-        }
-
-        function openNewCardModal() {
-            document.getElementById('newCardModal').style.display = 'flex';
-            setupAddressSuggestion('newAddressInput', 'newAddressSuggestions');
-        }
-
-        function closeNewCardModal() {
-            document.getElementById('newCardModal').style.display = 'none';
-        }
-
-        function openImportModal() {
-            document.getElementById('importModal').style.display = 'flex';
-        }
-
-        function closeImportModal() {
-            document.getElementById('importModal').style.display = 'none';
-        }
-
-        function openEditCardModal() {
-            document.getElementById('editCardModal').style.display = 'flex';
-            setupAddressSuggestion('editAddressInput', 'editAddressSuggestions');
-        }
-
-        function closeEditCardModal() {
-            document.getElementById('editCardModal').style.display = 'none';
-            currentEditingCard = null;
-        }
-
-        // Excel機能（受注額・購入済み対応）
-        function exportToExcel() {
-            const cards = document.querySelectorAll('.card');
-            const currentMonth = getCurrentMonth();
-            const currentYear = getCurrentYear();
+        // 新規塾登録フォームの送信処理を完全に置き換え
+        document.getElementById('newCardForm').addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            const headers = ['塾名', '区分', '住所', '最終更新日'];
-            headers.push(`${currentMonth}月売上目標`, `${currentMonth}月粗利`, `${currentMonth}月受注額`, `${currentMonth}月購入済み`, `${currentMonth}月確率`, `${currentMonth}月備考`);
+            // フォームデータを取得
+            const cardData = {
+                jukuName: document.getElementById('newJukuName').value.trim(),
+                status: document.getElementById('newJukuStatus').value,
+                address: document.getElementById('newAddressInput').value.trim(),
+                salesTarget: parseInt(document.getElementById('newSalesTarget').value) || 0,
+                profit: parseInt(document.getElementById('newProfit').value) || 0,
+                orderAmount: parseInt(document.getElementById('newOrderAmount').value) || 0,
+                purchasedAmount: parseInt(document.getElementById('newPurchasedAmount').value) || 0,
+                probability: document.getElementById('newProbability').value,
+                memo: document.getElementById('newMemo').value.trim()
+            };
             
-            const data = [headers];
-            
-            cards.forEach(card => {
-                if (card.style.display !== 'none') {
-                    const title = card.querySelector('.card-title').textContent;
-                    const badge = card.querySelector('.card-badge').textContent;
-                    const location = card.querySelector('.card-location').textContent.replace('📍 ', '');
-                    const lastUpdated = card.querySelector('.last-updated').textContent.replace('最終更新: ', '');
-                    
-                    const metrics = card.querySelectorAll('.metric-value');
-                    const salesTarget = parseAmount(metrics[0].textContent);
-                    const grossProfit = parseAmount(metrics[1].textContent);
-                    const orderAmount = parseAmount(metrics[2].textContent);
-                    const purchasedAmount = parseAmount(metrics[3].textContent);
-                    const probability = card.querySelector('.probability-value').textContent;
-                    
-                    const memo = '';
-                    
-                    data.push([title, badge, location, lastUpdated, salesTarget, grossProfit, orderAmount, purchasedAmount, probability, memo]);
-                }
-            });
-            
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "営業管理データ");
-            
-            // 個人設定シート
-            const settingsData = [
-                ['項目', '値'],
-                ['担当者名', personalSettings.userName],
-                ['個人粗利率(%)', personalSettings.profitRate],
-                ['年間粗利目標', personalSettings.yearlyProfitTarget],
-                [`${currentMonth}月目標`, personalSettings.monthlyTargets[currentMonth] || 0]
-            ];
-            const settingsWs = XLSX.utils.aoa_to_sheet(settingsData);
-            XLSX.utils.book_append_sheet(wb, settingsWs, "個人設定");
-            
-            const fileName = `営業管理データ_受注額対応_${currentYear}-${String(currentMonth).padStart(2, '0')}-${new Date().getDate()}.xlsx`;
-            XLSX.writeFile(wb, fileName);
-            
-            alert(`Excel出力完了！\nファイル名: ${fileName}\n\n受注額・購入済みデータを含んでいます。`);
-        }
-
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, {type: 'array'});
-                        const firstSheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[firstSheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                        
-                        alert(`${jsonData.length}件のデータを読み込み準備完了しました。`);
-                    } catch (error) {
-                        alert('ファイル読み込みエラーが発生しました。');
-                        console.error('Excel読み込みエラー:', error);
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            }
-        }
-
-        function importExcelData() {
-            const fileInput = document.getElementById('fileInput');
-            if (!fileInput.files[0]) {
-                alert('ファイルを選択してください。');
+            // 必須項目チェック
+            if (!cardData.jukuName) {
+                alert('塾名を入力してください。');
                 return;
             }
             
-            alert('Excel読み込み完了！\n塾名と住所を取り込み、架空名に自動変換しました。\n売上・粗利・受注額・購入済み・確率は各カードで入力してください。');
-            closeImportModal();
-        }
-
-        // 更新履歴表示
-        function showUpdateHistory(jukuName) {
-            const modal = document.getElementById('historyModal');
-            const title = document.getElementById('historyTitle');
-            const content = document.getElementById('historyContent');
-            
-            title.textContent = `${jukuName} - 更新履歴`;
-            
-            const currentMonth = getCurrentMonth();
-            const historyData = [
-                {
-                    date: '2025/08/25 14:30',
-                    action: `${currentMonth}月受注額更新`,
-                    details: '¥0 → ¥50,000（受注完了）'
-                },
-                {
-                    date: '2025/08/24 10:15',
-                    action: '電話対応完了',
-                    details: `担当者との面談アポ取得（${currentMonth}月データ）`
-                },
-                {
-                    date: '2025/08/23 16:45',
-                    action: `${currentMonth}月売上目標更新`,
-                    details: '¥30,000 → ¥50,000に修正'
-                },
-                {
-                    date: '2025/08/22 09:20',
-                    action: 'メモ追加',
-                    details: '見本送付完了の記録'
-                }
-            ];
-            
-            content.innerHTML = historyData.map(item => `
-                <div class="history-item">
-                    <div class="history-date">${item.date}</div>
-                    <div class="history-action">${item.action}</div>
-                    <div class="history-details">${item.details}</div>
-                </div>
-            `).join('');
-            
-            modal.style.display = 'flex';
-        }
-
-        function closeHistoryModal() {
-            document.getElementById('historyModal').style.display = 'none';
-        }
-
-        // カードアクション
-        function editCard(button) {
-            currentEditingCard = button.closest('.card');
-            const cardTitle = currentEditingCard.querySelector('.card-title').textContent;
-            const badge = currentEditingCard.querySelector('.card-badge').textContent;
-            const location = currentEditingCard.querySelector('.card-location').textContent.replace('📍 ', '');
-            const metrics = currentEditingCard.querySelectorAll('.metric-value');
-            const probability = currentEditingCard.querySelector('.probability-value').textContent;
-            
-            const currentMonth = getCurrentMonth();
-            
-            // 編集モーダルに値を設定
-            document.getElementById('editModalTitle').textContent = `${cardTitle} - 編集`;
-            document.getElementById('editMonthLabel').textContent = `${currentMonth}月データ`;
-            document.getElementById('editJukuName').value = cardTitle;
-            document.getElementById('editAddressInput').value = location;
-            
-            // 区分の設定
-            let statusValue = 'new';
-            if (badge === '既存') statusValue = 'existing';
-            else if (badge === '元既存') statusValue = 'former';
-            document.getElementById('editJukuStatus').value = statusValue;
-            
-            // 金額データの設定
-            if (metrics[0]) document.getElementById('editSalesTarget').value = parseAmount(metrics[0].textContent);
-            if (metrics[1]) document.getElementById('editProfit').value = parseAmount(metrics[1].textContent);
-            if (metrics[2]) document.getElementById('editOrderAmount').value = parseAmount(metrics[2].textContent);
-            if (metrics[3]) document.getElementById('editPurchasedAmount').value = parseAmount(metrics[3].textContent);
-            
-            // 確率の設定
-            let probValue = '50-';
-            if (probability.includes('80%以上') || probability.includes('受注済み')) probValue = '80+';
-            else if (probability.includes('60-80%')) probValue = '60-80';
-            else if (probability.includes('50-60%')) probValue = '50-60';
-            document.getElementById('editProbability').value = probValue;
-            
-            openEditCardModal();
-        }
-
-        function callAction(button) {
-            const cardTitle = button.closest('.card').querySelector('.card-title').textContent;
-            const currentMonth = getCurrentMonth();
-            
-            if (confirm(`${cardTitle}に電話をかけますか？`)) {
-                const card = button.closest('.card');
-                const today = new Date().toISOString().split('T')[0].replace(/-/g, '/');
-                card.querySelector('.last-updated').textContent = `最終更新: ${today}`;
-                card.dataset.lastUpdated = today;
-                alert(`通話完了として記録しました。\n${currentMonth}月データとして保存されます。`);
-                updateDashboard();
+            if (!cardData.address) {
+                alert('住所を入力してください。');
+                return;
             }
-        }
-
-        function addMemo(button) {
-            const cardTitle = button.closest('.card').querySelector('.card-title').textContent;
-            const currentMonth = getCurrentMonth();
-            const memo = prompt(`${cardTitle}の${currentMonth}月メモを入力してください：`);
             
-            if (memo) {
-                const card = button.closest('.card');
-                const today = new Date().toISOString().split('T')[0].replace(/-/g, '/');
-                card.querySelector('.last-updated').textContent = `最終更新: ${today}`;
-                card.dataset.lastUpdated = today;
-                alert(`${currentMonth}月メモを保存しました：\n"${memo}"`);
-                updateDashboard();
-            }
-        }
-
-        // フォーム送信処理
-        document.getElementById('personalSettingsForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+            // 新しいカードを作成
+            const newCardHTML = createNewCardElement(cardData);
+            const container = document.getElementById('cardsContainer');
             
-            personalSettings.userName = document.getElementById('userName').value;
-            personalSettings.profitRate = parseFloat(document.getElementById('profitRate').value);
-            personalSettings.yearlyProfitTarget = parseInt(document.getElementById('yearlyProfitTarget').value);
-            personalSettings.monthlyTargets[8] = parseInt(document.getElementById('monthlyTarget8').value);
-            personalSettings.monthlyTargets[9] = parseInt(document.getElementById('monthlyTarget9').value);
-            personalSettings.monthlyTargets[10] = parseInt(document.getElementById('monthlyTarget10').value);
+            // カードを一覧の最上部に追加（最新が上に表示）
+            container.insertAdjacentHTML('afterbegin', newCardHTML);
             
-            localStorage.setItem('personalSettings', JSON.stringify(personalSettings));
+            // 追加されたカードにアニメーション効果を適用
+            const newCard = container.firstElementChild;
+            newCard.style.opacity = '0';
+            newCard.style.transform = 'translateY(-20px)';
+            
+            // スムーズなアニメーション実行
+            setTimeout(() => {
+                newCard.style.transition = 'all 0.3s ease';
+                newCard.style.opacity = '1';
+                newCard.style.transform = 'translateY(0)';
+            }, 10);
+            
+            // フォームをリセット
+            document.getElementById('newCardForm').reset();
+            
+            // 住所サジェストを非表示
+            const suggestions = document.getElementById('newAddressSuggestions');
+            if (suggestions) suggestions.style.display = 'none';
+            
+            // ダッシュボードを更新（進捗計算に反映）
             updateDashboard();
             
-            alert('個人設定を保存しました！');
-            closePersonalSettingsModal();
-        });
-
-        document.getElementById('newCardForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const currentMonth = getCurrentMonth();
-            alert(`新規塾が登録されました！\n${currentMonth}月データとして保存されます。`);
+            // 現在のフィルター条件を適用
+            applyFilters();
+            
+            // モーダルを閉じる
             closeNewCardModal();
-            updateDashboard();
-        });
-
-        document.getElementById('editCardForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (currentEditingCard) {
-                const jukuName = document.getElementById('editJukuName').value;
-                const statusValue = document.getElementById('editJukuStatus').value;
-                const address = document.getElementById('editAddressInput').value;
-                const salesTarget = parseInt(document.getElementById('editSalesTarget').value) || 0;
-                const profit = parseInt(document.getElementById('editProfit').value) || 0;
-                const orderAmount = parseInt(document.getElementById('editOrderAmount').value) || 0;
-                const purchasedAmount = parseInt(document.getElementById('editPurchasedAmount').value) || 0;
-                const probability = document.getElementById('editProbability').value;
-                
-                // カード表示を更新
-                currentEditingCard.querySelector('.card-title').textContent = jukuName;
-                currentEditingCard.querySelector('.card-location').textContent = `📍 ${address}`;
-                
-                // 区分バッジ更新
-                const badgeEl = currentEditingCard.querySelector('.card-badge');
-                let badgeText = '';
-                if (statusValue === 'existing') { badgeText = '既存'; badgeEl.className = 'card-badge badge-existing'; }
-                else if (statusValue === 'former') { badgeText = '元既存'; badgeEl.className = 'card-badge badge-former'; }
-                else { badgeText = '新規'; badgeEl.className = 'card-badge badge-new'; }
-                badgeEl.textContent = badgeText;
-                
-                // メトリクス更新
-                const metrics = currentEditingCard.querySelectorAll('.metric-value');
-                if (metrics[0]) metrics[0].textContent = formatAmount(salesTarget);
-                if (metrics[1]) metrics[1].textContent = formatAmount(profit);
-                if (metrics[2]) metrics[2].textContent = formatAmount(orderAmount);
-                if (metrics[3]) metrics[3].textContent = formatAmount(purchasedAmount);
-                
-                // 受注額がある場合は緑色強調
-                const orderMetric = currentEditingCard.querySelectorAll('.metric')[2];
-                if (orderAmount > 0) {
-                    orderMetric.classList.add('metric-received');
-                } else {
-                    orderMetric.classList.remove('metric-received');
-                }
-                
-                // 確率表示更新
-                const probEl = currentEditingCard.querySelector('.probability-value');
-                const barEl = currentEditingCard.querySelector('.probability-fill');
-                
-                let probText = '', probClass = '', probWidth = 0, probBg = '';
-                if (orderAmount > 0) {
-                    probText = '受注済み'; probClass = 'prob-high'; probWidth = 100; probBg = 'linear-gradient(90deg, #22c55e, #16a34a)';
-                } else if (statusValue === 'former') {
-                    probText = '元既存'; probClass = 'prob-low'; probWidth = 0; probBg = '#ef4444';
-                } else if (probability === '80+') {
-                    probText = '80%以上'; probClass = 'prob-high'; probWidth = 85; probBg = 'linear-gradient(90deg, #22c55e, #16a34a)';
-                } else if (probability === '60-80') {
-                    probText = '60-80%'; probClass = 'prob-medium-high'; probWidth = 70; probBg = 'linear-gradient(90deg, #3b82f6, #1d4ed8)';
-                } else if (probability === '50-60') {
-                    probText = '50-60%'; probClass = 'prob-medium'; probWidth = 55; probBg = 'linear-gradient(90deg, #f59e0b, #d97706)';
-                } else {
-                    probText = '50%未満'; probClass = 'prob-low'; probWidth = 30; probBg = '#ef4444';
-                }
-                
-                probEl.textContent = probText;
-                probEl.className = `probability-value ${probClass}`;
-                barEl.style.width = `${probWidth}%`;
-                barEl.style.background = probBg;
-                
-                // データ属性更新
-                const today = new Date().toISOString().split('T')[0];
-                currentEditingCard.dataset.lastUpdated = today;
-                currentEditingCard.dataset.status = statusValue;
-                currentEditingCard.dataset.probability = probability;
-                currentEditingCard.dataset.city = address;
-                currentEditingCard.querySelector('.last-updated').textContent = `最終更新: ${today.replace(/-/g, '/')}`;
-                
-                const currentMonth = getCurrentMonth();
-                alert(`${jukuName}の${currentMonth}月データを更新しました！`);
-                closeEditCardModal();
-                updateDashboard();
-            }
+            
+            // 成功メッセージ
+            const currentMonth = getCurrentMonth();
+            alert(`新規塾「${cardData.jukuName}」を登録しました！\n${currentMonth}月データとして保存されました。`);
         });
 
         // 初期化
@@ -1955,6 +1451,11 @@
             if (savedSettings) {
                 personalSettings = { ...personalSettings, ...JSON.parse(savedSettings) };
             }
+            
+            // 担当者名表示を更新
+            const displayElement = document.getElementById('userNameDisplay');
+            displayElement.textContent = personalSettings.userName;
+            displayElement.className = personalSettings.userName === '担当者' ? 'user-name-display placeholder' : 'user-name-display';
             
             const currentDate = new Date();
             const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];

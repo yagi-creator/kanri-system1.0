@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>営業支援ダッシュボード v6.0 - 完全機能版</title>
+    <title>営業支援ダッシュボード v6.1 - 修正版</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -67,7 +67,6 @@
             padding: 16px;
             color: white;
             transition: background 0.5s ease;
-            /* 背景は JavaScript で動的に設定 */
         }
 
         .progress-cards {
@@ -359,7 +358,7 @@
         }
         .card-level-4 { 
             background: linear-gradient(135deg, rgba(251, 191, 36, 0.85) 0%, rgba(252, 211, 77, 0.85) 100%);
-            border-left: 4px solid #f59e0b; /* 黄色寄りに調整 */
+            border-left: 4px solid #f59e0b;
         }
         .card-level-5 { 
             background: linear-gradient(135deg, rgba(248, 113, 113, 0.85) 0%, rgba(252, 165, 165, 0.85) 100%);
@@ -1241,18 +1240,16 @@
             return colorMap[level] || colorMap[0];
         }
 
-        // 斜めグラデーション背景更新
+        // 斜めグラデーション背景更新（修正版：白いライン削除）
         function updateDiagonalProgressBackground(monthlyRate, yearlyRate) {
             const monthlyColors = getProgressGradientColors(monthlyRate);
             const yearlyColors = getProgressGradientColors(yearlyRate);
             
-            // 左上（月間）から右下（年間）への斜めグラデーション
+            // 左上（月間）から右下（年間）への斜めグラデーション（白いライン削除）
             const diagonalGradient = `linear-gradient(135deg, 
                 ${monthlyColors.start} 0%, 
-                ${monthlyColors.end} 45%, 
-                rgba(255,255,255,0.15) 47%, 
-                rgba(255,255,255,0.15) 53%, 
-                ${yearlyColors.start} 55%, 
+                ${monthlyColors.end} 50%, 
+                ${yearlyColors.start} 50%, 
                 ${yearlyColors.end} 100%)`;
             
             // ストライプパターンも斜めに調整
@@ -1452,7 +1449,7 @@
         function updateDashboard() {
             const progress = calculateAllProgress();
             
-            // 斜めグラデーション背景更新
+            // 斜めグラデーション背景更新（修正版）
             updateDiagonalProgressBackground(progress.monthly.rate, progress.yearly.rate);
             
             // 1. 月別目標
@@ -1799,7 +1796,7 @@
             showToast('フィルタをクリアしました', 'info');
         }
 
-        // 並び替え機能
+        // 並び替え機能（修正版）
         function applySorting() {
             renderCards();
         }
@@ -1842,17 +1839,19 @@
             sortInfo.textContent = sortLabels[sortType] || '最終更新日順（新→古）';
         }
 
+        // カード表示（修正版：並び替え対応）
         function renderCards() {
             const container = document.getElementById('cardsContainer');
             
-            const existingCards = container.querySelectorAll('.card');
-            existingCards.forEach(card => card.style.display = 'none');
+            // コンテナ内をクリアして新しい順序で再構築
+            container.innerHTML = '';
 
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const statusFilter = document.getElementById('statusFilter').value;
             const probabilityFilter = document.getElementById('probabilityFilter').value;
             const cityFilter = document.getElementById('cityFilter').value;
 
+            // フィルタリング
             let filteredCards = cardsData.filter(cardData => {
                 const title = cardData.jukuName.toLowerCase();
                 const status = cardData.status;
@@ -1867,30 +1866,18 @@
                 return show;
             });
 
+            // 並び替え適用
             filteredCards = getSortedCards(filteredCards);
 
-            filteredCards.forEach((cardData, index) => {
-                let cardElement = container.querySelector(`[data-card-id="${cardData.id}"]`);
-                if (!cardElement) {
-                    cardElement = createNewCardElement(cardData);
-                    container.appendChild(cardElement);
-                } else {
-                    const newCardElement = createNewCardElement(cardData);
-                    cardElement.replaceWith(newCardElement);
-                }
-                cardElement = container.querySelector(`[data-card-id="${cardData.id}"]`);
-                cardElement.style.display = 'block';
-            });
-            
-            const visibleCardIds = new Set(filteredCards.map(card => card.id.toString()));
-            existingCards.forEach(card => {
-                if (!visibleCardIds.has(card.dataset.cardId)) {
-                    card.remove();
-                }
+            // ソート済みの順序でカードを生成・追加
+            filteredCards.forEach((cardData) => {
+                const cardElement = createNewCardElement(cardData);
+                container.appendChild(cardElement);
             });
             
             updateSortInfo();
             
+            // 進捗更新（必要に応じて）
             if (Date.now() - lastRenderTime > 2000) {
                 progressCache = null;
                 updateDashboard();
@@ -1964,8 +1951,8 @@
             fiscalMonths.forEach(month => {
                 const monthDiv = document.createElement('div');
                 monthDiv.className = 'monthly-row';
-                const actualValue = personalSettings.monthlyProfitActuals[month] || 0;
-                const targetValue = personalSettings.monthlyProfitTargets[month] || 0;
+                const actualValue = personalSettings.monthlyProfitActuals[month.num] || 0;
+                const targetValue = personalSettings.monthlyProfitTargets[month.num] || 0;
                 const actualDisplay = actualValue === 0 ? '' : actualValue;
                 const targetDisplay = targetValue === 0 ? '' : targetValue;
                 

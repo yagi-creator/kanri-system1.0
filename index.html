@@ -123,10 +123,11 @@
         }
 
         .progress-detail {
-            font-size: 11px;
-            opacity: 0.9;
+            font-size: 14px; /* 変更: 11px → 14px */
+            opacity: 0.95; /* 変更: 0.9 → 0.95 */
             margin-bottom: 3px;
             color: #FFFFFF;
+            font-weight: 600; /* 追加 */
         }
 
         .progress-rate {
@@ -152,13 +153,13 @@
         }
 
         .funnel-section {
-            display: flex;
+            display: grid; /* 変更: flex → grid */
+            grid-template-columns: repeat(5, 1fr); /* 追加: 5列グリッド */
             gap: 6px;
             margin-top: 10px;
         }
 
         .funnel-item {
-            flex: 1;
             background: rgba(255,255,255,0.15);
             border-radius: 6px;
             padding: 6px;
@@ -175,7 +176,8 @@
         }
 
         .funnel-excluded {
-            opacity: 0.5;
+            opacity: 0.75; /* 変更: 0.5 → 0.75 文字を濃く */
+            font-weight: 600; /* 追加: 文字を太く */
         }
 
         .funnel-label {
@@ -194,7 +196,7 @@
             padding: 15px;
             background: rgba(255,255,255,0.1);
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            color: #FFFFFF;
+            color: #000000; /* 変更: #FFFFFF → #000000 */
             backdrop-filter: blur(5px);
         }
 
@@ -206,22 +208,22 @@
         .search-input {
             width: 100%;
             padding: 10px 35px 10px 12px;
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid #00B0FF; /* 変更: rgba(255,255,255,0.2) → #00B0FF */
             border-radius: 8px;
             font-size: 16px;
             outline: none;
             transition: border-color 0.2s ease;
-            background: rgba(255,255,255,0.1);
-            color: #FFFFFF;
+            background: rgba(255,255,255,0.9); /* 変更: 背景を明るく */
+            color: #000000; /* 変更: #FFFFFF → #000000 */
         }
 
         .search-input::placeholder {
-            color: rgba(255,255,255,0.6);
+            color: rgba(0,0,0,0.6); /* 変更: rgba(255,255,255,0.6) → rgba(0,0,0,0.6) */
         }
 
         .search-input:focus {
-            border-color: #00B0FF;
-            background: rgba(255,255,255,0.15);
+            border-color: #00E5FF; /* 変更: より明るい水色 */
+            background: rgba(255,255,255,1);
         }
 
         .search-icon {
@@ -229,7 +231,7 @@
             right: 10px;
             top: 50%;
             transform: translateY(-50%);
-            color: rgba(255,255,255,0.6);
+            color: #00B0FF; /* 変更: rgba(255,255,255,0.6) → #00B0FF */
         }
 
         .control-buttons {
@@ -263,7 +265,7 @@
 
         .btn-primary {
             background: linear-gradient(135deg, #00B0FF 0%, #00E5FF 100%);
-            color: #FFFFFF;
+            color: #000000; /* 変更: #FFFFFF → #000000 */
         }
 
         .btn-secondary {
@@ -293,8 +295,8 @@
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 6px;
             font-size: 13px;
-            background: rgba(255,255,255,0.1);
-            color: #FFFFFF;
+            background: rgba(255,255,255,0.9); /* 変更: 背景を明るく */
+            color: #000000; /* 変更: #FFFFFF → #000000 */
             cursor: pointer;
         }
 
@@ -308,12 +310,14 @@
             border: 2px solid rgba(255,255,255,0.2);
             border-radius: 8px;
             font-size: 14px;
+            background: rgba(255,255,255,0.9); /* 変更: 背景を明るく */
+            color: #000000; /* 変更: #FFFFFF → #000000 */
         }
 
         .cards-section {
             padding: 0 15px 15px;
             background: rgba(255,255,255,0.05);
-            color: #FFFFFF;
+            color: #000000; /* 変更: #FFFFFF → #000000 */
             backdrop-filter: blur(3px);
         }
 
@@ -327,12 +331,12 @@
         .section-title {
             font-size: 17px;
             font-weight: bold;
-            color: #FFFFFF;
+            color: #000000; /* 変更: #FFFFFF → #000000 */
         }
 
         .sort-info {
             font-size: 12px;
-            color: rgba(255,255,255,0.8);
+            color: rgba(0,0,0,0.8); /* 変更: rgba(255,255,255,0.8) → rgba(0,0,0,0.8) */
         }
 
         .card {
@@ -809,6 +813,10 @@
                 height: 250px;
                 padding: 15px;
             }
+
+            .funnel-section {
+                grid-template-columns: repeat(5, 1fr); /* PC版でも5列維持 */
+            }
         }
     </style>
 </head>
@@ -870,6 +878,11 @@
 
             <!-- 確率別ファネル -->
             <div class="funnel-section">
+                <!-- 追加: 全て項目 -->
+                <div class="funnel-item" onclick="filterByProbability('all')">
+                    <div class="funnel-label">全て</div>
+                    <div class="funnel-value" id="probAll">¥0万</div>
+                </div>
                 <div class="funnel-item" onclick="filterByProbability('80+')">
                     <div class="funnel-label">80%以上</div>
                     <div class="funnel-value" id="prob80Plus">¥0万</div>
@@ -1502,7 +1515,7 @@
                 sum + (card.annualProfitIncreaseExpected || 0), 0);
             const prospectRate = profitIncreaseTarget > 0 ? (prospectTotal / profitIncreaseTarget) * 100 : 0;
             
-            // ファネル計算
+            // ファネル計算（全て項目追加）
             let prob80Plus = 0, prob6080 = 0, prob5060 = 0, probUnder50 = 0;
             cardsData.forEach(card => {
                 const profit = card.annualProfitIncreaseExpected || 0;
@@ -1571,7 +1584,8 @@
                 progress.prospect.rate >= 100 ? '目標クリア見込み' : '追加営業必要';
             document.getElementById('prospectBar').style.width = `${Math.min(progress.prospect.rate, 100)}%`;
             
-            // ファネル更新
+            // ファネル更新（全て項目追加）
+            document.getElementById('probAll').textContent = formatManYen(progress.prospect.total);
             document.getElementById('prob80Plus').textContent = formatManYen(progress.funnel.prob80Plus);
             document.getElementById('prob6080').textContent = formatManYen(progress.funnel.prob6080);
             document.getElementById('prob5060').textContent = formatManYen(progress.funnel.prob5060);

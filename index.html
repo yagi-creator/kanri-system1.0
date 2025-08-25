@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>営業支援ダッシュボード v5.3 - 完全機能版</title>
+    <title>営業支援ダッシュボード v6.0 - 完全機能版</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -16,7 +18,6 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #333;
-            /* 軽量ドットパターン背景 */
             background-image: 
                 radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 2px, transparent 2px),
                 radial-gradient(circle at 75% 75%, rgba(255,255,255,0.08) 2px, transparent 2px);
@@ -38,7 +39,7 @@
             box-shadow: 0 0 15px rgba(0,0,0,0.08);
         }
 
-        /* ヘッダー（ストライプパターン背景） */
+        /* ヘッダー */
         .header-section {
             background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
             padding: 12px 20px;
@@ -61,33 +62,12 @@
             opacity: 0.9;
         }
 
-        /* 上段：進捗エリア（月別粗利進捗による色変化） */
+        /* 上段：進捗エリア（斜めグラデーション） */
         .progress-section {
             padding: 16px;
             color: white;
             transition: background 0.5s ease;
-            background-image: 
-                repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(255,255,255,0.05) 8px, rgba(255,255,255,0.05) 16px);
-        }
-
-        /* 月別粗利進捗による6段階色分け */
-        .progress-section.monthly-level-0 { 
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); /* 0-19%: 赤 */
-        }
-        .progress-section.monthly-level-1 { 
-            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); /* 20-39%: オレンジ */
-        }
-        .progress-section.monthly-level-2 { 
-            background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); /* 40-59%: 黄 */
-        }
-        .progress-section.monthly-level-3 { 
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); /* 60-79%: 緑 */
-        }
-        .progress-section.monthly-level-4 { 
-            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); /* 80-99%: シアン */
-        }
-        .progress-section.monthly-level-5 { 
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); /* 100%+: 紫 */
+            /* 背景は JavaScript で動的に設定 */
         }
 
         .progress-cards {
@@ -103,6 +83,28 @@
             padding: 12px;
             border: 1px solid rgba(255,255,255,0.3);
             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .progress-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .progress-card::after {
+            content: '📊';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 12px;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .progress-card:hover::after {
+            opacity: 1;
         }
 
         .progress-card h3 {
@@ -256,7 +258,7 @@
         }
 
         .btn-settings {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
             color: white;
         }
 
@@ -280,7 +282,6 @@
             cursor: pointer;
         }
 
-        /* 並び替えセクション（新規追加） */
         .sort-section {
             margin-bottom: 12px;
         }
@@ -301,7 +302,7 @@
             outline: none;
         }
 
-        /* 塾カード一覧（縦線パターン背景） */
+        /* 塾カード一覧 */
         .cards-section {
             padding: 0 15px 15px;
             background: #f8fafc;
@@ -343,29 +344,25 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.12);
         }
 
-        /* カード色分け（さらに濃く＋左側ライン） */
+        /* カード色分け（調整版：彩度5%減・明度10%向上） */
         .card-level-0, .card-level-1 { 
             background: #ffffff;
             border-left: 4px solid #d1d5db;
         }
         .card-level-2 { 
-            background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
-            border-color: #2563eb;
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.85) 0%, rgba(147, 197, 253, 0.85) 100%);
             border-left: 4px solid #1d4ed8;
         }
         .card-level-3 { 
-            background: linear-gradient(135deg, #4ade80 0%, #86efac 100%);
-            border-color: #16a34a;
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.85) 0%, rgba(134, 239, 172, 0.85) 100%);
             border-left: 4px solid #15803d;
         }
         .card-level-4 { 
-            background: linear-gradient(135deg, #fb923c 0%, #fdba74 100%);
-            border-color: #ea580c;
-            border-left: 4px solid #c2410c;
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.85) 0%, rgba(252, 211, 77, 0.85) 100%);
+            border-left: 4px solid #f59e0b; /* 黄色寄りに調整 */
         }
         .card-level-5 { 
-            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
-            border-color: #dc2626;
+            background: linear-gradient(135deg, rgba(248, 113, 113, 0.85) 0%, rgba(252, 165, 165, 0.85) 100%);
             border-left: 4px solid #b91c1c;
         }
 
@@ -504,6 +501,11 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
+        .modal-graph {
+            max-width: 550px;
+            max-height: 90vh;
+        }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -561,6 +563,37 @@
             cursor: not-allowed;
         }
 
+        /* グラフモーダル専用 */
+        .graph-container {
+            margin: 20px 0;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            height: 300px;
+        }
+
+        .graph-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
         /* 月別データ */
         .month-data-section {
             background: #f8fafc;
@@ -608,7 +641,7 @@
 
         .monthly-row {
             display: grid;
-            grid-template-columns: 60px 1fr 20px;
+            grid-template-columns: 60px 1fr 1fr 20px;
             gap: 8px;
             align-items: center;
             margin-bottom: 8px;
@@ -629,6 +662,11 @@
             text-align: right;
         }
 
+        .monthly-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
         .settings-section {
             margin-bottom: 16px;
             padding: 12px;
@@ -642,7 +680,7 @@
             color: #1f2937;
         }
 
-        /* FAB（左下） */
+        /* FAB */
         .fab {
             position: fixed;
             bottom: 20px;
@@ -711,6 +749,16 @@
             .section-header {
                 grid-column: 1 / -1;
             }
+
+            .modal-graph {
+                max-width: 95vw;
+                margin: 10px;
+            }
+            
+            .graph-container {
+                height: 250px;
+                padding: 15px;
+            }
         }
     </style>
 </head>
@@ -722,50 +770,50 @@
             <div class="current-date-header" id="currentDateHeader">2025年8月</div>
         </div>
 
-        <!-- 上段：4カード進捗エリア（月別粗利進捗による色変化） -->
+        <!-- 上段：4カード進捗エリア（斜めグラデーション） -->
         <div class="progress-section" id="progressSection">
             <div class="progress-cards">
                 <!-- 月別目標（粗利） -->
-                <div class="progress-card">
+                <div class="progress-card" onclick="openProgressGraphModal(0)">
                     <h3>月別目標（粗利）</h3>
                     <div class="progress-value" id="monthlyTargetDisplay">¥0万円</div>
                     <div class="progress-detail" id="monthlyDetail">¥0/¥0（0.0%）</div>
                     <div class="progress-rate" id="monthlyRate">差分: ¥0</div>
                     <div class="progress-chart">
-                        <div class="progress-bar" id="monthlyProgressBar" style="width: 0%; background: #22c55e;"></div>
+                        <div class="progress-bar" id="monthlyProgressBar" style="width: 0%; background: #4ade80;"></div>
                     </div>
                 </div>
                 
                 <!-- 年間目標（粗利） -->
-                <div class="progress-card">
+                <div class="progress-card" onclick="openProgressGraphModal(1)">
                     <h3>年間目標（粗利）</h3>
                     <div class="progress-value" id="yearlyTargetDisplay">¥0万円</div>
                     <div class="progress-detail" id="yearlyDetail">¥0/¥0（0.0%）</div>
                     <div class="progress-rate" id="yearlyRate">0.0%達成</div>
                     <div class="progress-chart">
-                        <div class="progress-bar" id="yearlyProgressBar" style="width: 0%; background: #22c55e;"></div>
+                        <div class="progress-bar" id="yearlyProgressBar" style="width: 0%; background: #4ade80;"></div>
                     </div>
                 </div>
                 
                 <!-- 目標粗利増 -->
-                <div class="progress-card">
+                <div class="progress-card" onclick="openProgressGraphModal(2)">
                     <h3>目標粗利増</h3>
                     <div class="progress-value" id="profitIncreaseDisplay">¥0万円</div>
                     <div class="progress-detail" id="profitIncreaseDetail">¥0/¥0（0.0%）</div>
                     <div class="progress-rate" id="profitIncreaseRate">期待: 0.0%</div>
                     <div class="progress-chart">
-                        <div class="progress-bar" id="profitIncreaseBar" style="width: 0%; background: #3b82f6;"></div>
+                        <div class="progress-bar" id="profitIncreaseBar" style="width: 0%; background: #60a5fa;"></div>
                     </div>
                 </div>
                 
                 <!-- 年間粗利増予定（営業見込） -->
-                <div class="progress-card">
+                <div class="progress-card" onclick="openProgressGraphModal(3)">
                     <h3>年間粗利増予定<br>（営業見込）</h3>
                     <div class="progress-value" id="prospectTotalDisplay">¥0万円</div>
                     <div class="progress-detail" id="prospectDetail">対目標0.0%</div>
                     <div class="progress-rate" id="prospectRate">追加営業必要</div>
                     <div class="progress-chart">
-                        <div class="progress-bar" id="prospectBar" style="width: 0%; background: #22c55e;"></div>
+                        <div class="progress-bar" id="prospectBar" style="width: 0%; background: #4ade80;"></div>
                     </div>
                 </div>
             </div>
@@ -819,7 +867,6 @@
                 </button>
             </div>
 
-            <!-- 並び替えセクション（新規追加） -->
             <div class="sort-section">
                 <select class="sort-select" id="sortSelect" onchange="applySorting()">
                     <option value="updated-desc">📅 最終更新日順（新→古）</option>
@@ -868,7 +915,7 @@
         </div>
     </div>
 
-    <!-- フローティングアクションボタン（左下） -->
+    <!-- フローティングアクションボタン -->
     <button class="fab" onclick="openNewCardModal()" title="新規塾登録">➕</button>
 
     <!-- 個人設定モーダル -->
@@ -905,21 +952,17 @@
                 </div>
 
                 <div class="settings-section">
-                    <h4>月別実績</h4>
-                    <div class="form-group">
-                        <label class="form-label">追加当月成果（円）</label>
-                        <input type="number" class="form-input" value="0" id="otherCurrentMonthProfit">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">年間進捗調整値（円）</label>
-                        <input type="number" class="form-input" value="0" id="yearlyProgressOverride">
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h4>月別粗利実績（会計年度：10月〜9月）</h4>
-                    <div class="monthly-data-section" id="monthlyProfitContainer">
-                        <!-- 月別粗利実績は JavaScript で動的に生成されます -->
+                    <h4>月別データ（会計年度：10月〜9月）</h4>
+                    <div class="monthly-data-section">
+                        <div class="monthly-row" style="font-weight: bold; margin-bottom: 8px;">
+                            <div class="month-name">月</div>
+                            <div style="text-align: center; font-size: 11px;">実績（円）</div>
+                            <div style="text-align: center; font-size: 11px;">目標（円）</div>
+                            <div></div>
+                        </div>
+                        <div id="monthlyProfitContainer">
+                            <!-- 月別粗利実績・目標は JavaScript で動的に生成されます -->
+                        </div>
                     </div>
                 </div>
                 
@@ -928,6 +971,24 @@
                     <button type="submit" class="btn btn-primary">保存</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- 進捗グラフモーダル -->
+    <div class="modal" id="progressGraphModal">
+        <div class="modal-content modal-graph">
+            <div class="modal-header">
+                <div class="modal-title" id="graphModalTitle">年間進捗グラフ</div>
+                <button class="close-btn" onclick="closeProgressGraphModal()">&times;</button>
+            </div>
+            
+            <div class="graph-container">
+                <canvas id="progressChart"></canvas>
+            </div>
+            
+            <div class="graph-legend" id="graphLegend">
+                <!-- 凡例項目は JavaScript で動的に追加されます -->
+            </div>
         </div>
     </div>
 
@@ -1034,6 +1095,7 @@
             </div>
             
             <form id="editCardForm">
+                <input type="hidden" id="editCardId">
                 <div class="form-group">
                     <label class="form-label">塾名</label>
                     <input type="text" class="form-input" id="editJukuName" required>
@@ -1099,24 +1161,26 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         // グローバル変数
         let cardsData = [];
         let nextCardId = 1;
         let progressCache = null;
         let lastRenderTime = 0;
-        let lastMonthlyColorLevel = -1;
+        let progressChart = null;
+        let currentGraphType = null;
         
-        // パーソナル設定（月別粗利実績を12ヶ月分対応）
+        // パーソナル設定（月別粗利実績・目標を12ヶ月分対応）
         let personalSettings = {
             userName: '担当者',
             profitRate: 30,
             yearlyProfitTarget: 13000000,
             yearlyProfitIncreaseTarget: 1200000,
-            otherCurrentMonthProfit: 0,
-            yearlyProgressOverride: 0,
             monthlyProfitActuals: {
+                10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+                4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+            },
+            monthlyProfitTargets: {
                 10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
                 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
             }
@@ -1160,6 +1224,44 @@
             return 0;
         }
 
+        // 進捗率に基づいてグラデーション色を取得（調整版）
+        function getProgressGradientColors(rate) {
+            const effectiveRate = Math.min(Math.max(rate, 0), 100);
+            const level = Math.min(Math.floor(effectiveRate / 20), 5);
+            
+            const colorMap = {
+                0: { start: '#f87171', end: '#fca5a5' }, // 0-19%: 赤（明度10%向上）
+                1: { start: '#fbbf24', end: '#fcd34d' }, // 20-39%: 黄色寄り（調整版）
+                2: { start: '#fcd34d', end: '#fde047' }, // 40-59%: 黄色（明度10%向上）
+                3: { start: '#4ade80', end: '#86efac' }, // 60-79%: 緑（明度10%向上）
+                4: { start: '#22d3ee', end: '#67e8f9' }, // 80-99%: シアン（明度10%向上）
+                5: { start: '#a78bfa', end: '#c4b5fd' }  // 100%+: 紫（明度10%向上）
+            };
+            
+            return colorMap[level] || colorMap[0];
+        }
+
+        // 斜めグラデーション背景更新
+        function updateDiagonalProgressBackground(monthlyRate, yearlyRate) {
+            const monthlyColors = getProgressGradientColors(monthlyRate);
+            const yearlyColors = getProgressGradientColors(yearlyRate);
+            
+            // 左上（月間）から右下（年間）への斜めグラデーション
+            const diagonalGradient = `linear-gradient(135deg, 
+                ${monthlyColors.start} 0%, 
+                ${monthlyColors.end} 45%, 
+                rgba(255,255,255,0.15) 47%, 
+                rgba(255,255,255,0.15) 53%, 
+                ${yearlyColors.start} 55%, 
+                ${yearlyColors.end} 100%)`;
+            
+            // ストライプパターンも斜めに調整
+            const stripePattern = 'repeating-linear-gradient(135deg, transparent, transparent 8px, rgba(255,255,255,0.05) 8px, rgba(255,255,255,0.05) 16px)';
+            
+            const progressSection = document.getElementById('progressSection');
+            progressSection.style.background = `${diagonalGradient}, ${stripePattern}`;
+        }
+
         // データ管理
         function saveCardsData() {
             localStorage.setItem('salesDashboard_cardsData', JSON.stringify(cardsData));
@@ -1186,7 +1288,16 @@
         function loadPersonalSettings() {
             const saved = localStorage.getItem('salesDashboard_personalSettings');
             if (saved) {
-                personalSettings = { ...personalSettings, ...JSON.parse(saved) };
+                const savedSettings = JSON.parse(saved);
+                personalSettings = { ...personalSettings, ...savedSettings };
+                
+                // 新規追加のフィールドが存在しない場合の初期化
+                if (!personalSettings.monthlyProfitTargets) {
+                    personalSettings.monthlyProfitTargets = {
+                        10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+                        4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+                    };
+                }
             }
         }
 
@@ -1207,24 +1318,6 @@
                     setTimeout(() => toast.remove(), 200);
                 }, 2500);
             });
-        }
-
-        // 月別粗利進捗による上部4カード色変化
-        function updateMonthlyProgressColor(monthlyRate) {
-            const colorLevel = Math.min(Math.floor(monthlyRate / 20), 5);
-            
-            if (colorLevel === lastMonthlyColorLevel) return;
-            
-            const progressSection = document.getElementById('progressSection');
-            
-            // 既存のレベルクラスを削除
-            progressSection.classList.remove(...Array.from(progressSection.classList)
-                .filter(cls => cls.startsWith('monthly-level-')));
-            
-            // 新しいレベルクラスを追加
-            progressSection.classList.add(`monthly-level-${colorLevel}`);
-            
-            lastMonthlyColorLevel = colorLevel;
         }
 
         // カード作成
@@ -1291,7 +1384,7 @@
             return div.innerHTML;
         }
 
-        // 進捗計算（月別粗利実績12ヶ月対応）
+        // 進捗計算（累積粗利実績（推定）対応）
         function calculateAllProgress() {
             const now = Date.now();
             if (progressCache && (now - lastRenderTime) < 1000) {
@@ -1301,13 +1394,12 @@
             const currentMonth = getCurrentMonth();
             
             // 月間進捗（当月の粗利実績合計）
-            const monthlyTarget = 450000;
-            const monthlyActualFromSettings = personalSettings.monthlyProfitActuals[currentMonth] || 0;
-            const monthlyActual = monthlyActualFromSettings + (personalSettings.otherCurrentMonthProfit || 0);
+            const monthlyTarget = personalSettings.monthlyProfitTargets[currentMonth] || 0;
+            const monthlyActual = personalSettings.monthlyProfitActuals[currentMonth] || 0;
             const monthlyDifference = monthlyActual - monthlyTarget;
             const monthlyRate = monthlyTarget > 0 ? (monthlyActual / monthlyTarget) * 100 : 0;
             
-            // 年間進捗
+            // 年間進捗（累積粗利実績（推定））
             const yearlyTarget = personalSettings.yearlyProfitTarget;
             let yearlyActualCalculated = cardsData.reduce((sum, card) => sum + (card.annualProfitActual || 0), 0);
             
@@ -1315,9 +1407,8 @@
             Object.values(personalSettings.monthlyProfitActuals).forEach(monthlyProfit => {
                 yearlyActualCalculated += monthlyProfit;
             });
-            yearlyActualCalculated += (personalSettings.otherCurrentMonthProfit || 0);
             
-            const yearlyActual = personalSettings.yearlyProgressOverride !== 0 ? personalSettings.yearlyProgressOverride : yearlyActualCalculated;
+            const yearlyActual = yearlyActualCalculated;
             const yearlyRate = yearlyTarget > 0 ? (yearlyActual / yearlyTarget) * 100 : 0;
             
             // 目標粗利増進捗
@@ -1361,8 +1452,8 @@
         function updateDashboard() {
             const progress = calculateAllProgress();
             
-            // 月別粗利進捗による色変化
-            updateMonthlyProgressColor(progress.monthly.rate);
+            // 斜めグラデーション背景更新
+            updateDiagonalProgressBackground(progress.monthly.rate, progress.yearly.rate);
             
             // 1. 月別目標
             document.getElementById('monthlyTargetDisplay').textContent = formatManYen(progress.monthly.target);
@@ -1389,7 +1480,7 @@
             document.getElementById('profitIncreaseDisplay').textContent = formatManYen(progress.profitIncrease.target);
             document.getElementById('profitIncreaseDetail').textContent = 
                 `${formatAmount(progress.profitIncrease.actual)}/${formatAmount(progress.profitIncrease.target)}（${progress.profitIncrease.rate.toFixed(1)}%）`;
-            document.getElementById('profitIncreaseRate').textContent = `期待: ${(progress.profitIncrease.rate * 0.8).toFixed(1)}%`;
+            document.getElementById('profitIncreaseRate').textContent = `期待: ${(progress.profitIncrease.rate).toFixed(1)}%`;
             document.getElementById('profitIncreaseBar').style.width = `${Math.min(progress.profitIncrease.rate, 100)}%`;
             
             // 4. 営業見込総額
@@ -1404,6 +1495,287 @@
             document.getElementById('prob6080').textContent = formatManYen(progress.funnel.prob6080);
             document.getElementById('prob5060').textContent = formatManYen(progress.funnel.prob5060);
             document.getElementById('probUnder50').textContent = formatManYen(progress.funnel.probUnder50);
+        }
+
+        // 会計年度の月順と表示名を取得
+        function getFiscalYearStructure() {
+            const fiscalMonths = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            const monthNames = ['10月', '11月', '12月', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月'];
+            const currentMonth = getCurrentMonth();
+            
+            return {
+                months: fiscalMonths,
+                labels: monthNames,
+                currentMonthIndex: fiscalMonths.indexOf(currentMonth)
+            };
+        }
+
+        // 会計年度データ生成
+        function generateFiscalYearData(graphType) {
+            const { months, labels, currentMonthIndex } = getFiscalYearStructure();
+            
+            const actualData = [];
+            const targetData = [];
+            const cumulativeActual = [];
+            const cumulativeTarget = [];
+            
+            let cumActual = 0;
+            let cumTarget = 0;
+            let cumDifference = 0;
+            
+            months.forEach((month, index) => {
+                const isPastMonth = index <= currentMonthIndex;
+                
+                // 各グラフタイプ別のデータ生成
+                switch(graphType) {
+                    case 0: // 月別粗利目標 - 並列棒グラフ
+                        const monthlyTarget = personalSettings.monthlyProfitTargets[month] || 0;
+                        const monthlyActual = isPastMonth ? (personalSettings.monthlyProfitActuals[month] || 0) : 0;
+                        
+                        targetData.push(monthlyTarget);
+                        actualData.push(isPastMonth ? monthlyActual : null);
+                        break;
+                        
+                    case 1: // 年間粗利目標 - 累積棒グラフ
+                        const yearlyMonthTarget = personalSettings.monthlyProfitTargets[month] || 0;
+                        const yearlyMonthActual = isPastMonth ? (personalSettings.monthlyProfitActuals[month] || 0) : 0;
+                        
+                        cumTarget += yearlyMonthTarget;
+                        cumActual += isPastMonth ? yearlyMonthActual : 0;
+                        
+                        cumulativeTarget.push(cumTarget);
+                        cumulativeActual.push(isPastMonth ? cumActual : null);
+                        break;
+                        
+                    case 2: // 目標粗利増 - ±棒グラフ
+                        const profitTarget = personalSettings.monthlyProfitTargets[month] || 0;
+                        const profitActual = isPastMonth ? (personalSettings.monthlyProfitActuals[month] || 0) : 0;
+                        const profitDiff = profitActual - profitTarget;
+                        
+                        cumDifference += isPastMonth ? profitDiff : 0;
+                        actualData.push(isPastMonth ? cumDifference : null);
+                        break;
+                        
+                    case 3: // 年間粗利増予定 - 折れ線グラフ（達成率）
+                        const yearlyTarget = personalSettings.yearlyProfitTarget;
+                        const cumulativeProfitActual = isPastMonth ? (personalSettings.monthlyProfitActuals[month] || 0) : 0;
+                        
+                        cumActual += cumulativeProfitActual;
+                        const achievementRate = yearlyTarget > 0 ? (cumActual / yearlyTarget) * 100 : 0;
+                        
+                        actualData.push(isPastMonth ? achievementRate : null);
+                        targetData.push(100); // 100%ライン
+                        break;
+                }
+            });
+            
+            return { 
+                labels, 
+                actualData: graphType === 1 ? cumulativeActual : actualData, 
+                targetData: graphType === 1 ? cumulativeTarget : targetData,
+                cumulativeActual,
+                cumulativeTarget
+            };
+        }
+
+        // Chart.js描画
+        function generateProgressChart(graphType) {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            const data = generateFiscalYearData(graphType);
+            
+            if (progressChart) {
+                progressChart.destroy();
+            }
+            
+            const chartColors = {
+                actual: '#4ade80',
+                target: '#60a5fa',
+                positive: '#34d399',
+                negative: '#f87171',
+                line: '#a78bfa'
+            };
+
+            const chartConfigs = {
+                0: { // 月別粗利目標 - 並列棒グラフ
+                    type: 'bar',
+                    datasets: [
+                        {
+                            label: '実績値',
+                            data: data.actualData,
+                            backgroundColor: chartColors.actual,
+                            borderColor: chartColors.actual,
+                            borderWidth: 2
+                        },
+                        {
+                            label: '目標値',
+                            data: data.targetData,
+                            backgroundColor: chartColors.target,
+                            borderColor: chartColors.target,
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                1: { // 年間粗利目標 - 累積棒グラフ
+                    type: 'bar',
+                    datasets: [
+                        {
+                            label: '累積実績',
+                            data: data.actualData,
+                            backgroundColor: chartColors.actual,
+                            borderColor: chartColors.actual,
+                            borderWidth: 2
+                        },
+                        {
+                            label: '累積目標',
+                            data: data.targetData,
+                            backgroundColor: chartColors.target,
+                            borderColor: chartColors.target,
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                2: { // 目標粗利増 - ±棒グラフ
+                    type: 'bar',
+                    datasets: [
+                        {
+                            label: '累積差分',
+                            data: data.actualData,
+                            backgroundColor: data.actualData.map(val => val >= 0 ? chartColors.positive : chartColors.negative),
+                            borderColor: data.actualData.map(val => val >= 0 ? chartColors.positive : chartColors.negative),
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                3: { // 年間粗利増予定 - 折れ線グラフ
+                    type: 'line',
+                    datasets: [
+                        {
+                            label: '達成率（%）',
+                            data: data.actualData,
+                            borderColor: chartColors.line,
+                            backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 6,
+                            pointBackgroundColor: chartColors.line
+                        },
+                        {
+                            label: '100%ライン',
+                            data: data.targetData,
+                            borderColor: chartColors.target,
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0,
+                            tension: 0
+                        }
+                    ]
+                }
+            };
+            
+            const config = chartConfigs[graphType];
+            
+            progressChart = new Chart(ctx, {
+                type: config.type,
+                data: {
+                    labels: data.labels,
+                    datasets: config.datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: '#4facfe',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.parsed.y === null) return null;
+                                    if (graphType === 3) {
+                                        return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
+                                    }
+                                    return `${context.dataset.label}: ${formatAmount(context.parsed.y)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6b7280'
+                            }
+                        },
+                        y: {
+                            beginAtZero: graphType !== 2,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#6b7280',
+                                callback: function(value) {
+                                    if (graphType === 3) {
+                                        return value + '%';
+                                    }
+                                    return formatManYen(value, 0);
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+
+            // カスタム凡例更新
+            updateGraphLegend(config.datasets);
+        }
+
+        function updateGraphLegend(datasets) {
+            const legendContainer = document.getElementById('graphLegend');
+            legendContainer.innerHTML = '';
+
+            datasets.forEach(dataset => {
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <span class="legend-color" style="background: ${dataset.backgroundColor || dataset.borderColor};"></span>
+                    <span>${dataset.label}</span>
+                `;
+                legendContainer.appendChild(legendItem);
+            });
+        }
+
+        // 進捗グラフモーダル開閉
+        function openProgressGraphModal(cardIndex) {
+            const cardTitles = ['月別目標（粗利）', '年間目標（粗利）', '目標粗利増', '年間粗利増予定'];
+            document.getElementById('graphModalTitle').textContent = `${cardTitles[cardIndex]} - 年間進捗グラフ`;
+            
+            currentGraphType = cardIndex;
+            generateProgressChart(cardIndex);
+            openModal('progressGraphModal');
+        }
+
+        function closeProgressGraphModal() {
+            if (progressChart) {
+                progressChart.destroy();
+                progressChart = null;
+            }
+            currentGraphType = null;
+            closeModal('progressGraphModal');
         }
 
         // 検索・フィルター
@@ -1427,7 +1799,7 @@
             showToast('フィルタをクリアしました', 'info');
         }
 
-        // 並び替え機能（プルダウン対応）
+        // 並び替え機能
         function applySorting() {
             renderCards();
         }
@@ -1495,7 +1867,6 @@
                 return show;
             });
 
-            // 並び替え適用
             filteredCards = getSortedCards(filteredCards);
 
             filteredCards.forEach((cardData, index) => {
@@ -1551,16 +1922,35 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
+        // 月別入力の0円自動クリア機能
+        function setupMonthlyInputHandlers(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const inputs = container.querySelectorAll('.monthly-input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    if (this.value === '0') {
+                        this.value = '';
+                    }
+                });
+                
+                input.addEventListener('blur', function() {
+                    if (this.value === '') {
+                        // 空欄のまま表示、計算では0として扱う
+                    }
+                });
+            });
+        }
+
         // モーダル個別関数
         function openPersonalSettingsModal() {
             document.getElementById('userName').value = personalSettings.userName;
             document.getElementById('profitRate').value = personalSettings.profitRate;
             document.getElementById('yearlyProfitTarget').value = personalSettings.yearlyProfitTarget;
             document.getElementById('yearlyProfitIncreaseTarget').value = personalSettings.yearlyProfitIncreaseTarget;
-            document.getElementById('otherCurrentMonthProfit').value = personalSettings.otherCurrentMonthProfit;
-            document.getElementById('yearlyProgressOverride').value = personalSettings.yearlyProgressOverride;
             
-            // 12ヶ月の粗利実績設定
+            // 12ヶ月の粗利実績・目標設定
             const monthlyContainer = document.getElementById('monthlyProfitContainer');
             const fiscalMonths = [
                 {num: 10, name: '10月'}, {num: 11, name: '11月'}, {num: 12, name: '12月'},
@@ -1574,13 +1964,24 @@
             fiscalMonths.forEach(month => {
                 const monthDiv = document.createElement('div');
                 monthDiv.className = 'monthly-row';
+                const actualValue = personalSettings.monthlyProfitActuals[month] || 0;
+                const targetValue = personalSettings.monthlyProfitTargets[month] || 0;
+                const actualDisplay = actualValue === 0 ? '' : actualValue;
+                const targetDisplay = targetValue === 0 ? '' : targetValue;
+                
                 monthDiv.innerHTML = `
                     <div class="month-name">${month.name}</div>
-                    <input type="number" class="monthly-input" placeholder="粗利実績" id="monthlyProfit${month.num}" value="${personalSettings.monthlyProfitActuals[month.num] || 0}">
+                    <input type="number" class="monthly-input" placeholder="実績" id="monthlyProfitActual${month.num}" value="${actualDisplay}">
+                    <input type="number" class="monthly-input" placeholder="目標" id="monthlyProfitTarget${month.num}" value="${targetDisplay}">
                     <div style="font-size: 10px; color: #6b7280; text-align: center;">円</div>
                 `;
                 monthlyContainer.appendChild(monthDiv);
             });
+            
+            // 0円自動クリア機能を設定
+            setTimeout(() => {
+                setupMonthlyInputHandlers('monthlyProfitContainer');
+            }, 100);
             
             openModal('personalSettingsModal');
         }
@@ -1748,6 +2149,7 @@
             
             if (!cardData) return;
 
+            document.getElementById('editCardId').value = cardData.id;
             document.getElementById('editModalTitle').textContent = `${cardData.jukuName} - 編集`;
             document.getElementById('editJukuName').value = cardData.jukuName;
             document.getElementById('editJukuStatus').value = cardData.status;
@@ -1791,15 +2193,17 @@
             personalSettings.profitRate = parseFloat(document.getElementById('profitRate').value);
             personalSettings.yearlyProfitTarget = parseInt(document.getElementById('yearlyProfitTarget').value);
             personalSettings.yearlyProfitIncreaseTarget = parseInt(document.getElementById('yearlyProfitIncreaseTarget').value);
-            personalSettings.otherCurrentMonthProfit = parseInt(document.getElementById('otherCurrentMonthProfit').value) || 0;
-            personalSettings.yearlyProgressOverride = parseInt(document.getElementById('yearlyProgressOverride').value) || 0;
             
-            // 12ヶ月の粗利実績保存
+            // 12ヶ月の粗利実績・目標保存
             const fiscalMonths = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
             fiscalMonths.forEach(month => {
-                const profitInput = document.getElementById(`monthlyProfit${month}`);
-                if (profitInput) {
-                    personalSettings.monthlyProfitActuals[month] = parseInt(profitInput.value) || 0;
+                const actualInput = document.getElementById(`monthlyProfitActual${month}`);
+                const targetInput = document.getElementById(`monthlyProfitTarget${month}`);
+                if (actualInput) {
+                    personalSettings.monthlyProfitActuals[month] = parseInt(actualInput.value) || 0;
+                }
+                if (targetInput) {
+                    personalSettings.monthlyProfitTargets[month] = parseInt(targetInput.value) || 0;
                 }
             });
             
@@ -1812,7 +2216,6 @@
             });
             saveCardsData();
             progressCache = null;
-            lastMonthlyColorLevel = -1; // 色変化強制更新
             renderCards();
             
             showToast('個人設定を保存しました！', 'success');
@@ -1865,8 +2268,8 @@
         document.getElementById('editCardForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const cardTitle = document.getElementById('editModalTitle').textContent.split(' - ')[0];
-            const cardData = cardsData.find(card => card.jukuName === cardTitle);
+            const cardId = parseInt(document.getElementById('editCardId').value);
+            const cardData = cardsData.find(card => card.id === cardId);
             
             if (!cardData) return;
 

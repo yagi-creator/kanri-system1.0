@@ -15,12 +15,12 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 50%, #80DEEA 100%); /* 薄い水色の美しいグラデーション背景 */
+            background: linear-gradient(135deg, #1A237E 0%, #0D47A1 100%);
             min-height: 100vh;
             color: #FFFFFF;
             background-image: 
-                radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 2px, transparent 2px),
-                radial-gradient(circle at 75% 75%, rgba(255,255,255,0.08) 2px, transparent 2px);
+                radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, rgba(255,255,255,0.04) 2px, transparent 2px);
             background-size: 30px 30px;
             background-position: 0 0, 15px 15px;
         }
@@ -34,39 +34,41 @@
         .container {
             max-width: 420px;
             margin: 0 auto;
-            background: rgba(255,255,255,0.05);
+            /* メインコンテンツ領域に薄い水色のグラデーション背景を適用 */
+            background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 50%, #80DEEA 100%);
             min-height: 100vh;
             box-shadow: 0 0 15px rgba(0,0,0,0.2);
             backdrop-filter: blur(5px);
+            color: #000000; /* コンテナ内のデフォルト文字色を黒に */
         }
 
         .header-section {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.4); /* 透明度を上げて水色背景を透過 */
             padding: 16px 20px;
             color: #000000; /* ヘッダーの文字を黒に変更 */
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.3);
         }
 
         .header-title {
             font-size: 18px;
             font-weight: bold;
             color: #000000; /* ヘッダータイトルを黒に */
-            text-shadow: 0 1px 2px rgba(255,255,255,0.3); /* 白いテキストシャドウで視認性向上 */
+            text-shadow: 0 1px 2px rgba(255,255,255,0.5); /* 白いテキストシャドウで視認性向上 */
         }
 
         .current-date-header {
             font-size: 14px;
-            opacity: 0.8;
+            opacity: 0.9;
             color: #000000; /* ヘッダー日付を黒に */
-            text-shadow: 0 1px 2px rgba(255,255,255,0.3); /* 白いテキストシャドウで視認性向上 */
+            text-shadow: 0 1px 2px rgba(255,255,255,0.5); /* 白いテキストシャドウで視認性向上 */
         }
 
         .progress-section {
             padding: 16px;
-            color: #FFFFFF;
+            color: #000000; /* 進捗セクションの文字色も黒に */
             transition: background 0.5s ease;
         }
 
@@ -78,10 +80,10 @@
         }
 
         .progress-card {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.5); /* 透明度を上げて水色背景を透過 */
             border-radius: 8px;
             padding: 12px;
-            border: 1px solid rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.5);
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             cursor: pointer;
             transition: all 0.2s ease;
@@ -92,7 +94,7 @@
         .progress-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.6);
         }
 
         .progress-card::after {
@@ -116,21 +118,21 @@
             line-height: 1.2;
             min-height: 2.4em;
             font-weight: 600;
-            color: #FFFFFF;
+            color: #000000; /* 進捗カードのタイトルも黒に */
         }
 
         .progress-value {
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 3px;
-            color: #FFFFFF;
+            color: #000000; /* 進捗カードの値も黒に */
         }
 
         .progress-detail {
             font-size: 14px;
             opacity: 0.95;
             margin-bottom: 3px;
-            color: #FFFFFF;
+            color: #000000; /* 進捗カードの詳細も黒に */
             font-weight: 600;
         }
 
@@ -139,12 +141,12 @@
             font-weight: bold;
         }
 
-        .rate-positive { color: #8BC34A; }
-        .rate-negative { color: #FF5252; }
+        .rate-positive { color: #2E7D32; } /* 明るい背景に合わせて濃い緑に */
+        .rate-negative { color: #D32F2F; } /* 明るい背景に合わせて濃い赤に */
 
         .progress-chart {
             height: 4px;
-            background: rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.3); /* 黒系のプログレスバー背景 */
             border-radius: 2px;
             margin-top: 8px;
             position: relative;
@@ -164,19 +166,19 @@
 
         .funnel-item {
             flex: 1;
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.5); /* 透明度を上げて水色背景を透過 */
             border-radius: 6px;
             padding: 6px;
             text-align: center;
             cursor: pointer;
             transition: background 0.2s ease;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.5);
             box-shadow: 0 1px 4px rgba(0,0,0,0.15);
             backdrop-filter: blur(3px);
         }
 
         .funnel-item:hover {
-            background: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.6);
         }
 
         .funnel-excluded {
@@ -187,19 +189,19 @@
         .funnel-label {
             font-size: 10px;
             margin-bottom: 3px;
-            color: #FFFFFF;
+            color: #000000; /* ファネルのラベルも黒に */
         }
 
         .funnel-value {
             font-size: 11px;
             font-weight: bold;
-            color: #FFFFFF;
+            color: #000000; /* ファネルの値も黒に */
         }
 
         .control-section {
             padding: 15px;
-            background: rgba(255,255,255,0.1);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.4); /* 透明度を上げて水色背景を透過 */
+            border-bottom: 1px solid rgba(255,255,255,0.3);
             color: #000000;
             backdrop-filter: blur(5px);
         }
@@ -217,7 +219,7 @@
             font-size: 16px;
             outline: none;
             transition: border-color 0.2s ease;
-            background: rgba(255,255,255,0.9);
+            background: #FFFFFF; /* 検索窓は白背景で維持 */
             color: #000000;
         }
 
@@ -227,7 +229,7 @@
 
         .search-input:focus {
             border-color: #00E5FF;
-            background: rgba(255,255,255,1);
+            background: #FFFFFF;
         }
 
         .search-icon {
@@ -273,9 +275,9 @@
         }
 
         .btn-secondary {
-            background: rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.6); /* 透明度を上げて水色背景を透過 */
             color: #000000;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: 1px solid rgba(255,255,255,0.5);
         }
 
         .btn-settings {
@@ -296,10 +298,10 @@
         .filter-select, .sort-select {
             flex: 1;
             padding: 6px 10px;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(0,0,0,0.2); /* 枠線を黒系に */
             border-radius: 6px;
             font-size: 13px;
-            background: rgba(255,255,255,0.9);
+            background: #FFFFFF; /* 白背景で維持 */
             color: #000000;
             cursor: pointer;
         }
@@ -311,16 +313,16 @@
         .sort-select {
             width: 100%;
             padding: 8px 12px;
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(0,0,0,0.2); /* 枠線を黒系に */
             border-radius: 8px;
             font-size: 14px;
-            background: rgba(255,255,255,0.9);
+            background: #FFFFFF; /* 白背景で維持 */
             color: #000000;
         }
 
         .cards-section {
             padding: 0 15px 15px;
-            background: rgba(255,255,255,0.05);
+            background: transparent; /* カードセクションの背景は透明にして水色背景を透過 */
             color: #000000;
             backdrop-filter: blur(3px);
         }
@@ -348,24 +350,24 @@
             padding: 16px;
             margin-bottom: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.5);
             transition: all 0.2s ease;
             position: relative;
-            background: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.6); /* 透明度を上げて水色背景を透過 */
             backdrop-filter: blur(5px);
-            color: #FFFFFF;
+            color: #000000; /* カード内の文字色デフォルトを黒に */
         }
 
         .card:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-            background: rgba(255,255,255,0.32);
+            background: rgba(255,255,255,0.7);
         }
 
         /* 白系カード（レベル0, 1）を黒文字に変更 */
         .card-level-0, .card-level-1 { 
-            background: rgba(255,255,255,0.25);
-            border-left: 4px solid rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.6);
+            border-left: 4px solid rgba(255,255,255,0.7);
             color: #000000;
         }
         .card-level-0 .card-title, .card-level-1 .card-title,
@@ -378,17 +380,19 @@
         }
 
         .card-level-2 { 
-            background: linear-gradient(135deg, rgba(30, 136, 229, 0.4) 0%, rgba(66, 165, 245, 0.4) 100%);
+            background: linear-gradient(135deg, rgba(30, 136, 229, 0.5) 0%, rgba(66, 165, 245, 0.5) 100%);
             border-left: 4px solid #1976D2;
+            color: #FFFFFF; /* 青系背景では白文字を維持 */
         }
         .card-level-3 { 
-            background: linear-gradient(135deg, rgba(67, 160, 71, 0.4) 0%, rgba(102, 187, 106, 0.4) 100%);
+            background: linear-gradient(135deg, rgba(67, 160, 71, 0.5) 0%, rgba(102, 187, 106, 0.5) 100%);
             border-left: 4px solid #388E3C;
+            color: #FFFFFF; /* 緑系背景では白文字を維持 */
         }
         
         /* 黄色系カード（レベル4）を黒文字に変更 */
         .card-level-4 { 
-            background: linear-gradient(135deg, rgba(255, 193, 7, 0.4) 0%, rgba(255, 213, 79, 0.4) 100%);
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.5) 0%, rgba(255, 213, 79, 0.5) 100%);
             border-left: 4px solid #FFC107;
             color: #000000;
         }
@@ -402,8 +406,9 @@
         }
 
         .card-level-5 { 
-            background: linear-gradient(135deg, rgba(229, 57, 53, 0.4) 0%, rgba(244, 67, 54, 0.4) 100%);
+            background: linear-gradient(135deg, rgba(229, 57, 53, 0.5) 0%, rgba(244, 67, 54, 0.5) 100%);
             border-left: 4px solid #D32F2F;
+            color: #FFFFFF; /* 赤系背景では白文字を維持 */
         }
 
         .card-header {
@@ -417,8 +422,8 @@
         .card-title {
             font-size: 18px;
             font-weight: bold;
-            color: #FFFFFF;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            color: inherit; /* 親要素の文字色を継承 */
+            text-shadow: none;
         }
 
         .card-badge {
@@ -431,29 +436,29 @@
         }
 
         .badge-new { 
-            background: rgba(0,184,212,0.4); 
-            color: #FFFFFF; 
-            border: 1px solid rgba(0,184,212,0.6);
+            background: rgba(0,184,212,0.5);
+            color: #000000; /* バッジの文字色も黒に */
+            border: 1px solid rgba(0,184,212,0.7);
         }
         .badge-existing { 
-            background: rgba(100,221,23,0.4); 
-            color: #FFFFFF; 
-            border: 1px solid rgba(100,221,23,0.6);
+            background: rgba(100,221,23,0.5);
+            color: #000000; /* バッジの文字色も黒に */
+            border: 1px solid rgba(100,221,23,0.7);
         }
         
         /* 元既存バッジを黒文字に変更 */
         .badge-former { 
-            background: rgba(255,179,0,0.4); 
+            background: rgba(255,179,0,0.5);
             color: #000000 !important;
-            border: 1px solid rgba(255,179,0,0.6);
+            border: 1px solid rgba(255,179,0,0.7);
         }
 
         /* カード住所のサイズアップ: 12px → 14px */
         .card-location {
             font-size: 14px;
-            color: rgba(255,255,255,0.9);
+            color: inherit; /* 親要素の文字色を継承 */
             margin-bottom: 12px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            text-shadow: none;
         }
 
         .card-metrics {
@@ -464,29 +469,29 @@
         }
 
         .metric {
-            background: rgba(255,255,255,0.25);
+            background: rgba(0,0,0,0.1); /* メトリックの背景を黒透過に */
             padding: 8px;
             border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #FFFFFF;
+            border: 1px solid rgba(0,0,0,0.2);
+            color: inherit; /* 親要素の文字色を継承 */
             backdrop-filter: blur(3px);
         }
 
         .metric-auto {
-            background: rgba(0,184,212,0.2);
-            border: 1px solid rgba(0,184,212,0.4);
+            background: rgba(0,0,0,0.15); /* メトリックオートの背景を濃い黒透過に */
+            border: 1px solid rgba(0,0,0,0.3);
         }
 
         .metric-auto .metric-label::after {
             content: ' (自動計算)';
-            color: #00E5FF;
+            color: #00B0FF; /* 自動計算の文字色を水色に */
             font-size: 7px;
         }
 
         /* メトリックラベルのサイズアップ: 10px → 12px */
         .metric-label {
             font-size: 12px;
-            color: rgba(255,255,255,0.9);
+            color: inherit; /* 親要素の文字色を継承 */
             margin-bottom: 2px;
             font-weight: 500;
         }
@@ -495,8 +500,8 @@
         .metric-value {
             font-size: 15px;
             font-weight: bold;
-            color: #FFFFFF;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            color: inherit; /* 親要素の文字色を継承 */
+            text-shadow: none;
         }
 
         .card-footer {
@@ -504,13 +509,13 @@
             justify-content: space-between;
             align-items: center;
             padding-top: 10px;
-            border-top: 1px solid rgba(255,255,255,0.2);
+            border-top: 1px solid rgba(255,255,255,0.5);
         }
 
         /* 最終更新日のサイズアップ: 11px → 13px */
         .last-updated {
             font-size: 13px;
-            color: rgba(255,255,255,0.8);
+            color: rgba(0,0,0,0.8); /* 黒系の透明度を上げた色に */
             cursor: pointer;
         }
 
@@ -524,8 +529,8 @@
             height: 44px;
             border: none;
             border-radius: 6px;
-            background: rgba(255,255,255,0.2);
-            color: rgba(255,255,255,0.9);
+            background: rgba(0,0,0,0.1); /* アクションボタンの背景を黒透過に */
+            color: rgba(0,0,0,0.9); /* アクションボタンのアイコン色を黒に */
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -559,7 +564,7 @@
         }
 
         .modal-content {
-            background: rgba(255,255,255,0.98);
+            background: #FFFFFF; /* モーダルコンテンツは白背景で維持 */
             border-radius: 12px;
             padding: 20px;
             max-width: 380px;
@@ -1375,7 +1380,7 @@
                 ${yearlyColors.start} 52%, 
                 ${yearlyColors.end} 100%)`;
             
-            const stripePattern = 'repeating-linear-gradient(135deg, transparent, transparent 8px, rgba(255,255,255,0.02) 8px, rgba(255,255,255,0.02) 16px)';
+            const stripePattern = 'repeating-linear-gradient(135deg, transparent, transparent 8px, rgba(0,0,0,0.02) 8px, rgba(0,0,0,0.02) 16px)';
             
             const progressSection = document.getElementById('progressSection');
             progressSection.style.background = `${diagonalGradient}, ${stripePattern}`;
@@ -1774,7 +1779,7 @@
                             backgroundColor: 'rgba(224, 64, 251, 0.1)',
                             borderWidth: 3,
                             fill: false,
-                            tension: 0, // 直線
+                            tension: 0,
                             pointRadius: 6,
                             pointBackgroundColor: chartColors.line,
                             pointBorderColor: '#ffffff',

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>営業支援ダッシュボード v8.3 - 完全動作保証版</title>
+    <title>営業支援ダッシュボード v8.4 - 完全改善版</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -63,6 +63,19 @@
             opacity: 0.9;
             color: #000000;
             text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .global-month-selector {
+            padding: 4px 8px;
+            border: 1px solid rgba(0,0,0,0.3);
+            border-radius: 4px;
+            font-size: 12px;
+            background: rgba(255,255,255,0.9);
+            color: #000000;
+            cursor: pointer;
         }
 
         .progress-section {
@@ -384,7 +397,6 @@
             color: #FFFFFF;
         }
 
-        /* 新しいカードレイアウト用CSS */
         .card-header-new {
             display: flex;
             justify-content: space-between;
@@ -519,6 +531,7 @@
             color: inherit;
             min-height: 2.6em;
             word-wrap: break-word;
+            white-space: pre-wrap; /* 改行を保持 */
         }
 
         .card-footer {
@@ -798,7 +811,6 @@
             justify-content: center;
         }
 
-        /* 月別履歴モーダル用CSS */
         .monthly-history-container {
             max-height: 65vh;
             overflow-y: auto;
@@ -975,8 +987,13 @@
     <div class="container">
         <!-- ヘッダー -->
         <div class="header-section">
-            <div class="header-title">営業ダッシュボード v8.3</div>
-            <div class="current-date-header" id="currentDateHeader">2025年8月</div>
+            <div class="header-title">営業ダッシュボード v8.4</div>
+            <div class="current-date-header" id="currentDateHeader">
+                <span id="currentDateDisplay">2025年8月</span>
+                <select class="global-month-selector" id="globalMonthSelector" onchange="changeAllCardsDisplayMonth(this.value)">
+                    <!-- 動的生成 -->
+                </select>
+            </div>
         </div>
 
         <!-- 上段：4カード進捗エリア -->
@@ -1174,6 +1191,18 @@
                         </button>
                     </div>
                 </div>
+
+                <div class="settings-section">
+                    <h4>データ管理</h4>
+                    <div class="control-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="exportAppData()">
+                            💾 データエクスポート
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="openImportAppDataModal()">
+                            📂 データインポート
+                        </button>
+                    </div>
+                </div>
                 
                 <div class="control-buttons">
                     <button type="button" class="btn btn-secondary" onclick="closePersonalSettingsModal()">キャンセル</button>
@@ -1197,6 +1226,24 @@
             <div class="control-buttons">
                 <button type="button" class="btn btn-secondary" onclick="closePersonalExcelImport()">キャンセル</button>
                 <button type="button" class="btn btn-primary" onclick="importPersonalExcelData()">取込</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- アプリケーションデータインポート用モーダル -->
+    <div class="modal" id="importAppDataModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">データインポート</div>
+                <button class="close-btn" onclick="closeImportAppDataModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">JSONファイルを選択</label>
+                <input type="file" class="form-input" accept=".json" onchange="handleAppDataFileSelect(event)" id="appDataFileInput">
+            </div>
+            <div class="control-buttons">
+                <button type="button" class="btn btn-secondary" onclick="closeImportAppDataModal()">キャンセル</button>
+                <button type="button" class="btn btn-primary" onclick="importAppData()">インポート</button>
             </div>
         </div>
     </div>
@@ -1390,6 +1437,7 @@
         let currentGraphType = null;
         let personalExcelImportData = null;
         let importedExcelData = [];
+        let importedAppData = null;
         let searchTimeout;
         let scrollPosition = 0;
 
@@ -1434,14 +1482,18 @@
         function getCurrentMonth() { return new Date().getMonth() + 1; }
         
         function formatManYen(amount, decimals = 1) {
-            const manYen = (amount || 0) / 10000;
-            return `¥${manYen.toFixed(decimals)}万`;
+            const absAmount = Math.abs(amount || 0);
+            const manYen = absAmount / 10000;
+            const sign = amount < 0 ? '-' : '';
+            return `${sign}¥${manYen.toFixed(decimals)}万`;
         }
         
         function parseAmount(text) { return parseInt(String(text).replace(/[¥,万]/g, '')) || 0; }
         
         function formatAmount(amount) { 
-            return `¥${(amount || 0).toLocaleString()}`;
+            const absAmount = Math.abs(amount || 0);
+            const sign = amount < 0 ? '-' : '';
+            return `${sign}¥${absAmount.toLocaleString()}`;
         }
 
         function escapeHtml(text) {
@@ -1556,46 +1608,68 @@
 
         // ===== データ管理 =====
         function saveCardsData() {
-            localStorage.setItem('salesDashboard_cardsData', JSON.stringify(cardsData));
-            localStorage.setItem('salesDashboard_nextCardId', nextCardId);
-            updateCityFilterOptions();
+            try {
+                localStorage.setItem('salesDashboard_cardsData', JSON.stringify(cardsData));
+                localStorage.setItem('salesDashboard_nextCardId', nextCardId);
+                updateCityFilterOptions();
+            } catch (e) {
+                showToast('データ保存エラー：容量不足の可能性があります', 'error');
+                console.error('Save error:', e);
+            }
         }
 
         function loadCardsData() {
-            const saved = localStorage.getItem('salesDashboard_cardsData');
-            const savedNextId = localStorage.getItem('salesDashboard_nextCardId');
-            
-            if (saved) {
-                cardsData = JSON.parse(saved);
-                nextCardId = parseInt(savedNextId) || 1;
-            } else {
+            try {
+                const saved = localStorage.getItem('salesDashboard_cardsData');
+                const savedNextId = localStorage.getItem('salesDashboard_nextCardId');
+                
+                if (saved) {
+                    cardsData = JSON.parse(saved);
+                    nextCardId = parseInt(savedNextId) || 1;
+                } else {
+                    cardsData = [];
+                    nextCardId = 1;
+                }
+            } catch (e) {
+                showToast('データ読み込みエラー：初期化します', 'error');
+                console.error('Load error:', e);
                 cardsData = [];
                 nextCardId = 1;
             }
         }
 
         function savePersonalSettings() {
-            localStorage.setItem('salesDashboard_personalSettings', JSON.stringify(personalSettings));
+            try {
+                localStorage.setItem('salesDashboard_personalSettings', JSON.stringify(personalSettings));
+            } catch (e) {
+                showToast('個人設定保存エラー', 'error');
+                console.error('Personal settings save error:', e);
+            }
         }
 
         function loadPersonalSettings() {
-            const saved = localStorage.getItem('salesDashboard_personalSettings');
-            if (saved) {
-                const savedSettings = JSON.parse(saved);
-                personalSettings = { ...personalSettings, ...savedSettings };
-                
-                if (!personalSettings.monthlyProfitTargets) {
-                    personalSettings.monthlyProfitTargets = {
-                        10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
-                        4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
-                    };
+            try {
+                const saved = localStorage.getItem('salesDashboard_personalSettings');
+                if (saved) {
+                    const savedSettings = JSON.parse(saved);
+                    personalSettings = { ...personalSettings, ...savedSettings };
+                    
+                    if (!personalSettings.monthlyProfitTargets) {
+                        personalSettings.monthlyProfitTargets = {
+                            10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+                            4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+                        };
+                    }
+                    if (!personalSettings.monthlyProfitActuals) {
+                        personalSettings.monthlyProfitActuals = {
+                            10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+                            4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+                        };
+                    }
                 }
-                if (!personalSettings.monthlyProfitActuals) {
-                    personalSettings.monthlyProfitActuals = {
-                        10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
-                        4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
-                    };
-                }
+            } catch (e) {
+                showToast('個人設定読み込みエラー：初期化します', 'error');
+                console.error('Personal settings load error:', e);
             }
         }
 
@@ -1698,6 +1772,29 @@
             });
         }
 
+        function updateGlobalMonthSelector() {
+            const selector = document.getElementById('globalMonthSelector');
+            if (!selector) return;
+            
+            const fiscalStructure = getFiscalYearStructure();
+            selector.innerHTML = '';
+            
+            fiscalStructure.months.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month.key;
+                option.textContent = `${month.month}月`;
+                if (month.key === fiscalStructure.currentMonthKey) {
+                    option.selected = true;
+                }
+                selector.appendChild(option);
+            });
+            
+            const currentMonthInfo = fiscalStructure.months.find(m => m.key === fiscalStructure.currentMonthKey);
+            if (currentMonthInfo) {
+                document.getElementById('currentDateDisplay').textContent = currentMonthInfo.label;
+            }
+        }
+
         // ===== トースト通知 =====
         function showToast(message, type = 'success') {
             const existingToast = document.querySelector('.toast');
@@ -1769,29 +1866,29 @@
                 
                 <div class="monthly-comparison-section">
                     <div class="month-data-column">
-                        <div class="month-data-header">今月 (${fiscalStructure.months.find(m => m.key === displayMonth)?.month}月)</div>
-                        <div class="month-data-content">
-                            <div class="forecast-amount">売上増見込: ${formatAmount(currentData.salesIncreaseForecast)}</div>
-                            <div class="forecast-probability">確率: ${getProbabilityLabel(currentData.probability)}</div>
-                        </div>
-                    </div>
-                    <div class="month-data-column">
                         <div class="month-data-header">先月 (${previousMonth.month}月)</div>
                         <div class="month-data-content">
                             <div class="forecast-amount">売上増見込: ${formatAmount(previousData.salesIncreaseForecast)}</div>
                             <div class="forecast-probability">確率: ${getProbabilityLabel(previousData.probability)}</div>
                         </div>
                     </div>
+                    <div class="month-data-column">
+                        <div class="month-data-header">今月 (${fiscalStructure.months.find(m => m.key === displayMonth)?.month}月)</div>
+                        <div class="month-data-content">
+                            <div class="forecast-amount">売上増見込: ${formatAmount(currentData.salesIncreaseForecast)}</div>
+                            <div class="forecast-probability">確率: ${getProbabilityLabel(currentData.probability)}</div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="memo-comparison-section">
                     <div class="memo-column">
-                        <div class="memo-header">今月メモ</div>
-                        <div class="memo-content">${escapeHtml(currentData.memo || '未入力')}</div>
-                    </div>
-                    <div class="memo-column">
                         <div class="memo-header">先月メモ</div>
                         <div class="memo-content">${escapeHtml(previousData.memo || '未入力')}</div>
+                    </div>
+                    <div class="memo-column">
+                        <div class="memo-header">今月メモ</div>
+                        <div class="memo-content">${escapeHtml(currentData.memo || '未入力')}</div>
                     </div>
                 </div>
                 
@@ -1800,6 +1897,7 @@
                     <div class="card-actions">
                         <button class="action-btn" title="編集" onclick="editCard(this)">✏️</button>
                         <button class="action-btn" title="履歴" onclick="openMonthlyHistoryModal(${cardData.id})">📊</button>
+                        <button class="action-btn" title="削除" onclick="deleteCard(${cardData.id})">🗑️</button>
                     </div>
                 </div>
             `;
@@ -1973,6 +2071,15 @@
             renderCards();
         }
 
+        function changeAllCardsDisplayMonth(newMonthKey) {
+            cardsData.forEach(cardData => {
+                cardData.displayMonth = newMonthKey;
+            });
+            saveCardsData();
+            renderCards();
+            showToast(`全カードの表示月を変更しました`, 'info');
+        }
+
         function openMonthlyHistoryModal(cardId) {
             const cardData = cardsData.find(card => card.id === cardId);
             if (!cardData) return;
@@ -2093,6 +2200,20 @@
 
         function closeEditCardModal() {
             closeModal('editCardModal');
+        }
+
+        function deleteCard(cardId) {
+            const cardData = cardsData.find(card => card.id === cardId);
+            const cardName = cardData ? cardData.jukuName : 'この塾';
+            
+            if (confirm(`『${cardName}』を削除します。この操作は元に戻せません。よろしいですか？`)) {
+                cardsData = cardsData.filter(card => card.id !== cardId);
+                saveCardsData();
+                progressCache = null;
+                updateDashboard();
+                renderCards();
+                showToast('データを削除しました', 'success');
+            }
         }
 
         function downloadPersonalTemplate() {
@@ -2217,6 +2338,7 @@
                         showToast(`${jsonData.length}件のデータを読み込み準備完了しました。`, 'info');
                     } catch (error) {
                         showToast('ファイル読み込みエラーが発生しました。', 'error');
+                        console.error(error);
                     }
                 };
                 reader.readAsArrayBuffer(file);
@@ -2235,7 +2357,7 @@
 
             importedExcelData.forEach((row) => {
                 const jukuName = row['塾名'] || row['学校名'] || row['名称'] || `塾${nextCardId}`;
-                const address = row['住所'] || row['所在地'] || row['市区町村'] || '大阪市';
+                const address = row['住所'] || row['所在地'] || row['市区町村'] || '';
                 
                 const monthlyData = {};
                 fiscalStructure.months.forEach(monthInfo => {
@@ -2270,6 +2392,98 @@
             showToast(`Excel読み込み完了！\n${addedCount}件の塾を追加しました。`, 'success');
             closeImportModal();
             importedExcelData = [];
+        }
+
+        function exportAppData() {
+            try {
+                const appData = {
+                    cardsData: cardsData,
+                    nextCardId: nextCardId,
+                    personalSettings: personalSettings,
+                    exportDate: new Date().toISOString(),
+                    version: '8.4'
+                };
+                
+                const dataStr = JSON.stringify(appData, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `営業ダッシュボード_backup_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showToast('データをエクスポートしました！', 'success');
+            } catch (e) {
+                showToast('データエクスポートに失敗しました。', 'error');
+                console.error('Export error:', e);
+            }
+        }
+
+        function openImportAppDataModal() {
+            importedAppData = null;
+            document.getElementById('appDataFileInput').value = '';
+            openModal('importAppDataModal');
+        }
+
+        function closeImportAppDataModal() {
+            closeModal('importAppDataModal');
+        }
+
+        function handleAppDataFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        importedAppData = JSON.parse(e.target.result);
+                        showToast('データファイルの読み込み準備ができました。', 'info');
+                    } catch (error) {
+                        showToast('データファイルの読み込みエラーが発生しました。', 'error');
+                        console.error(error);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function importAppData() {
+            if (!importedAppData) {
+                showToast('インポートするデータが選択されていません。', 'error');
+                return;
+            }
+
+            if (!confirm('現在のデータは上書きされます。続行しますか？')) {
+                return;
+            }
+
+            try {
+                if (importedAppData.cardsData && Array.isArray(importedAppData.cardsData)) {
+                    cardsData = importedAppData.cardsData;
+                }
+                if (typeof importedAppData.nextCardId === 'number') {
+                    nextCardId = importedAppData.nextCardId;
+                }
+                if (importedAppData.personalSettings && typeof importedAppData.personalSettings === 'object') {
+                    personalSettings = { ...personalSettings, ...importedAppData.personalSettings };
+                }
+                
+                saveCardsData();
+                savePersonalSettings();
+                progressCache = null;
+                updateDashboard();
+                renderCards();
+                updateGlobalMonthSelector();
+                
+                showToast('データのインポートが完了しました！', 'success');
+                closeImportAppDataModal();
+                closePersonalSettingsModal();
+            } catch (error) {
+                showToast(`データのインポートに失敗しました: ${error.message}`, 'error');
+                console.error(error);
+            }
         }
 
         // ===== 内部関数群 =====
@@ -2341,18 +2555,11 @@
             const profitIncreaseActual = cumulativeProfitDifference;
             const profitIncreaseRate = profitIncreaseTarget > 0 ? (profitIncreaseActual / profitIncreaseTarget) * 100 : 0;
             
-            const prospectTotal = cardsData.reduce((sum, card) => {
-                const displayMonth = card.displayMonth || getFiscalYearStructure().currentMonthKey;
-                const monthData = card.monthlyData?.[displayMonth] || { salesIncreaseForecast: 0 };
-                return sum + calculateProfitIncrease(monthData.salesIncreaseForecast || 0);
-            }, 0);
-
-            const prospectRate = profitIncreaseTarget > 0 ? (prospectTotal / profitIncreaseTarget) * 100 : 0;
-            
+            // ファネル集計は常に現在月で統一
+            const currentMonthKey = getFiscalYearStructure().currentMonthKey;
             let probUnder50 = 0, prob5070 = 0, prob7090 = 0, prob90100 = 0;
             cardsData.forEach(card => {
-                const displayMonth = card.displayMonth || getFiscalYearStructure().currentMonthKey;
-                const monthData = card.monthlyData?.[displayMonth] || { salesIncreaseForecast: 0, probability: 50 };
+                const monthData = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0, probability: 50 };
                 const profit = calculateProfitIncrease(monthData.salesIncreaseForecast || 0);
                 const probability = monthData.probability;
                 
@@ -2366,6 +2573,13 @@
                     prob90100 += profit;
                 }
             });
+
+            // 年間粗利増予定（営業見込）は現在月の営業見込合計
+            const prospectTotal = cardsData.reduce((sum, card) => {
+                const monthData = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0 };
+                return sum + calculateProfitIncrease(monthData.salesIncreaseForecast || 0);
+            }, 0);
+            const prospectRate = profitIncreaseTarget > 0 ? (prospectTotal / profitIncreaseTarget) * 100 : 0;
             
             progressCache = {
                 monthly: { target: monthlyTarget, actual: monthlyActual, difference: monthlyDifference, rate: monthlyRate },
@@ -2388,9 +2602,7 @@
             document.getElementById('monthlyDetail').textContent = 
                 `${formatAmount(progress.monthly.actual)}/${formatAmount(progress.monthly.target)}（${progress.monthly.rate.toFixed(1)}%）`;
             
-            const monthlyDiffText = progress.monthly.difference >= 0 ? 
-                `+${formatAmount(Math.abs(progress.monthly.difference))}` :
-                `-${formatAmount(Math.abs(progress.monthly.difference))}`;
+            const monthlyDiffText = formatAmount(progress.monthly.difference);
             document.getElementById('monthlyRate').textContent = `差分: ${monthlyDiffText}`;
             document.getElementById('monthlyRate').className = 
                 progress.monthly.difference >= 0 ? 'progress-rate rate-positive' : 'progress-rate rate-negative';
@@ -2406,7 +2618,7 @@
             document.getElementById('profitIncreaseDisplay').textContent = formatManYen(progress.profitIncrease.target);
             document.getElementById('profitIncreaseDetail').textContent = 
                 `${formatAmount(progress.profitIncrease.actual)}/${formatAmount(progress.profitIncrease.target)}（${progress.profitIncrease.rate.toFixed(1)}%）`;
-            document.getElementById('profitIncreaseRate').textContent = `累積差分: ${formatAmount(progress.profitIncrease.actual)}`;
+            document.getElementById('profitIncreaseRate').textContent = `期待: ${formatAmount(progress.profitIncrease.actual)}`;
             document.getElementById('profitIncreaseBar').style.width = `${Math.min(Math.abs(progress.profitIncrease.rate), 100)}%`;
             
             document.getElementById('prospectTotalDisplay').textContent = formatManYen(progress.prospect.total);
@@ -2552,14 +2764,21 @@
                         actualData.push(isPastMonth ? cumDifference : null);
                         break;
                         
-                    case 3:
-                        const yearlyTotalTarget = personalSettings.yearlyProfitTarget;
-                        const currentMonthActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
+                                          case 3:
+                        // 修正：営業見込ベースの累積計算
+                        let cumProspectProfit = 0;
+                        for (let j = 0; j <= index; j++) {
+                            const checkMonthKey = months[j].key;
+                            cardsData.forEach(card => {
+                                const monthData = card.monthlyData?.[checkMonthKey] || { salesIncreaseForecast: 0 };
+                                cumProspectProfit += calculateProfitIncrease(monthData.salesIncreaseForecast || 0);
+                            });
+                        }
                         
-                        cumActual += currentMonthActual;
-                        const achievementRate = yearlyTotalTarget > 0 ? (cumActual / yearlyTotalTarget) * 100 : 0;
+                        const profitIncreaseTarget = personalSettings.yearlyProfitIncreaseTarget;
+                        const prospectRate = profitIncreaseTarget > 0 ? (cumProspectProfit / profitIncreaseTarget) * 100 : 0;
                         
-                        actualData.push(isPastMonth ? achievementRate : null);
+                        actualData.push(isPastMonth ? prospectRate : null);
                         targetData.push(100);
                         break;
                 }
@@ -2643,7 +2862,7 @@
                     type: 'line',
                     datasets: [
                         {
-                            label: '達成率（%）',
+                            label: '営業見込達成率（%）',
                             data: data.actualData,
                             borderColor: chartColors.line,
                             backgroundColor: 'rgba(224, 64, 251, 0.1)',
@@ -2767,15 +2986,9 @@
             // フィルタ初期化
             updateProbabilityFilterOptions();
             updateCityFilterOptions();
+            updateGlobalMonthSelector();
             
-            // 現在日付設定
-            const fiscalStructure = getFiscalYearStructure();
-            const currentMonthInfo = fiscalStructure.months.find(m => m.key === fiscalStructure.currentMonthKey);
-            if (currentMonthInfo) {
-                document.getElementById('currentDateHeader').textContent = currentMonthInfo.label;
-            }
-
-                        // 検索入力イベント（デバウンス処理）
+            // 検索入力イベント（デバウンス処理）
             document.getElementById('searchInput').addEventListener('input', function() {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(applyFilters, 500);
@@ -2791,6 +3004,16 @@
                 });
             });
 
+            // ESCキーでモーダルを閉じる処理
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const openModal = document.querySelector('.modal[style*="flex"]');
+                    if (openModal) {
+                        closeModal(openModal.id);
+                    }
+                }
+            });
+
             // 個人設定フォームの送信処理
             document.getElementById('personalSettingsForm').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -2798,8 +3021,8 @@
                 // 基本設定の保存
                 personalSettings.userName = document.getElementById('userName').value;
                 personalSettings.profitRate = parseFloat(document.getElementById('profitRate').value);
-                personalSettings.yearlyProfitTarget = parseInt(document.getElementById('yearlyProfitTarget').value);
-                personalSettings.yearlyProfitIncreaseTarget = parseInt(document.getElementById('yearlyProfitIncreaseTarget').value);
+                personalSettings.yearlyProfitTarget = parseInt(document.getElementById('yearlyProfitTarget').value) || 0;
+                personalSettings.yearlyProfitIncreaseTarget = parseInt(document.getElementById('yearlyProfitIncreaseTarget').value) || 0;
                 
                 // 月別データの保存
                 const fiscalMonths = getFiscalYearStructure().months;
@@ -2845,10 +3068,6 @@
                 // バリデーション
                 if (!jukuName) {
                     showToast('塾名を入力してください。', 'error');
-                    return;
-                }
-                if (!address) {
-                    showToast('住所を入力してください。', 'error');
                     return;
                 }
                 

@@ -2,8 +2,13 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>営業支援ダッシュボード v8.5</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="営業支援ダッシュボード">
+    <meta name="theme-color" content="#007bff">
+    <title>営業支援ダッシュボード v8.5 - 修正版</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -11,18 +16,22 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1A237E 0%, #0D47A1 100%);
-            min-height: 100vh;
-            color: #FFFFFF;
-            background-image: 
-                radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 2px, transparent 2px),
-                radial-gradient(circle at 75% 75%, rgba(255,255,255,0.04) 2px, transparent 2px);
-            background-size: 30px 30px;
-            background-position: 0 0, 15px 15px;
+            font-family: system-ui, -apple-system, 'Segoe UI', 'ヒラギノ角ゴ ProN', Meiryo, sans-serif;
+            background-color: #f5f7fb;
+            color: #333;
+            line-height: 1.6;
+            font-size: 16px;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        input, textarea, select {
+            -webkit-user-select: text;
+            user-select: text;
         }
 
         body.modal-open {
@@ -32,124 +41,119 @@
         }
 
         .container {
-            max-width: 420px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 50%, #80DEEA 100%);
-            min-height: 100vh;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
-            backdrop-filter: blur(5px);
-            color: #000000;
+            padding: 16px;
+        }
+
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
 
         .header-section {
-            background: rgba(255,255,255,0.4);
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
             padding: 16px 20px;
-            color: #000000;
+            border-radius: 12px;
+            margin-bottom: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
         }
 
         .header-title {
-            font-size: 18px;
+            font-size: 22px;
             font-weight: bold;
-            color: #000000;
-            text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+            color: white;
         }
 
         .current-date-header {
-            font-size: 14px;
-            opacity: 0.9;
-            color: #000000;
-            text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+            font-size: 16px;
+            color: white;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
         .global-month-selector {
-            padding: 4px 8px;
-            border: 1px solid rgba(0,0,0,0.3);
-            border-radius: 4px;
-            font-size: 12px;
-            background: rgba(255,255,255,0.9);
-            color: #000000;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 16px;
             cursor: pointer;
         }
 
+        .global-month-selector option {
+            color: #333;
+            background: #fff;
+        }
+
         .progress-section {
-            padding: 16px;
-            color: #000000;
-            transition: background 0.5s ease;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
 
         .progress-cards {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
             margin-bottom: 15px;
         }
 
         .progress-card {
-            background: rgba(255,255,255,0.5);
-            border-radius: 8px;
-            padding: 12px;
-            border: 1px solid rgba(255,255,255,0.5);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            background: #e3f2fd !important;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: none !important;
             position: relative;
-            backdrop-filter: blur(5px);
         }
 
-        .progress-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-            background: rgba(255,255,255,0.6);
-        }
-
-        .progress-card::after {
-            content: '📊';
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            font-size: 14px;
-            opacity: 0.7;
-            transition: opacity 0.2s ease;
-        }
-
-        .progress-card:hover::after {
-            opacity: 1;
+        .progress-card:hover,
+        .progress-card:active,
+        .progress-card:focus {
+            background: #e3f2fd !important;
+            transform: none !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
         }
 
         .progress-card h3 {
-            font-size: 13px;
-            margin-bottom: 6px;
-            opacity: 0.95;
+            font-size: 16px;
+            margin-bottom: 8px;
             line-height: 1.2;
             min-height: 2.4em;
             font-weight: 600;
-            color: #000000;
+            color: #333;
         }
 
         .progress-value {
-            font-size: 18px;
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 3px;
-            color: #000000;
+            margin-bottom: 6px;
+            color: #007bff;
         }
 
         .progress-detail {
-            font-size: 14px;
-            opacity: 0.95;
-            margin-bottom: 3px;
-            color: #000000;
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: #333;
             font-weight: 600;
         }
 
         .progress-rate {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: bold;
         }
 
@@ -172,62 +176,74 @@
 
         .funnel-section {
             display: flex;
-            gap: 6px;
-            margin-top: 10px;
+            gap: 8px;
+            margin-top: 12px;
         }
 
         .funnel-item {
             flex: 1;
-            background: rgba(255,255,255,0.5);
-            border-radius: 6px;
-            padding: 6px;
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
             text-align: center;
             cursor: pointer;
-            transition: background 0.2s ease;
-            border: 1px solid rgba(255,255,255,0.5);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-            backdrop-filter: blur(3px);
+            transition: none !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .funnel-item:hover {
-            background: rgba(255,255,255,0.6);
+        .funnel-item:hover,
+        .funnel-item:active {
+            background: white !important;
+            transform: none !important;
         }
 
         .funnel-label {
-            font-size: 10px;
+            font-size: 12px;
             margin-bottom: 3px;
-            color: #000000;
+            color: #333;
         }
 
         .funnel-value {
-            font-size: 11px;
+            font-size: 14px;
             font-weight: bold;
-            color: #000000;
+            color: #333;
+        }
+
+        .excel-operations-panel h3 {
+            color: #007bff;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .excel-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .control-section {
-            padding: 15px;
-            background: rgba(255,255,255,0.4);
-            border-bottom: 1px solid rgba(255,255,255,0.3);
-            color: #000000;
-            backdrop-filter: blur(5px);
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
 
         .search-container {
             position: relative;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
 
         .search-input {
             width: 100%;
-            padding: 10px 35px 10px 12px;
-            border: 2px solid #00B0FF;
+            padding: 14px 40px 14px 14px;
+            border: 2px solid #dee2e6;
             border-radius: 8px;
             font-size: 16px;
             outline: none;
             transition: border-color 0.2s ease;
-            background: #FFFFFF;
-            color: #000000;
+            background: #fff;
+            color: #333;
         }
 
         .search-input::placeholder {
@@ -235,103 +251,109 @@
         }
 
         .search-input:focus {
-            border-color: #00E5FF;
-            background: #FFFFFF;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .search-icon {
             position: absolute;
-            right: 10px;
+            right: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: #00B0FF;
+            color: #007bff;
+            font-size: 18px;
         }
 
         .control-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 12px;
+            gap: 12px;
+            margin-bottom: 16px;
         }
 
         .control-buttons-row2 {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 6px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 16px;
         }
 
         .btn {
-            padding: 8px 10px;
+            display: inline-block;
+            padding: 12px 20px;
             border: none;
-            border-radius: 6px;
-            font-size: 12px;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 500;
             cursor: pointer;
+            min-height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 3px;
+            gap: 6px;
             transition: all 0.2s ease;
+            text-decoration: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.15);
         }
 
+        .btn:hover {
+            filter: brightness(0.95);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .btn-primary {
-            background: linear-gradient(135deg, #00B0FF 0%, #00E5FF 100%);
-            color: #000000;
+            background: #007bff;
+            color: white;
         }
 
         .btn-secondary {
-            background: rgba(255,255,255,0.6);
-            color: #000000;
-            border: 1px solid rgba(255,255,255,0.5);
+            background: #6c757d;
+            color: white;
         }
 
         .btn-settings {
             background: linear-gradient(135deg, #FFD700 0%, #FFEA00 100%);
-            color: #333333;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+            color: #333;
         }
 
         .filter-section {
             display: flex;
-            gap: 8px;
+            gap: 12px;
+            margin-bottom: 16px;
         }
 
         .filter-select, .sort-select {
             flex: 1;
-            padding: 6px 10px;
-            border: 1px solid rgba(0,0,0,0.2);
-            border-radius: 6px;
-            font-size: 13px;
-            background: #FFFFFF;
-            color: #000000;
+            padding: 12px 16px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            min-height: 48px;
+            background: white;
+            color: #333;
             cursor: pointer;
         }
 
         .sort-section {
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
 
         .sort-select {
             width: 100%;
-            padding: 8px 12px;
-            border: 2px solid rgba(0,0,0,0.2);
-            border-radius: 8px;
-            font-size: 14px;
-            background: #FFFFFF;
-            color: #000000;
         }
 
         .cards-section {
-            padding: 0 15px 15px;
-            background: transparent;
-            color: #000000;
-            backdrop-filter: blur(3px);
+            padding: 0;
         }
 
         .section-header {
@@ -339,62 +361,67 @@
             justify-content: space-between;
             align-items: center;
             padding: 15px 0 12px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
 
         .section-title {
-            font-size: 17px;
+            font-size: 18px;
             font-weight: bold;
-            color: #000000;
+            color: #333;
         }
 
         .sort-info {
-            font-size: 12px;
+            font-size: 14px;
             color: rgba(0,0,0,0.8);
         }
 
         .card {
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.5);
-            transition: all 0.2s ease;
+            background: #A5D6A7 !important;
+            color: #333 !important;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: none !important;
             position: relative;
-            background: rgba(255,255,255,0.6);
-            backdrop-filter: blur(5px);
-            color: #000000;
         }
 
-        .card:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-            background: rgba(255,255,255,0.7);
+        .card:hover,
+        .card:active,
+        .card:focus {
+            background: #A5D6A7 !important;
+            transform: none !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
         }
 
         .card-level-0, .card-level-1 { 
-            background: rgba(255,255,255,0.6);
+            background: #A5D6A7 !important;
             border-left: 4px solid rgba(255,255,255,0.7);
-            color: #000000;
+            color: #333 !important;
         }
         .card-level-2 { 
-            background: linear-gradient(135deg, rgba(30, 136, 229, 0.5) 0%, rgba(66, 165, 245, 0.5) 100%);
+            background: #A5D6A7 !important;
             border-left: 4px solid #1976D2;
-            color: #FFFFFF;
+            color: #333 !important;
         }
         .card-level-3 { 
-            background: linear-gradient(135deg, rgba(67, 160, 71, 0.5) 0%, rgba(102, 187, 106, 0.5) 100%);
+            background: #A5D6A7 !important;
             border-left: 4px solid #388E3C;
-            color: #FFFFFF;
+            color: #333 !important;
         }
         .card-level-4 { 
-            background: linear-gradient(135deg, rgba(255, 193, 7, 0.5) 0%, rgba(255, 213, 79, 0.5) 100%);
+            background: #A5D6A7 !important;
             border-left: 4px solid #FFC107;
-            color: #000000;
+            color: #333 !important;
         }
         .card-level-5 { 
-            background: linear-gradient(135deg, rgba(229, 57, 53, 0.5) 0%, rgba(244, 67, 54, 0.5) 100%);
+            background: #A5D6A7 !important;
             border-left: 4px solid #D32F2F;
-            color: #FFFFFF;
+            color: #333 !important;
         }
 
         .card-header-new {
@@ -407,63 +434,63 @@
         }
 
         .card-title-clickable {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
-            color: inherit;
+            color: #333 !important;
             text-decoration: underline;
             text-decoration-color: rgba(0,0,0,0.3);
             transition: text-decoration-color 0.2s ease;
         }
 
         .card-title-clickable:hover {
-            text-decoration-color: #00B0FF;
+            text-decoration-color: #007bff;
         }
 
         .month-selector {
-            padding: 4px 8px;
+            display: block;
+            padding: 6px 10px;
+            border-radius: 6px;
             border: 1px solid rgba(0,0,0,0.3);
-            border-radius: 4px;
-            font-size: 12px;
-            background: rgba(255,255,255,0.9);
-            color: #000000;
+            background: rgba(255,255,255,0.8);
+            color: #333;
+            font-size: 14px;
             cursor: pointer;
-            min-width: 100px;
         }
 
         .annual-metrics-row {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 4px;
+            gap: 6px;
             margin-bottom: 12px;
         }
 
         .annual-metric {
             background: rgba(0,0,0,0.1);
-            padding: 6px;
-            border-radius: 4px;
+            padding: 8px;
+            border-radius: 6px;
             text-align: center;
             border: 1px solid rgba(0,0,0,0.2);
         }
 
         .annual-metric-label {
-            font-size: 9px;
+            font-size: 12px;
             margin-bottom: 2px;
-            color: inherit;
+            color: #333;
             font-weight: 500;
             line-height: 1.2;
         }
 
         .annual-metric-value {
-            font-size: 11px;
+            font-size: 14px;
             font-weight: bold;
-            color: inherit;
+            color: #333;
         }
 
         .monthly-comparison-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 12px;
             margin-bottom: 12px;
             background: rgba(0,0,0,0.05);
             padding: 12px;
@@ -475,10 +502,10 @@
         }
 
         .month-data-header {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: bold;
             margin-bottom: 8px;
-            color: inherit;
+            color: #333;
             padding-bottom: 4px;
             border-bottom: 1px solid rgba(0,0,0,0.2);
         }
@@ -491,15 +518,15 @@
         }
 
         .forecast-amount {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             margin-bottom: 6px;
-            color: inherit;
+            color: #333;
         }
 
         .forecast-probability {
-            font-size: 12px;
-            color: inherit;
+            font-size: 14px;
+            color: #333;
             opacity: 0.9;
             font-weight: 600;
         }
@@ -507,7 +534,7 @@
         .memo-comparison-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 12px;
             margin-bottom: 12px;
         }
 
@@ -519,16 +546,16 @@
         }
 
         .memo-header {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             margin-bottom: 4px;
-            color: inherit;
+            color: #333;
         }
 
         .memo-content {
-            font-size: 12px;
+            font-size: 13px;
             line-height: 1.3;
-            color: inherit;
+            color: #333;
             min-height: 2.6em;
             word-wrap: break-word;
             white-space: pre-wrap;
@@ -540,42 +567,109 @@
             justify-content: space-between;
             align-items: center;
             padding-top: 10px;
-            border-top: 1px solid rgba(255,255,255,0.5);
+            border-top: 1px solid rgba(0,0,0,0.2);
         }
 
         .last-updated {
-            font-size: 13px;
+            font-size: 14px;
             color: rgba(0,0,0,0.8);
             cursor: pointer;
         }
 
         .card-actions {
             display: flex;
-            gap: 4px;
+            gap: 6px;
         }
 
         .action-btn {
-            width: 44px;
-            height: 44px;
+            width: 48px;
+            height: 48px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             background: rgba(0,0,0,0.1);
             color: rgba(0,0,0,0.9);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 18px;
             transition: all 0.2s ease;
             box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-            backdrop-filter: blur(3px);
         }
 
         .action-btn:hover {
-            background: #00B0FF;
-            color: #FFFFFF;
+            background: #007bff;
+            color: white;
             transform: translateY(-1px);
             box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+        }
+
+        .annual-materials-mini {
+            background: rgba(255,255,255,0.4);
+            border: 1px solid rgba(0,176,255,0.3);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .annual-materials-mini-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1976D2;
+            margin-bottom: 8px;
+            text-align: center;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(25,118,210,0.2);
+        }
+
+        .materials-mini-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .materials-mini-item {
+            background: rgba(255,255,255,0.6);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .materials-mini-header {
+            font-size: 12px;
+            font-weight: bold;
+            color: #1976D2;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .material-mini-field {
+            margin-bottom: 6px;
+        }
+
+        .material-mini-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .material-mini-select,
+        .material-mini-input {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 3px;
+            font-size: 12px;
+            background: white;
+            color: #333;
+            box-sizing: border-box;
+        }
+
+        .material-mini-input::placeholder {
+            color: rgba(0,0,0,0.5);
+            font-size: 11px;
         }
 
         .modal {
@@ -594,25 +688,24 @@
         }
 
         .modal-content {
-            background: #FFFFFF;
+            background: white;
             border-radius: 12px;
-            padding: 20px;
-            max-width: 380px;
-            width: 100%;
-            max-height: 80vh;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-            color: #000000;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            color: #333;
         }
 
         .modal-graph {
-            max-width: 550px;
+            max-width: 800px;
             max-height: 90vh;
         }
 
         .modal-history {
-            max-width: 700px;
+            max-width: 900px;
             max-height: 90vh;
         }
 
@@ -620,59 +713,69 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
         }
 
         .modal-title {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
-            color: #000000;
+            color: #333;
         }
 
         .close-btn {
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
-            color: #6b7280;
-            width: 32px;
-            height: 32px;
+            color: #aaa;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            color: #333;
+            background: #f0f0f0;
         }
 
         .form-group {
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
         .form-label {
             display: block;
-            font-size: 14px;
-            font-weight: 500;
-            color: #000000;
-            margin-bottom: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
         }
 
         .form-input, .form-select {
             width: 100%;
-            padding: 8px 10px;
-            border: 2px solid #E0E0E0;
+            padding: 12px;
+            border: 2px solid #dee2e6;
             border-radius: 6px;
             font-size: 16px;
             outline: none;
             transition: border-color 0.2s ease;
-            background: #FFFFFF;
-            color: #000000;
+            background: white;
+            color: #333;
         }
 
         .form-input:focus, .form-select:focus {
-            border-color: #00B0FF;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .form-input[readonly] {
-            background: #f0f0f0;
-            color: #6b7280;
+            background: #f8f9fa;
+            color: #6c757d;
             cursor: not-allowed;
         }
 
@@ -698,7 +801,7 @@
             display: flex;
             align-items: center;
             gap: 5px;
-            font-size: 13px;
+            font-size: 14px;
             color: #E0E0E0;
         }
 
@@ -708,146 +811,60 @@
             border-radius: 3px;
         }
 
-        .month-data-section {
+        .settings-section {
+            margin-bottom: 20px;
+            padding: 16px;
             background: rgba(255,255,255,0.6);
             border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 14px;
-            color: #000000;
-            backdrop-filter: blur(3px);
-        }
-
-        .month-data-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .month-label {
-            font-size: 14px;
-            font-weight: bold;
-            color: #000000;
-        }
-
-        .current-month-indicator {
-            background: #00B0FF;
-            color: #FFFFFF;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 10px;
-        }
-
-        .month-data-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 12px;
+            color: #333;
         }
         
-        /* 年間教材管理セクション（年間データ内） */
-        .annual-materials-mini {
-            background: rgba(255,255,255,0.4);
-            border: 1px solid rgba(0,176,255,0.3);
-            border-radius: 8px;
-            padding: 10px;
-            margin-top: 10px;
+        .settings-section h4 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: #333;
         }
-
-        .annual-materials-mini-title {
-            font-size: 13px;
-            font-weight: bold;
-            color: #1976D2;
-            margin-bottom: 8px;
-            text-align: center;
-            padding-bottom: 4px;
-            border-bottom: 1px solid rgba(25,118,210,0.2);
-        }
-
-        .materials-mini-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .materials-mini-item {
-            background: rgba(255,255,255,0.6);
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 6px;
-            padding: 8px;
-        }
-
-        .materials-mini-header {
-            font-size: 11px;
-            font-weight: bold;
-            color: #1976D2;
-            margin-bottom: 6px;
-            text-align: center;
-        }
-
-        .material-mini-field {
-            margin-bottom: 6px;
-        }
-
-        .material-mini-label {
-            font-size: 10px;
-            font-weight: 500;
-            color: #333333;
-            margin-bottom: 2px;
-            display: block;
-        }
-
-        .material-mini-select,
-        .material-mini-input {
-            width: 100%;
-            padding: 4px 6px;
-            border: 1px solid rgba(0,0,0,0.2);
-            border-radius: 3px;
-            font-size: 11px;
-            background: #FFFFFF;
-            color: #000000;
-            box-sizing: border-box;
-        }
-
-        .material-mini-input::placeholder {
-            color: rgba(0,0,0,0.5);
-            font-size: 10px;
+        
+        .settings-excel-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            justify-content: center;
         }
 
         .monthly-data-section {
             background: rgba(255,255,255,0.6);
             border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
             max-height: 300px;
             overflow-y: auto;
-            color: #000000;
-            backdrop-filter: blur(3px);
+            color: #333;
         }
 
         .monthly-row {
             display: grid;
-            grid-template-columns: 60px 1fr 1fr 20px;
-            gap: 8px;
+            grid-template-columns: 80px 1fr 1fr 20px;
+            gap: 10px;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .month-name {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 500;
-            color: #000000;
+            color: #333;
             text-align: center;
         }
 
         .monthly-input {
-            padding: 6px 8px;
+            padding: 8px 10px;
             border: 1px solid rgba(0,0,0,0.3);
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 16px;
             text-align: right;
             background: rgba(255,255,255,0.9);
-            color: #000000;
+            color: #333;
         }
 
         .monthly-input::placeholder {
@@ -856,30 +873,8 @@
 
         .monthly-input:focus {
             outline: none;
-            border-color: #00B0FF;
-            background: rgba(255,255,255,1);
-        }
-
-        .settings-section {
-            margin-bottom: 16px;
-            padding: 12px;
-            background: rgba(255,255,255,0.6);
-            border-radius: 8px;
-            color: #000000;
-            backdrop-filter: blur(3px);
-        }
-        
-        .settings-section h4 {
-            font-size: 15px;
-            margin-bottom: 10px;
-            color: #000000;
-        }
-        
-        .settings-excel-buttons {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            justify-content: center;
+            border-color: #007bff;
+            background: white;
         }
 
         .monthly-history-container {
@@ -903,7 +898,7 @@
 
         .history-month-label {
             font-weight: bold;
-            font-size: 16px;
+            font-size: 18px;
             margin-bottom: 10px;
             color: #333;
             display: flex;
@@ -916,7 +911,7 @@
             color: white;
             padding: 2px 6px;
             border-radius: 3px;
-            font-size: 10px;
+            font-size: 12px;
         }
 
         .history-data-grid {
@@ -928,7 +923,7 @@
 
         .history-field label {
             display: block;
-            font-size: 12px;
+            font-size: 14px;
             margin-bottom: 4px;
             font-weight: 500;
             color: #333;
@@ -936,19 +931,19 @@
 
         .history-input, .history-select {
             width: 100%;
-            padding: 6px 8px;
+            padding: 8px 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 16px;
         }
 
         .history-memo {
             width: 100%;
             min-height: 60px;
-            padding: 6px 8px;
+            padding: 8px 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 14px;
             resize: vertical;
             font-family: inherit;
         }
@@ -967,20 +962,20 @@
             left: 20px;
             width: 56px;
             height: 56px;
-            background: linear-gradient(135deg, #00B0FF 0%, #00E5FF 100%);
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             border: none;
             border-radius: 50%;
-            color: #FFFFFF;
+            color: white;
             font-size: 24px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,176,255,0.4);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.4);
             transition: all 0.2s ease;
             z-index: 100;
         }
 
         .fab:hover {
             transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(0,176,255,0.6);
+            box-shadow: 0 6px 20px rgba(0,123,255,0.6);
         }
 
         .toast {
@@ -989,15 +984,14 @@
             right: 20px;
             padding: 12px 20px;
             border-radius: 6px;
-            color: #FFFFFF;
-            font-size: 14px;
+            color: white;
+            font-size: 16px;
             font-weight: 500;
             z-index: 10000;
             transform: translateX(100%);
             transition: transform 0.2s ease;
             max-width: 300px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            backdrop-filter: blur(5px);
         }
 
         .toast.show {
@@ -1006,12 +1000,11 @@
 
         .toast-success { background: linear-gradient(135deg, #4CAF50, #8BC34A); }
         .toast-error { background: linear-gradient(135deg, #F44336, #FF5252); }
-        .toast-info { background: linear-gradient(135deg, #2196F3, #00B0FF); }
+        .toast-info { background: linear-gradient(135deg, #2196F3, #007bff); }
 
-        /* 編集可能フィールドのスタイル */
         .editable-field {
             cursor: pointer;
-            padding: 4px 0;
+            padding: 6px;
             border-radius: 4px;
             transition: background-color 0.2s ease;
         }
@@ -1022,90 +1015,130 @@
 
         .editable-field .display-value {
             display: block;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             margin-bottom: 6px;
-            color: inherit;
+            color: #333;
         }
 
         .editable-field .edit-input,
         .editable-field .edit-select {
-            width: calc(100% - 10px);
-            padding: 4px 5px;
-            border: 1px solid #00B0FF;
+            width: calc(100% - 12px);
+            padding: 6px 8px;
+            border: 1px solid #007bff;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 16px;
             box-sizing: border-box;
-            background-color: #FFFFFF;
-            color: #000000;
+            background-color: white;
+            color: #333;
         }
 
-        @media (max-width: 480px) {
-            .month-data-grid {
-                grid-template-columns: 1fr;
-                gap: 6px;
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
             }
             
-            .form-input, .form-select {
-                font-size: 16px; /* iOSでのズーム防止 */
-                padding: 10px 12px;
+            .header-section {
+                flex-direction: column;
+                text-align: center;
+                padding: 16px;
             }
+
+            .current-date-header {
+                margin-top: 12px;
+            }
+
+            .progress-cards {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .excel-buttons {
+                flex-direction: column;
+            }
+
+            .control-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .control-buttons-row2 {
+                grid-template-columns: 1fr;
+            }
+
+            .btn {
+                width: 100%;
+                margin-bottom: 8px;
+                min-height: 48px;
+                font-size: 16px;
+            }
+
+            .filter-section {
+                flex-direction: column;
+            }
+
+            .cards-section {
+                display: block;
+            }
+
+            .section-header {
+                margin-bottom: 12px;
+            }
+
+            .modal-content {
+                margin: 2% auto;
+                width: 95%;
+                max-height: 90vh;
+                padding: 20px;
+            }
+
+            .monthly-comparison-section {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
             .materials-mini-grid {
                 grid-template-columns: 1fr;
                 gap: 6px;
             }
+
+            .annual-metrics-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 4px;
+            }
+
+            .form-input, .form-select {
+                font-size: 16px;
+                padding: 14px 12px;
+            }
         }
 
-        @media (min-width: 768px) {
-            .container {
-                max-width: 800px;
-                box-shadow: 0 0 25px rgba(0,0,0,0.25);
+        @media (min-width: 1200px) {
+            .cards-section .card {
+                display: inline-block;
+                width: calc(50% - 8px);
+                margin-right: 16px;
+                vertical-align: top;
             }
 
-            .progress-cards {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            
-            .cards-section {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 15px;
-                padding: 15px;
-            }
-
-            .section-header {
-                grid-column: 1 / -1;
-            }
-
-            .modal-graph {
-                max-width: 95vw;
-                margin: 10px;
-            }
-            
-            .graph-container {
-                height: 250px;
-                padding: 15px;
+            .cards-section .card:nth-child(even) {
+                margin-right: 0;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- ヘッダー -->
         <div class="header-section">
-            <div class="header-title">営業ダッシュボード v8.5</div>
+            <div class="header-title">営業ダッシュボード v8.5 - 修正版</div>
             <div class="current-date-header" id="currentDateHeader">
                 <span id="currentDateDisplay">2025年8月</span>
                 <select class="global-month-selector" id="globalMonthSelector" onchange="changeAllCardsDisplayMonth(this.value)">
-                    <!-- 動的生成 -->
                 </select>
             </div>
         </div>
 
-        <!-- 上段：4カード進捗エリア -->
-        <div class="progress-section" id="progressSection">
+        <div class="progress-section">
             <div class="progress-cards">
-                <!-- 月別目標（粗利） -->
                 <div class="progress-card" onclick="openProgressGraphModal(0)">
                     <h3>月別目標（粗利）</h3>
                     <div class="progress-value" id="monthlyTargetDisplay">¥0万</div>
@@ -1116,7 +1149,6 @@
                     </div>
                 </div>
                 
-                <!-- 年間目標（粗利） -->
                 <div class="progress-card" onclick="openProgressGraphModal(1)">
                     <h3>年間目標（粗利）</h3>
                     <div class="progress-value" id="yearlyTargetDisplay">¥0万</div>
@@ -1127,7 +1159,6 @@
                     </div>
                 </div>
                 
-                <!-- 目標粗利増 -->
                 <div class="progress-card" onclick="openProgressGraphModal(2)">
                     <h3>目標粗利増</h3>
                     <div class="progress-value" id="profitIncreaseDisplay">¥0万</div>
@@ -1138,7 +1169,6 @@
                     </div>
                 </div>
                 
-                <!-- 年間粗利増予定（営業見込） -->
                 <div class="progress-card" onclick="openProgressGraphModal(3)">
                     <h3>年間粗利増予定<br>（営業見込）</h3>
                     <div class="progress-value" id="prospectTotalDisplay">¥0万</div>
@@ -1150,7 +1180,6 @@
                 </div>
             </div>
 
-            <!-- 確率別ファネル -->
             <div class="funnel-section">
                 <div class="funnel-item" onclick="filterByProbability('under50')">
                     <div class="funnel-label">50未満</div>
@@ -1171,10 +1200,24 @@
             </div>
         </div>
 
-        <!-- 中段：検索・操作エリア -->
+        <div class="excel-operations-panel panel">
+            <h3>📊 データ管理</h3>
+            <div class="excel-buttons">
+                <button class="btn btn-secondary" onclick="openImportModal()">
+                    📥 Excel読込
+                </button>
+                <button class="btn btn-secondary" onclick="exportToExcel()">
+                    📄 Excel出力
+                </button>
+                <button class="btn btn-secondary" onclick="downloadPersonalTemplate()">
+                    📋 個人設定テンプレート
+                </button>
+            </div>
+        </div>
+
         <div class="control-section">
             <div class="search-container">
-                <input type="text" class="search-input" placeholder="塾名で検索..." id="searchInput">
+                <input type="text" class="search-input" placeholder="🔍 塾名で検索..." id="searchInput">
                 <span class="search-icon">🔍</span>
             </div>
             
@@ -1188,23 +1231,23 @@
             </div>
 
             <div class="control-buttons-row2">
-                <button class="btn btn-secondary" onclick="openImportModal()">
-                    📥 Excel読込
-                </button>
-                <button class="btn btn-secondary" onclick="exportToExcel()">
-                    📄 Excel出力
-                </button>
                 <button class="btn btn-secondary" onclick="clearFilters()">
                     🔄 フィルタクリア
+                </button>
+                <button class="btn btn-secondary" onclick="exportAppData()">
+                    💾 データエクスポート
+                </button>
+                <button class="btn btn-secondary" onclick="openImportAppDataModal()">
+                    📂 データインポート
                 </button>
             </div>
 
             <div class="sort-section">
                 <select class="sort-select" id="sortSelect" onchange="applySorting()">
+                    <option value="sales-desc">💰 売上増見込順（大→小）</option>
+                    <option value="sales-asc">💰 売上増見込順（小→大）</option>
                     <option value="updated-desc">📅 最終更新日順（新→古）</option>
                     <option value="updated-asc">📅 最終更新日順（古→新）</option>
-                    <option value="sales-desc">💰 年間売上増目標順（大→小）</option>
-                    <option value="sales-asc">💰 年間売上増目標順（小→大）</option>
                     <option value="probability-desc">📈 受注確率順（高→低）</option>
                     <option value="probability-asc">📈 受注確率順（低→高）</option>
                 </select>
@@ -1218,31 +1261,25 @@
                     <option value="former">元既存</option>
                 </select>
                 <select class="filter-select" id="probabilityFilter" onchange="applyFilters()">
-                    <!-- 動的生成 -->
                 </select>
                 <select class="filter-select" id="cityFilter" onchange="applyFilters()">
-                    <!-- 動的生成 -->
                 </select>
             </div>
         </div>
 
-        <!-- 下段：塾カード一覧 -->
         <div class="cards-section">
             <div class="section-header">
                 <div class="section-title">塾一覧</div>
-                <div class="sort-info" id="sortInfo">最終更新日順（新→古）</div>
+                <div class="sort-info" id="sortInfo">売上増見込順（大→小）</div>
             </div>
 
             <div id="cardsContainer">
-                <!-- 塾カードは JavaScript で動的に生成されます -->
             </div>
         </div>
     </div>
 
-    <!-- フローティングアクションボタン -->
     <button class="fab" onclick="openNewCardModal()" title="新規塾登録">➕</button>
 
-    <!-- 個人設定モーダル -->
     <div class="modal" id="personalSettingsModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1254,11 +1291,11 @@
                 <div class="settings-section">
                     <h4>基本情報</h4>
                     <div class="form-group">
-                        <label class="form-label">担当者名</label>
+                        <label class="form-label" for="userName">担当者名</label>
                         <input type="text" class="form-input" value="担当者" id="userName">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">個人粗利率（%）</label>
+                        <label class="form-label" for="profitRate">個人粗利率（%）</label>
                         <input type="number" class="form-input" value="30" step="0.1" id="profitRate">
                     </div>
                 </div>
@@ -1266,11 +1303,11 @@
                 <div class="settings-section">
                     <h4>年間目標</h4>
                     <div class="form-group">
-                        <label class="form-label">年間粗利目標</label>
+                        <label class="form-label" for="yearlyProfitTarget">年間粗利目標</label>
                         <input type="number" class="form-input" value="13000000" id="yearlyProfitTarget">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">目標粗利増</label>
+                        <label class="form-label" for="yearlyProfitIncreaseTarget">目標粗利増</label>
                         <input type="number" class="form-input" value="1200000" id="yearlyProfitIncreaseTarget">
                     </div>
                 </div>
@@ -1280,12 +1317,11 @@
                     <div class="monthly-data-section">
                         <div class="monthly-row" style="font-weight: bold; margin-bottom: 8px;">
                             <div class="month-name">月</div>
-                            <div style="text-align: center; font-size: 11px;">実績</div>
-                            <div style="text-align: center; font-size: 11px;">目標</div>
+                            <div style="text-align: center; font-size: 13px;">実績</div>
+                            <div style="text-align: center; font-size: 13px;">目標</div>
                             <div></div>
                         </div>
                         <div id="monthlyProfitContainer">
-                            <!-- 月別粗利実績・目標は JavaScript で動的に生成されます -->
                         </div>
                     </div>
                     <div class="settings-excel-buttons">
@@ -1318,7 +1354,6 @@
         </div>
     </div>
 
-    <!-- 個人設定Excelインポート用モーダル -->
     <div class="modal" id="personalExcelImportModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1326,7 +1361,7 @@
                 <button class="close-btn" onclick="closePersonalExcelImport()">&times;</button>
             </div>
             <div class="form-group">
-                <label class="form-label">Excelファイルを選択</label>
+                <label class="form-label" for="personalFileInput">Excelファイルを選択</label>
                 <input type="file" class="form-input" accept=".xlsx,.xls" onchange="handlePersonalExcelFileSelect(event)" id="personalFileInput">
             </div>
             <div class="control-buttons">
@@ -1336,7 +1371,6 @@
         </div>
     </div>
 
-    <!-- アプリケーションデータインポート用モーダル -->
     <div class="modal" id="importAppDataModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1344,7 +1378,7 @@
                 <button class="close-btn" onclick="closeImportAppDataModal()">&times;</button>
             </div>
             <div class="form-group">
-                <label class="form-label">JSONファイルを選択</label>
+                <label class="form-label" for="appDataFileInput">JSONファイルを選択</label>
                 <input type="file" class="form-input" accept=".json" onchange="handleAppDataFileSelect(event)" id="appDataFileInput">
             </div>
             <div class="control-buttons">
@@ -1354,7 +1388,6 @@
         </div>
     </div>
 
-    <!-- 進捗グラフモーダル -->
     <div class="modal" id="progressGraphModal">
         <div class="modal-content modal-graph">
             <div class="modal-header">
@@ -1367,12 +1400,10 @@
             </div>
             
             <div class="graph-legend" id="graphLegend">
-                <!-- 凡例項目は JavaScript で動的に追加されます -->
             </div>
         </div>
     </div>
 
-    <!-- 月別履歴モーダル（表示専用） -->
     <div class="modal" id="monthlyHistoryModal">
         <div class="modal-content modal-history">
             <div class="modal-header">
@@ -1381,7 +1412,6 @@
             </div>
             
             <div class="monthly-history-container" id="monthlyHistoryContainer">
-                <!-- 月別履歴は JavaScript で動的に生成 -->
             </div>
             
             <div class="control-buttons">
@@ -1390,7 +1420,6 @@
         </div>
     </div>
 
-    <!-- 新規塾登録モーダル -->
     <div class="modal" id="newCardModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1400,12 +1429,12 @@
             
             <form id="newCardForm">
                 <div class="form-group">
-                    <label class="form-label">塾名 *</label>
+                    <label class="form-label" for="newJukuName">塾名 *</label>
                     <input type="text" class="form-input" placeholder="例：○○学習塾" required id="newJukuName">
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">区分</label>
+                    <label class="form-label" for="newJukuStatus">区分</label>
                     <select class="form-select" id="newJukuStatus">
                         <option value="new">新規</option>
                         <option value="existing">既存</option>
@@ -1414,63 +1443,57 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">住所（市区町村）</label>
+                    <label class="form-label" for="newAddressInput">住所（市区町村）</label>
                     <input type="text" class="form-input" id="newAddressInput" placeholder="例: 豊中市、大阪市中央区">
                 </div>
 
-                <div class="month-data-section">
-                    <div class="month-data-header">
-                        <div class="month-label">年間データ</div>
-                        <div class="current-month-indicator">編集可能</div>
+                <div class="settings-section">
+                    <h4>年間データ</h4>
+                    <div class="form-group">
+                        <label class="form-label" for="newSalesIncreaseTarget">年間売上増目標</label>
+                        <input type="number" class="form-input" placeholder="300000" id="newSalesIncreaseTarget" oninput="updateAutoCalculations('new')">
                     </div>
-                    <div class="month-data-grid">
-                        <div class="form-group">
-                            <label class="form-label">年間売上増目標</label>
-                            <input type="number" class="form-input" placeholder="300000" id="newSalesIncreaseTarget" oninput="updateAutoCalculations('new')">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">年間粗利増予定</label>
-                            <input type="number" class="form-input" placeholder="90000" id="newProfitIncreaseExpected" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">年間粗利実績</label>
-                            <input type="number" class="form-input" placeholder="0" id="newProfitActual" oninput="updateAutoCalculations('new')">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">年間売上実績</label>
-                            <input type="number" class="form-input" placeholder="0" id="newSalesActual" readonly>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label" for="newProfitIncreaseExpected">年間粗利増予定</label>
+                        <input type="number" class="form-input" placeholder="90000" id="newProfitIncreaseExpected" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="newProfitActual">年間粗利実績</label>
+                        <input type="number" class="form-input" placeholder="0" id="newProfitActual" oninput="updateAutoCalculations('new')">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="newSalesActual">年間売上実績</label>
+                        <input type="number" class="form-input" placeholder="0" id="newSalesActual" readonly>
                     </div>
                     
-                    <!-- 年間教材管理セクション -->
                     <div class="annual-materials-mini">
                         <div class="annual-materials-mini-title">📚 年間教材管理</div>
                         <div class="materials-mini-grid">
                             <div class="materials-mini-item">
                                 <div class="materials-mini-header">通年教材</div>
                                 <div class="material-mini-field">
-                                    <label class="material-mini-label">注文状況</label>
+                                    <label class="material-mini-label" for="newYearRoundOrder">注文状況</label>
                                     <select class="material-mini-select" id="newYearRoundOrder">
                                         <option value="false" selected>注文なし</option>
                                         <option value="true">注文あり</option>
                                     </select>
                                 </div>
                                 <div class="material-mini-field">
-                                    <label class="material-mini-label">注文時期</label>
+                                    <label class="material-mini-label" for="newYearRoundPeriod">注文時期</label>
                                     <input type="text" class="material-mini-input" id="newYearRoundPeriod" placeholder="例: 4月上旬">
                                 </div>
                             </div>
                             <div class="materials-mini-item">
                                 <div class="materials-mini-header">季節・入試教材</div>
                                 <div class="material-mini-field">
-                                    <label class="material-mini-label">使用状況</label>
+                                    <label class="material-mini-label" for="newSeasonalUsage">使用状況</label>
                                     <select class="material-mini-select" id="newSeasonalUsage">
                                         <option value="false" selected>使用なし</option>
                                         <option value="true">使用あり</option>
                                     </select>
                                 </div>
                                 <div class="material-mini-field">
-                                    <label class="material-mini-label">使用時期</label>
+                                    <label class="material-mini-label" for="newSeasonalPeriod">使用時期</label>
                                     <input type="text" class="material-mini-input" id="newSeasonalPeriod" placeholder="例: 夏期講習">
                                 </div>
                             </div>
@@ -1486,7 +1509,6 @@
         </div>
     </div>
 
-    <!-- Excel読み込みモーダル -->
     <div class="modal" id="importModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1495,7 +1517,7 @@
             </div>
             
             <div class="form-group">
-                <label class="form-label">Excelファイルを選択</label>
+                <label class="form-label" for="fileInput">Excelファイルを選択</label>
                 <input type="file" class="form-input" accept=".xlsx,.xls" onchange="handleFileSelect(event)" id="fileInput">
             </div>
             
@@ -1506,7 +1528,6 @@
         </div>
     </div>
 
-    <!-- 塾編集モーダル -->
     <div class="modal" id="editCardModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1517,12 +1538,12 @@
             <form id="editCardForm">
                 <input type="hidden" id="editCardId">
                 <div class="form-group">
-                    <label class="form-label">塾名</label>
+                    <label class="form-label" for="editJukuName">塾名</label>
                     <input type="text" class="form-input" id="editJukuName" required>
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">区分</label>
+                    <label class="form-label" for="editJukuStatus">区分</label>
                     <select class="form-select" id="editJukuStatus">
                         <option value="new">新規</option>
                         <option value="existing">既存</option>
@@ -1531,63 +1552,57 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">住所（市区町村）</label>
+                    <label class="form-label" for="editAddressInput">住所（市区町村）</label>
                     <input type="text" class="form-input" id="editAddressInput">
                 </div>
 
-                <div class="month-data-section">
-                    <div class="month-data-header">
-                        <div class="month-label">年間データ</div>
-                        <div class="current-month-indicator">編集可能</div>
+                <div class="settings-section">
+                    <h4>年間データ</h4>
+                    <div class="form-group">
+                        <label class="form-label" for="editSalesIncreaseTarget">年間売上増目標</label>
+                        <input type="number" class="form-input" id="editSalesIncreaseTarget" oninput="updateAutoCalculations('edit')">
                     </div>
-                    <div class="month-data-grid">
-                        <div class="form-group">
-                            <label class="form-label">年間売上増目標</label>
-                            <input type="number" class="form-input" id="editSalesIncreaseTarget" oninput="updateAutoCalculations('edit')">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">年間粗利増予定</label>
-                            <input type="number" class="form-input" id="editProfitIncreaseExpected" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">年間粗利実績</label>
-                            <input type="number" class="form-input" id="editProfitActual" oninput="updateAutoCalculations('edit')">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">年間売上実績</label>
-                            <input type="number" class="form-input" id="editSalesActual" readonly>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editProfitIncreaseExpected">年間粗利増予定</label>
+                        <input type="number" class="form-input" id="editProfitIncreaseExpected" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editProfitActual">年間粗利実績</label>
+                        <input type="number" class="form-input" id="editProfitActual" oninput="updateAutoCalculations('edit')">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editSalesActual">年間売上実績</label>
+                        <input type="number" class="form-input" id="editSalesActual" readonly>
                     </div>
 
-                    <!-- 年間教材管理セクション -->
                     <div class="annual-materials-mini">
                         <div class="annual-materials-mini-title">📚 年間教材管理</div>
                         <div class="materials-mini-grid">
                             <div class="materials-mini-item">
                                 <div class="materials-mini-header">通年教材</div>
                                 <div class="material-mini-field">
-                                    <label class="material-mini-label">注文状況</label>
+                                    <label class="material-mini-label" for="editYearRoundOrder">注文状況</label>
                                     <select class="material-mini-select" id="editYearRoundOrder">
                                         <option value="false">注文なし</option>
                                         <option value="true">注文あり</option>
                                     </select>
                                 </div>
                                 <div class="material-mini-field">
-                                    <label class="material-mini-label">注文時期</label>
+                                    <label class="material-mini-label" for="editYearRoundPeriod">注文時期</label>
                                     <input type="text" class="material-mini-input" id="editYearRoundPeriod" placeholder="例: 4月上旬">
                                 </div>
                             </div>
                             <div class="materials-mini-item">
                                 <div class="materials-mini-header">季節・入試教材</div>
                                 <div class="material-mini-field">
-                                    <label class="material-mini-label">使用状況</label>
+                                    <label class="material-mini-label" for="editSeasonalUsage">使用状況</label>
                                     <select class="material-mini-select" id="editSeasonalUsage">
                                         <option value="false">使用なし</option>
                                         <option value="true">使用あり</option>
                                     </select>
                                 </div>
                                 <div class="material-mini-field">
-                                    <label class="material-mini-label">使用時期</label>
+                                    <label class="material-mini-label" for="editSeasonalPeriod">使用時期</label>
                                     <input type="text" class="material-mini-input" id="editSeasonalPeriod" placeholder="例: 夏期講習">
                                 </div>
                             </div>
@@ -1603,7 +1618,6 @@
         </div>
     </div>
 
-    <!-- メモ詳細モーダル -->
     <div class="modal" id="memoDetailModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1611,16 +1625,18 @@
                 <button class="close-btn" onclick="closeMemoDetailModal()">&times;</button>
             </div>
             <div class="form-group">
-                <label class="form-label" id="memoCardName"></label>
-                <textarea class="form-input" id="memoContentDisplay" readonly style="min-height: 150px; resize: vertical;"></textarea>
+                <label class="form-label" id="memoCardName">メモ内容</label>
+                <textarea class="form-input" id="memoContentInput" style="min-height: 150px; resize: vertical;"></textarea>
             </div>
             <div class="control-buttons">
-                <button type="button" class="btn btn-primary" onclick="closeMemoDetailModal()">閉じる</button>
+                <button type="button" class="btn btn-secondary" onclick="closeMemoDetailModal()">キャンセル</button>
+                <button type="button" class="btn btn-primary" onclick="saveMemoContent()">保存</button>
             </div>
         </div>
     </div>
 
     <script>
+        // グローバル変数の定義
         let cardsData = [];
         let nextCardId = 1;
         let progressCache = null;
@@ -1631,6 +1647,7 @@
         let importedAppData = null;
         let searchTimeout;
         let scrollPosition = 0;
+        let currentEditingMemo = null;
 
         let personalSettings = {
             userName: '担当者',
@@ -1668,7 +1685,9 @@
         };
 
         // ユーティリティ関数
-        function getCurrentMonth() { return new Date().getMonth() + 1; }
+        function getCurrentMonth() { 
+            return new Date().getMonth() + 1; 
+        }
         
         function formatManYen(amount, decimals = 1) {
             const absAmount = Math.abs(amount || 0);
@@ -1706,7 +1725,6 @@
             return getProbabilityFilterGroup(probability) === filterValue;
         }
 
-        // 会計年度管理（10月〜9月）
         function getFiscalYearStructure() {
             const now = new Date();
             const currentYear = now.getFullYear();
@@ -1740,7 +1758,6 @@
             return fiscalStructure.months[prevIndex];
         }
 
-        // 粗利計算
         function calculateProfitIncrease(salesIncreaseTarget) {
             const profitRate = personalSettings.profitRate / 100;
             return Math.round(salesIncreaseTarget * profitRate);
@@ -1760,46 +1777,18 @@
             return 5;
         }
 
-        function getProgressGradientColors(rate) {
-            const effectiveRate = Math.min(Math.max(rate, 0), 100);
-            const level = Math.min(Math.floor(effectiveRate / 20), 5);
-            
-            const colorMap = {
-                0: { start: '#C62828', end: '#E53935' },
-                1: { start: '#FFB300', end: '#FFC107' },
-                2: { start: '#FFEA00', end: '#FFEE58' },
-                3: { start: '#2E7D32', end: '#43A047' },
-                4: { start: '#00838F', end: '#00ACC1' },
-                5: { start: '#4527A0', end: '#5E35B1' }
-            };
-            
-            return colorMap[level] || colorMap[0];
-        }
-
-        function updateDiagonalProgressBackground(monthlyRate, yearlyRate) {
-            const monthlyColors = getProgressGradientColors(monthlyRate);
-            const yearlyColors = getProgressGradientColors(yearlyRate);
-            
-            const diagonalGradient = `linear-gradient(135deg, 
-                ${monthlyColors.start} 0%, 
-                ${monthlyColors.end} 48%, 
-                ${yearlyColors.start} 52%, 
-                ${yearlyColors.end} 100%)`;
-            
-            const stripePattern = 'repeating-linear-gradient(135deg, transparent, transparent 8px, rgba(0,0,0,0.02) 8px, rgba(0,0,0,0.02) 16px)';
-            
-            const progressSection = document.getElementById('progressSection');
-            progressSection.style.background = `${diagonalGradient}, ${stripePattern}`;
-        }
-
-        // データ管理
+        // ストレージ管理（エラーハンドリング強化）
         function saveCardsData() {
             try {
                 localStorage.setItem('salesDashboard_cardsData', JSON.stringify(cardsData));
                 localStorage.setItem('salesDashboard_nextCardId', nextCardId);
                 updateCityFilterOptions();
             } catch (e) {
-                showToast('データ保存エラー：容量不足の可能性があります', 'error');
+                if (e.name === 'QuotaExceededError') {
+                    showToast('ストレージ容量が不足しています。古いデータを削除してください。', 'error');
+                } else {
+                    showToast('データ保存エラー：容量不足の可能性があります', 'error');
+                }
                 console.error('Save error:', e);
             }
         }
@@ -1828,7 +1817,11 @@
             try {
                 localStorage.setItem('salesDashboard_personalSettings', JSON.stringify(personalSettings));
             } catch (e) {
-                showToast('個人設定保存エラー', 'error');
+                if (e.name === 'QuotaExceededError') {
+                    showToast('個人設定保存エラー：ストレージ容量が不足しています。', 'error');
+                } else {
+                    showToast('個人設定保存エラー', 'error');
+                }
                 console.error('Personal settings save error:', e);
             }
         }
@@ -1859,7 +1852,21 @@
             }
         }
 
-        // 既存データの自動移行
+        function initializeDisplayMonth() {
+            const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+            
+            cardsData.forEach(cardData => {
+                cardData.displayMonth = currentMonthKey;
+            });
+            
+            const globalSelector = document.getElementById('globalMonthSelector');
+            if (globalSelector) {
+                globalSelector.value = currentMonthKey;
+            }
+            
+            saveCardsData();
+        }
+
         function migrateToNewCardStructure() {
             const fiscalStructure = getFiscalYearStructure();
             let migrationCount = 0;
@@ -1907,15 +1914,22 @@
                     cardData.annualSalesActual = 0;
                     needsMigration = true;
                 }
+                
                 if (!cardData.hasOwnProperty('annualSalesIncreaseTarget')) cardData.annualSalesIncreaseTarget = 0;
                 if (!cardData.hasOwnProperty('annualProfitIncreaseExpected')) cardData.annualProfitIncreaseExpected = 0;
 
-                // 年間教材データの初期化
                 if (!cardData.annualMaterials) {
                     cardData.annualMaterials = {
                         yearRound: { hasOrder: false, orderPeriod: "" },
                         seasonalExam: { hasUsage: false, usagePeriod: "" }
                     };
+                    needsMigration = true;
+                }
+
+                if (!cardData.registeredMonth) {
+                    cardData.registeredMonth = cardData.lastUpdated ? 
+                        cardData.lastUpdated.substring(0, 7) : 
+                        fiscalStructure.currentMonthKey;
                     needsMigration = true;
                 }
 
@@ -1930,7 +1944,6 @@
             }
         }
 
-        // フィルタオプション動的生成
         function updateCityFilterOptions() {
             const cityFilter = document.getElementById('cityFilter');
             if (!cityFilter) return;
@@ -1990,7 +2003,6 @@
             }
         }
 
-        // トースト通知
         function showToast(message, type = 'success') {
             const existingToast = document.querySelector('.toast');
             if (existingToast) existingToast.remove();
@@ -2009,7 +2021,6 @@
             });
         }
 
-        // 新しいカード作成
         function createNewCardElement(cardData) {
             const fiscalStructure = getFiscalYearStructure();
             const displayMonth = cardData.displayMonth || fiscalStructure.currentMonthKey;
@@ -2028,6 +2039,8 @@
             card.className = `card card-level-${cardLevel}`;
             card.dataset.cardId = cardData.id;
             
+            const lastUpdated = cardData.lastUpdated ? cardData.lastUpdated.replace(/-/g, '/') : '—';
+            
             card.innerHTML = `
                 <div class="card-header-new">
                     <div class="card-title-clickable" onclick="openMonthlyHistoryModal(${cardData.id})">
@@ -2042,8 +2055,8 @@
                 
                 <div class="annual-metrics-row">
                     <div class="annual-metric">
-                        <div class="annual-metric-label">年間売上増目標</div>
-                        <div class="annual-metric-value">${formatAmount(cardData.annualSalesIncreaseTarget || 0)}</div>
+                        <div class="annual-metric-label">売上増見込</div>
+                        <div class="annual-metric-value">${formatAmount(currentData.salesIncreaseForecast || 0)}</div>
                     </div>
                     <div class="annual-metric">
                         <div class="annual-metric-label">年間粗利増予定</div>
@@ -2098,7 +2111,7 @@
                 </div>
                 
                 <div class="card-footer">
-                    <div class="last-updated">最終更新: ${cardData.lastUpdated.replace(/-/g, '/')}</div>
+                    <div class="last-updated">最終更新: ${lastUpdated}</div>
                     <div class="card-actions">
                         <button class="action-btn" title="編集" onclick="editCard(this)">✏️</button>
                         <button class="action-btn" title="履歴" onclick="openMonthlyHistoryModal(${cardData.id})">📊</button>
@@ -2129,7 +2142,7 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
-        // グローバル関数群
+        // 進捗グラフ関連
         function openProgressGraphModal(cardIndex) {
             const cardTitles = ['月別目標（粗利）', '年間目標（粗利）', '目標粗利増', '年間粗利増予定'];
             document.getElementById('graphModalTitle').textContent = `${cardTitles[cardIndex]} - 年間進捗グラフ`;
@@ -2144,951 +2157,6 @@
                 progressChart = null;
             }
             closeModal('progressGraphModal');
-        }
-
-        function filterByProbability(probability) {
-            document.getElementById('probabilityFilter').value = probability;
-            applyFilters();
-        }
-
-        function openNewCardModal() {
-            updateAutoCalculations('new');
-            document.getElementById('newSalesActual').readOnly = true;
-            document.getElementById('newSalesActual').style.background = '#f0f0f0';
-            openModal('newCardModal');
-        }
-
-        function closeNewCardModal() {
-            document.getElementById('newCardForm').reset();
-            closeModal('newCardModal');
-        }
-
-        function openPersonalSettingsModal() {
-            document.getElementById('userName').value = personalSettings.userName;
-            document.getElementById('profitRate').value = personalSettings.profitRate;
-            document.getElementById('yearlyProfitTarget').value = personalSettings.yearlyProfitTarget;
-            document.getElementById('yearlyProfitIncreaseTarget').value = personalSettings.yearlyProfitIncreaseTarget;
-            
-            const monthlyContainer = document.getElementById('monthlyProfitContainer');
-            const fiscalMonths = getFiscalYearStructure().months;
-            
-            monthlyContainer.innerHTML = '';
-            
-            fiscalMonths.forEach(monthInfo => {
-                const monthDiv = document.createElement('div');
-                monthDiv.className = 'monthly-row';
-                const actualValue = personalSettings.monthlyProfitActuals[monthInfo.month] || 0;
-                const targetValue = personalSettings.monthlyProfitTargets[monthInfo.month] || 0;
-                const actualDisplay = actualValue === 0 ? '' : actualValue;
-                const targetDisplay = targetValue === 0 ? '' : targetValue;
-                
-                monthDiv.innerHTML = `
-                    <div class="month-name">${monthInfo.label.substring(monthInfo.label.indexOf('年') + 1)}</div>
-                    <input type="number" class="monthly-input" placeholder="実績" id="monthlyProfitActual${monthInfo.month}" value="${actualDisplay}">
-                    <input type="number" class="monthly-input" placeholder="目標" id="monthlyProfitTarget${monthInfo.month}" value="${targetDisplay}">
-                    <div style="font-size: 10px; color: rgba(0,0,0,0.7); text-align: center;"></div>
-                `;
-                monthlyContainer.appendChild(monthDiv);
-            });
-            
-            setTimeout(() => {
-                setupMonthlyInputHandlers('monthlyProfitContainer');
-            }, 100);
-            
-            openModal('personalSettingsModal');
-        }
-
-        function closePersonalSettingsModal() {
-            closeModal('personalSettingsModal');
-        }
-
-        function openImportModal() {
-            openModal('importModal');
-        }
-
-        function closeImportModal() {
-            closeModal('importModal');
-        }
-
-        function exportToExcel() {
-            const headers = [
-                '塾名', '区分', '住所', '年間売上増目標', '年間粗利増予定',
-                '年間粗利実績', '年間売上実績', '通年教材注文', '通年教材時期',
-                '季節入試使用', '季節入試時期', '最終更新日'
-            ];
-            
-            const data = [headers];
-            
-            cardsData.forEach(cardData => {
-                const statusText = cardData.status === 'new' ? '新規' : (cardData.status === 'existing' ? '既存' : '元既存');
-                const materials = cardData.annualMaterials || {
-                    yearRound: { hasOrder: false, orderPeriod: "" },
-                    seasonalExam: { hasUsage: false, usagePeriod: "" }
-                };
-                
-                data.push([
-                    cardData.jukuName,
-                    statusText,
-                    cardData.address,
-                    cardData.annualSalesIncreaseTarget,
-                    cardData.annualProfitIncreaseExpected,
-                    cardData.annualProfitActual,
-                    calculateSalesFromProfit(cardData.annualProfitActual || 0),
-                    materials.yearRound.hasOrder ? '注文あり' : '注文なし',
-                    materials.yearRound.orderPeriod,
-                    materials.seasonalExam.hasUsage ? '使用あり' : '使用なし',
-                    materials.seasonalExam.usagePeriod,
-                    cardData.lastUpdated.replace(/-/g, '/')
-                ]);
-            });
-            
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "営業管理データ");
-            
-            const fileName = `営業管理データ_${personalSettings.userName}_${new Date().toISOString().split('T')[0]}.xlsx`;
-            XLSX.writeFile(wb, fileName);
-            
-            showToast(`Excel出力完了！`, 'success');
-        }
-
-        function clearFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('statusFilter').value = 'all';
-            document.getElementById('probabilityFilter').value = 'all';
-            document.getElementById('cityFilter').value = 'all';
-            document.getElementById('sortSelect').value = 'updated-desc';
-            renderCards();
-            showToast('フィルタをクリアしました', 'info');
-        }
-
-        function applySorting() {
-            renderCards();
-        }
-
-        function applyFilters() {
-            renderCards();
-        }
-
-        function changeCardDisplayMonth(cardId, newMonthKey) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!cardData) return;
-            
-            cardData.displayMonth = newMonthKey;
-            saveCardsData();
-            renderCards();
-        }
-
-        function changeAllCardsDisplayMonth(newMonthKey) {
-            cardsData.forEach(cardData => {
-                cardData.displayMonth = newMonthKey;
-            });
-            saveCardsData();
-            renderCards();
-            showToast(`全カードの表示月を変更しました`, 'info');
-        }
-
-        function openMonthlyHistoryModal(cardId) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!cardData) return;
-            
-            document.getElementById('historyModalTitle').textContent = `${cardData.jukuName} - 月別履歴（表示専用）`;
-            
-            const container = document.getElementById('monthlyHistoryContainer');
-            container.innerHTML = '';
-            
-            const fiscalStructure = getFiscalYearStructure();
-
-            fiscalStructure.months.forEach(monthInfo => {
-                const monthData = cardData.monthlyData?.[monthInfo.key] || { 
-                    salesIncreaseForecast: 0, probability: 50, memo: "" 
-                };
-
-                const monthRow = document.createElement('div');
-                monthRow.className = 'history-month-row past-month';
-                
-                monthRow.innerHTML = `
-                    <div class="history-month-label">
-                        ${monthInfo.label}
-                        <span class="readonly-badge">表示のみ</span>
-                    </div>
-                    <div class="history-data-grid">
-                        <div class="history-field">
-                            <label>売上増見込</label>
-                            <input type="number" class="history-input" value="${monthData.salesIncreaseForecast}" readonly>
-                        </div>
-                        <div class="history-field">
-                            <label>確率</label>
-                            <input type="text" class="history-input" value="${getProbabilityLabel(monthData.probability)}" readonly>
-                        </div>
-                        <div class="history-field">
-                            <label>メモ</label>
-                            <textarea class="history-memo" readonly>${monthData.memo}</textarea>
-                        </div>
-                    </div>
-                `;
-                
-                container.appendChild(monthRow);
-            });
-            
-            openModal('monthlyHistoryModal');
-        }
-
-        function closeMonthlyHistoryModal() {
-            closeModal('monthlyHistoryModal');
-        }
-
-        function editCard(button) {
-            const card = button.closest('.card');
-            const cardId = parseInt(card.dataset.cardId);
-            const cardData = cardsData.find(card => card.id === cardId);
-            
-            if (!cardData) return;
-
-            document.getElementById('editCardId').value = cardData.id;
-            document.getElementById('editModalTitle').textContent = `${cardData.jukuName} - 編集`;
-            document.getElementById('editJukuName').value = cardData.jukuName;
-            document.getElementById('editJukuStatus').value = cardData.status;
-            document.getElementById('editAddressInput').value = cardData.address;
-            document.getElementById('editSalesIncreaseTarget').value = cardData.annualSalesIncreaseTarget;
-            document.getElementById('editProfitIncreaseExpected').value = cardData.annualProfitIncreaseExpected;
-            document.getElementById('editProfitActual').value = cardData.annualProfitActual;
-            document.getElementById('editSalesActual').value = calculateSalesFromProfit(cardData.annualProfitActual || 0);
-            
-            // 年間教材データの設定
-            const materials = cardData.annualMaterials || {
-                yearRound: { hasOrder: false, orderPeriod: "" },
-                seasonalExam: { hasUsage: false, usagePeriod: "" }
-            };
-            document.getElementById('editYearRoundOrder').value = String(materials.yearRound.hasOrder);
-            document.getElementById('editYearRoundPeriod').value = materials.yearRound.orderPeriod || '';
-            document.getElementById('editSeasonalUsage').value = String(materials.seasonalExam.hasUsage);
-            document.getElementById('editSeasonalPeriod').value = materials.seasonalExam.usagePeriod || '';
-            
-            openEditCardModal();
-        }
-
-        function openEditCardModal() {
-            updateAutoCalculations('edit');
-            document.getElementById('editSalesActual').readOnly = true;
-            document.getElementById('editSalesActual').style.background = '#f0f0f0';
-            openModal('editCardModal');
-        }
-
-        function closeEditCardModal() {
-            closeModal('editCardModal');
-        }
-
-        function deleteCard(cardId) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            const cardName = cardData ? cardData.jukuName : 'この塾';
-            
-            if (confirm(`『${cardName}』を削除します。この操作は元に戻せません。よろしいですか？`)) {
-                cardsData = cardsData.filter(card => card.id !== cardId);
-                saveCardsData();
-                progressCache = null;
-                updateDashboard();
-                renderCards();
-                showToast('データを削除しました', 'success');
-            }
-        }
-
-        function downloadPersonalTemplate() {
-            const fiscalMonths = getFiscalYearStructure().months.map(m => m.month);
-            const monthNames = getFiscalYearStructure().months.map(m => m.label.substring(m.label.indexOf('年') + 1));
-
-            const headers = ['項目名', ...monthNames, '年間目標'];
-            const data = [
-                headers,
-                ['粗利実績', ...fiscalMonths.map(m => personalSettings.monthlyProfitActuals[m] || 0), ''],
-                ['粗利目標', ...fiscalMonths.map(m => personalSettings.monthlyProfitTargets[m] || 0), ''],
-                ['年間粗利目標', '', '', '', '', '', '', '', '', '', '', '', '', personalSettings.yearlyProfitTarget]
-            ];
-
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "個人設定テンプレート");
-            
-            const fileName = `個人設定テンプレート_${personalSettings.userName}_${new Date().toISOString().split('T')[0]}.xlsx`;
-            XLSX.writeFile(wb, fileName);
-            
-            showToast(`個人設定テンプレートをダウンロードしました！`, 'success');
-        }
-
-        function openPersonalExcelImport() {
-            personalExcelImportData = null;
-            document.getElementById('personalFileInput').value = '';
-            openModal('personalExcelImportModal');
-        }
-
-        function closePersonalExcelImport() {
-            closeModal('personalExcelImportModal');
-        }
-
-        function handlePersonalExcelFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, {type: 'array'});
-                        const firstSheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[firstSheetName];
-                        personalExcelImportData = XLSX.utils.sheet_to_json(worksheet, {header: 1, raw: false});
-                        showToast(`個人設定データ読み込み準備完了しました。`, 'info');
-                    } catch (error) {
-                        showToast('個人設定ファイル読み込みエラーが発生しました。', 'error');
-                        console.error(error);
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            }
-        }
-
-        function importPersonalExcelData() {
-            if (!personalExcelImportData || personalExcelImportData.length < 4) {
-                showToast('読み込む個人設定データがありません。テンプレートを使用してください。', 'error');
-                return;
-            }
-
-            const fiscalMonths = getFiscalYearStructure().months.map(m => m.month);
-            let newMonthlyActuals = { ...personalSettings.monthlyProfitActuals };
-            let newMonthlyTargets = { ...personalSettings.monthlyProfitTargets };
-            let newYearlyProfitTarget = personalSettings.yearlyProfitTarget;
-
-            try {
-                if (personalExcelImportData[1] && personalExcelImportData[1][0] === '粗利実績') {
-                    fiscalMonths.forEach((monthNum, index) => {
-                        const value = parseInt(personalExcelImportData[1][index + 1]) || 0;
-                        newMonthlyActuals[monthNum] = value;
-                    });
-                } else {
-                    throw new Error('粗利実績の行が見つかりません。');
-                }
-
-                if (personalExcelImportData[2] && personalExcelImportData[2][0] === '粗利目標') {
-                    fiscalMonths.forEach((monthNum, index) => {
-                        const value = parseInt(personalExcelImportData[2][index + 1]) || 0;
-                        newMonthlyTargets[monthNum] = value;
-                    });
-                } else {
-                    throw new Error('粗利目標の行が見つかりません。');
-                }
-
-                if (personalExcelImportData[3] && personalExcelImportData[3][0] === '年間粗利目標') {
-                    newYearlyProfitTarget = parseInt(personalExcelImportData[3][personalExcelImportData[3].length - 1]) || 0;
-                } else {
-                    throw new Error('年間粗利目標の行が見つかりません。');
-                }
-
-                personalSettings.monthlyProfitActuals = newMonthlyActuals;
-                personalSettings.monthlyProfitTargets = newMonthlyTargets;
-                personalSettings.yearlyProfitTarget = newYearlyProfitTarget;
-                
-                savePersonalSettings();
-                progressCache = null;
-                updateDashboard();
-                showToast('個人設定データをExcelから取り込みました！', 'success');
-                closePersonalExcelImport();
-                closePersonalSettingsModal();
-                openPersonalSettingsModal();
-            } catch (error) {
-                showToast(`個人設定Excel取込エラー: ${error.message}`, 'error');
-                console.error("Personal Excel Import Error:", error);
-            }
-        }
-
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, {type: 'array'});
-                        const firstSheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[firstSheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                        
-                        importedExcelData = jsonData;
-                        showToast(`${jsonData.length}件のデータを読み込み準備完了しました。`, 'info');
-                    } catch (error) {
-                        showToast('ファイル読み込みエラーが発生しました。', 'error');
-                        console.error(error);
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            }
-        }
-
-        function importExcelData() {
-            if (importedExcelData.length === 0) {
-                showToast('読み込むデータがありません。', 'error');
-                return;
-            }
-            
-            let addedCount = 0;
-            const fiscalStructure = getFiscalYearStructure();
-            const currentMonthKey = fiscalStructure.currentMonthKey;
-
-            importedExcelData.forEach((row) => {
-                const jukuName = row['塾名'] || row['学校名'] || row['名称'] || `塾${nextCardId}`;
-                const address = row['住所'] || row['所在地'] || row['市区町村'] || '';
-                
-                const monthlyData = {};
-                fiscalStructure.months.forEach(monthInfo => {
-                    monthlyData[monthInfo.key] = {
-                        salesIncreaseForecast: 0,
-                        probability: 50,
-                        memo: ""
-                    };
-                });
-                
-                const cardData = {
-                    id: nextCardId++,
-                    jukuName: jukuName,
-                    status: 'new',
-                    address: address,
-                    annualSalesIncreaseTarget: 0,
-                    annualProfitIncreaseExpected: 0,
-                    annualProfitActual: 0,
-                    displayMonth: currentMonthKey,
-                    monthlyData: monthlyData,
-                    annualMaterials: {
-                        yearRound: { hasOrder: false, orderPeriod: "" },
-                        seasonalExam: { hasUsage: false, usagePeriod: "" }
-                    },
-                    lastUpdated: new Date().toISOString().split('T')[0]
-                };
-                
-                cardsData.push(cardData);
-                addedCount++;
-            });
-            
-            saveCardsData();
-            progressCache = null;
-            renderCards();
-            
-            showToast(`Excel読み込み完了！\n${addedCount}件の塾を追加しました。`, 'success');
-            closeImportModal();
-            importedExcelData = [];
-        }
-
-        function exportAppData() {
-            try {
-                const appData = {
-                    cardsData: cardsData,
-                    nextCardId: nextCardId,
-                    personalSettings: personalSettings,
-                    exportDate: new Date().toISOString(),
-                    version: '8.5'
-                };
-                
-                const dataStr = JSON.stringify(appData, null, 2);
-                const blob = new Blob([dataStr], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `営業ダッシュボード_backup_${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                showToast('データをエクスポートしました！', 'success');
-            } catch (e) {
-                showToast('データエクスポートに失敗しました。', 'error');
-                console.error('Export error:', e);
-            }
-        }
-
-        function openImportAppDataModal() {
-            importedAppData = null;
-            document.getElementById('appDataFileInput').value = '';
-            openModal('importAppDataModal');
-        }
-
-        function closeImportAppDataModal() {
-            closeModal('importAppDataModal');
-        }
-
-        function handleAppDataFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        importedAppData = JSON.parse(e.target.result);
-                        showToast('データファイルの読み込み準備ができました。', 'info');
-                    } catch (error) {
-                        showToast('データファイルの読み込みエラーが発生しました。', 'error');
-                        console.error(error);
-                    }
-                };
-                reader.readAsText(file);
-            }
-        }
-
-        function importAppData() {
-            if (!importedAppData) {
-                showToast('インポートするデータが選択されていません。', 'error');
-                return;
-            }
-
-            if (!confirm('現在のデータは上書きされます。続行しますか？')) {
-                return;
-            }
-
-            try {
-                if (importedAppData.cardsData && Array.isArray(importedAppData.cardsData)) {
-                    cardsData = importedAppData.cardsData;
-                }
-                if (typeof importedAppData.nextCardId === 'number') {
-                    nextCardId = importedAppData.nextCardId;
-                }
-                if (importedAppData.personalSettings && typeof importedAppData.personalSettings === 'object') {
-                    personalSettings = { ...personalSettings, ...importedAppData.personalSettings };
-                }
-                
-                saveCardsData();
-                savePersonalSettings();
-                progressCache = null;
-                updateDashboard();
-                renderCards();
-                updateGlobalMonthSelector();
-                
-                showToast('データのインポートが完了しました！', 'success');
-                closeImportAppDataModal();
-                closePersonalSettingsModal();
-            } catch (error) {
-                showToast(`データのインポートに失敗しました: ${error.message}`, 'error');
-                console.error(error);
-            }
-        }
-
-        // 自動計算（統合版）
-        function updateAutoCalculations(prefix) {
-            const salesIncreaseTarget = parseInt(document.getElementById(`${prefix}SalesIncreaseTarget`).value) || 0;
-            const profitActual = parseInt(document.getElementById(`${prefix}ProfitActual`).value) || 0;
-            
-            const profitExpected = calculateProfitIncrease(salesIncreaseTarget);
-            const salesActual = calculateSalesFromProfit(profitActual);
-            
-            document.getElementById(`${prefix}ProfitIncreaseExpected`).value = profitExpected;
-            document.getElementById(`${prefix}SalesActual`).value = salesActual;
-        }
-
-        function setupMonthlyInputHandlers(containerId) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            
-            const inputs = container.querySelectorAll('.monthly-input');
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    if (this.value === '0') {
-                        this.value = '';
-                    }
-                });
-            });
-        }
-
-        function calculateAllProgress() {
-            const now = Date.now();
-            if (progressCache && (now - lastRenderTime) < 1000) {
-                return progressCache;
-            }
-
-            const currentMonth = getCurrentMonth();
-            
-            const monthlyTarget = personalSettings.monthlyProfitTargets[currentMonth] || 0;
-            const monthlyActual = personalSettings.monthlyProfitActuals[currentMonth] || 0;
-            const monthlyDifference = monthlyActual - monthlyTarget;
-            const monthlyRate = monthlyTarget > 0 ? (monthlyActual / monthlyTarget) * 100 : 0;
-            
-            const yearlyTarget = personalSettings.yearlyProfitTarget;
-            let yearlyActualCalculated = Object.values(personalSettings.monthlyProfitActuals)
-                                            .reduce((sum, monthlyProfit) => sum + (monthlyProfit || 0), 0);
-            
-            const yearlyActual = yearlyActualCalculated;
-            const yearlyRate = yearlyTarget > 0 ? (yearlyActual / yearlyTarget) * 100 : 0;
-            
-            const profitIncreaseTarget = personalSettings.yearlyProfitIncreaseTarget;
-            let cumulativeProfitDifference = 0;
-            const fiscalMonths = getFiscalYearStructure().months;
-            for(let i=0; i <= getFiscalYearStructure().currentMonthIndex; i++) {
-                const month = fiscalMonths[i].month;
-                const actual = personalSettings.monthlyProfitActuals[month] || 0;
-                const target = personalSettings.monthlyProfitTargets[month] || 0;
-                cumulativeProfitDifference += (actual - target);
-            }
-            const profitIncreaseActual = cumulativeProfitDifference;
-            const profitIncreaseRate = profitIncreaseTarget > 0 ? (profitIncreaseActual / profitIncreaseTarget) * 100 : 0;
-            
-            // ファネル集計は常に現在月で統一
-            const currentMonthKey = getFiscalYearStructure().currentMonthKey;
-            let probUnder50 = 0, prob5070 = 0, prob7090 = 0, prob90100 = 0;
-            cardsData.forEach(card => {
-                const monthData = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0, probability: 50 };
-                const profit = calculateProfitIncrease(monthData.salesIncreaseForecast || 0);
-                const probability = monthData.probability;
-                
-                if (probability < 50) {
-                    probUnder50 += profit;
-                } else if (probability < 70) {
-                    prob5070 += profit;
-                } else if (probability < 90) {
-                    prob7090 += profit;
-                } else {
-                    prob90100 += profit;
-                }
-            });
-
-            // 年間粗利増予定（営業見込）は現在月の営業見込合計
-            const prospectTotal = cardsData.reduce((sum, card) => {
-                const monthData = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0 };
-                return sum + calculateProfitIncrease(monthData.salesIncreaseForecast || 0);
-            }, 0);
-            const prospectRate = profitIncreaseTarget > 0 ? (prospectTotal / profitIncreaseTarget) * 100 : 0;
-            
-            progressCache = {
-                monthly: { target: monthlyTarget, actual: monthlyActual, difference: monthlyDifference, rate: monthlyRate },
-                yearly: { target: yearlyTarget, actual: yearlyActual, rate: yearlyRate },
-                profitIncrease: { target: profitIncreaseTarget, actual: profitIncreaseActual, rate: profitIncreaseRate },
-                prospect: { total: prospectTotal, rate: prospectRate },
-                funnel: { probUnder50, prob5070, prob7090, prob90100 }
-            };
-            
-            lastRenderTime = now;
-            return progressCache;
-        }
-
-        function updateDashboard() {
-            const progress = calculateAllProgress();
-            
-            updateDiagonalProgressBackground(progress.monthly.rate, progress.yearly.rate);
-            
-            document.getElementById('monthlyTargetDisplay').textContent = formatManYen(progress.monthly.target);
-            document.getElementById('monthlyDetail').textContent = 
-                `${formatAmount(progress.monthly.actual)}/${formatAmount(progress.monthly.target)}（${progress.monthly.rate.toFixed(1)}%）`;
-            
-            const monthlyDiffText = formatAmount(progress.monthly.difference);
-            document.getElementById('monthlyRate').textContent = `差分: ${monthlyDiffText}`;
-            document.getElementById('monthlyRate').className = 
-                progress.monthly.difference >= 0 ? 'progress-rate rate-positive' : 'progress-rate rate-negative';
-            
-            document.getElementById('monthlyProgressBar').style.width = `${Math.min(progress.monthly.rate, 100)}%`;
-            
-            document.getElementById('yearlyTargetDisplay').textContent = formatManYen(progress.yearly.target);
-            document.getElementById('yearlyDetail').textContent = 
-                `${formatAmount(progress.yearly.actual)}/${formatAmount(progress.yearly.target)}（${progress.yearly.rate.toFixed(1)}%）`;
-            document.getElementById('yearlyRate').textContent = `${progress.yearly.rate.toFixed(1)}%達成`;
-            document.getElementById('yearlyProgressBar').style.width = `${Math.min(progress.yearly.rate, 100)}%`;
-            
-            document.getElementById('profitIncreaseDisplay').textContent = formatManYen(progress.profitIncrease.target);
-            document.getElementById('profitIncreaseDetail').textContent = 
-                `${formatAmount(progress.profitIncrease.actual)}/${formatAmount(progress.profitIncrease.target)}（${progress.profitIncrease.rate.toFixed(1)}%）`;
-            document.getElementById('profitIncreaseRate').textContent = `期待: ${formatAmount(progress.profitIncrease.actual)}`;
-            document.getElementById('profitIncreaseBar').style.width = `${Math.min(Math.abs(progress.profitIncrease.rate), 100)}%`;
-            
-            document.getElementById('prospectTotalDisplay').textContent = formatManYen(progress.prospect.total);
-            document.getElementById('prospectDetail').textContent = `対目標${progress.prospect.rate.toFixed(1)}%`;
-            document.getElementById('prospectRate').textContent = 
-                progress.prospect.rate >= 100 ? '目標クリア見込み' : '追加営業必要';
-            document.getElementById('prospectBar').style.width = `${Math.min(progress.prospect.rate, 100)}%`;
-            
-            document.getElementById('probUnder50').textContent = formatManYen(progress.funnel.probUnder50);
-            document.getElementById('prob5070').textContent = formatManYen(progress.funnel.prob5070);
-            document.getElementById('prob7090').textContent = formatManYen(progress.funnel.prob7090);
-            document.getElementById('prob90100').textContent = formatManYen(progress.funnel.prob90100);
-        }
-
-       function getSortedCards(cards) {
-    const sortType = document.getElementById('sortSelect').value;
-    const sortedCards = [...cards];
-    
-    switch (sortType) {
-        case 'updated-desc':
-            return sortedCards.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
-        case 'updated-asc':
-            return sortedCards.sort((a, b) => new Date(a.lastUpdated) - new Date(b.lastUpdated));
-        case 'sales-desc':
-            return sortedCards.sort((a, b) => (b.annualSalesIncreaseTarget || 0) - (a.annualSalesIncreaseTarget || 0));
-        case 'sales-asc':
-            return sortedCards.sort((a, b) => (a.annualSalesIncreaseTarget || 0) - (b.annualSalesIncreaseTarget || 0));
-        case 'probability-desc':
-            return sortedCards.sort((a, b) => {
-                const aProb = a.monthlyData?.[a.displayMonth || getFiscalYearStructure().currentMonthKey]?.probability || 50;
-                const bProb = b.monthlyData?.[b.displayMonth || getFiscalYearStructure().currentMonthKey]?.probability || 50;
-                return bProb - aProb;
-            });
-        case 'probability-asc':
-            return sortedCards.sort((a, b) => {
-                const aProb = a.monthlyData?.[a.displayMonth || getFiscalYearStructure().currentMonthKey]?.probability || 50;
-                const bProb = b.monthlyData?.[b.displayMonth || getFiscalYearStructure().currentMonthKey]?.probability || 50;
-                return aProb - bProb;
-            });
-        default:
-            return sortedCards;
-    }
-}
-
-
-        function updateSortInfo() {
-            const sortType = document.getElementById('sortSelect').value;
-            const sortInfo = document.getElementById('sortInfo');
-            
-            const sortLabels = {
-                'updated-desc': '最終更新日順（新→古）',
-                'updated-asc': '最終更新日順（古→新）',
-                'sales-desc': '年間売上増目標順（大→小）',
-                'sales-asc': '年間売上増目標順（小→大）',
-                'probability-desc': '受注確率順（高→低）',
-                'probability-asc': '受注確率順（低→高）'
-            };
-            
-            sortInfo.textContent = sortLabels[sortType] || '最終更新日順（新→古）';
-        }
-
-        function renderCards() {
-            const container = document.getElementById('cardsContainer');
-            container.innerHTML = '';
-
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value;
-            const probabilityFilter = document.getElementById('probabilityFilter').value;
-            const cityFilter = document.getElementById('cityFilter').value;
-
-            let filteredCards = cardsData.filter(cardData => {
-                const title = cardData.jukuName.toLowerCase();
-                const status = cardData.status;
-                const city = cardData.address;
-                
-                const displayMonth = cardData.displayMonth || getFiscalYearStructure().currentMonthKey;
-                const monthData = cardData.monthlyData?.[displayMonth] || { probability: 50 };
-                
-                let show = true;
-                if (searchTerm && !title.includes(searchTerm)) show = false;
-                if (statusFilter !== 'all' && status !== statusFilter) show = false;
-                if (probabilityFilter !== 'all' && !matchesProbabilityFilter(monthData.probability, probabilityFilter)) show = false;
-                if (cityFilter !== 'all' && !city.includes(cityFilter)) show = false;
-                return show;
-            });
-
-            filteredCards = getSortedCards(filteredCards);
-
-            filteredCards.forEach((cardData) => {
-                const cardElement = createNewCardElement(cardData);
-                container.appendChild(cardElement);
-            });
-            
-            updateSortInfo();
-            
-            if (Date.now() - lastRenderTime > 2000) {
-                progressCache = null;
-                updateDashboard();
-            }
-        }
-
-        // インライン編集機能（当月のみ）
-        function editSalesIncreaseForecast(cardId, monthKey, element) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!cardData) return;
-
-            const fiscalStructure = getFiscalYearStructure();
-            if (monthKey !== fiscalStructure.currentMonthKey) {
-                showToast('当月分のみ編集可能です。', 'info');
-                return;
-            }
-
-            const displaySpan = element.querySelector('.display-value');
-            const inputField = element.querySelector('.edit-input');
-
-            displaySpan.style.display = 'none';
-            inputField.style.display = 'block';
-            inputField.focus();
-            inputField.select();
-
-            const saveChanges = () => {
-                const newValue = parseInt(inputField.value) || 0;
-                if (!cardData.monthlyData) cardData.monthlyData = {};
-                if (!cardData.monthlyData[monthKey]) {
-                    cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
-                }
-                
-                if (cardData.monthlyData[monthKey].salesIncreaseForecast !== newValue) {
-                    cardData.monthlyData[monthKey].salesIncreaseForecast = newValue;
-                    cardData.lastUpdated = new Date().toISOString().split('T')[0];
-                    saveCardsData();
-                    progressCache = null;
-                    updateDashboard();
-                    renderCards();
-                    showToast('売上増見込を更新しました。', 'success');
-                } else {
-                    inputField.style.display = 'none';
-                    displaySpan.style.display = 'block';
-                }
-            };
-
-            const cancelEdit = () => {
-                inputField.style.display = 'none';
-                displaySpan.style.display = 'block';
-            };
-
-            inputField.onblur = saveChanges;
-            inputField.onkeydown = (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    saveChanges();
-                } else if (event.key === 'Escape') {
-                    event.preventDefault();
-                    cancelEdit();
-                }
-            };
-        }
-
-        function editProbability(cardId, monthKey, element) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!cardData) return;
-
-            const fiscalStructure = getFiscalYearStructure();
-            if (monthKey !== fiscalStructure.currentMonthKey) {
-                showToast('当月分のみ編集可能です。', 'info');
-                return;
-            }
-
-            const displaySpan = element.querySelector('.display-value');
-            const selectField = element.querySelector('.edit-select');
-
-            displaySpan.style.display = 'none';
-            selectField.style.display = 'block';
-            selectField.focus();
-
-            const saveChanges = () => {
-                const newValue = parseInt(selectField.value);
-                if (!cardData.monthlyData) cardData.monthlyData = {};
-                if (!cardData.monthlyData[monthKey]) {
-                    cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
-                }
-                
-                if (cardData.monthlyData[monthKey].probability !== newValue) {
-                    cardData.monthlyData[monthKey].probability = newValue;
-                    cardData.lastUpdated = new Date().toISOString().split('T')[0];
-                    saveCardsData();
-                    progressCache = null;
-                    updateDashboard();
-                    renderCards();
-                    showToast('確率を更新しました。', 'success');
-                } else {
-                    selectField.style.display = 'none';
-                    displaySpan.style.display = 'block';
-                }
-            };
-
-            const cancelEdit = () => {
-                selectField.style.display = 'none';
-                displaySpan.style.display = 'block';
-            };
-
-            selectField.onchange = saveChanges;
-            selectField.onblur = saveChanges;
-            selectField.onkeydown = (event) => {
-                if (event.key === 'Escape') {
-                    event.preventDefault();
-                    cancelEdit();
-                }
-            };
-        }
-
-        // メモ詳細モーダル
-        function openMemoDetailModal(cardId, monthKey) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!cardData) return;
-
-            const monthData = cardData.monthlyData?.[monthKey] || { memo: "" };
-            const fiscalStructure = getFiscalYearStructure();
-            const monthLabel = fiscalStructure.months.find(m => m.key === monthKey)?.label;
-
-            document.getElementById('memoModalTitle').textContent = `メモ詳細 - ${monthLabel}`;
-            document.getElementById('memoCardName').textContent = `塾名: ${cardData.jukuName}`;
-            document.getElementById('memoContentDisplay').value = monthData.memo || 'メモがありません。';
-            
-            openModal('memoDetailModal');
-        }
-
-        function closeMemoDetailModal() {
-            closeModal('memoDetailModal');
-        }
-
-        // Chart.js関連
-        function generateFiscalYearData(graphType) {
-            const { months, currentMonthIndex } = getFiscalYearStructure();
-            
-            const actualData = [];
-            const targetData = [];
-            const labels = months.map(m => m.label.substring(m.label.indexOf('年') + 1));
-            
-            let cumActual = 0;
-            let cumTarget = 0;
-            let cumDifference = 0;
-            
-            months.forEach((monthInfo, index) => {
-                const isPastMonth = index <= currentMonthIndex;
-                const monthNum = monthInfo.month;
-                
-                switch(graphType) {
-                    case 0:
-                        const monthlyTarget = personalSettings.monthlyProfitTargets[monthNum] || 0;
-                        const monthlyActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
-                        
-                        targetData.push(monthlyTarget);
-                        actualData.push(isPastMonth ? monthlyActual : null);
-                        break;
-                        
-                    case 1:
-                        const yearlyMonthTarget = personalSettings.monthlyProfitTargets[monthNum] || 0;
-                        const yearlyMonthActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
-                        
-                        cumTarget += yearlyMonthTarget;
-                        cumActual += isPastMonth ? yearlyMonthActual : 0;
-                        
-                        targetData.push(cumTarget);
-                        actualData.push(isPastMonth ? cumActual : null);
-                        break;
-                        
-                    case 2:
-                        const profitTarget = personalSettings.monthlyProfitTargets[monthNum] || 0;
-                        const profitActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
-                        const profitDiff = profitActual - profitTarget;
-                        
-                        cumDifference += isPastMonth ? profitDiff : 0;
-                        actualData.push(isPastMonth ? cumDifference : null);
-                        break;
-                        
-                    case 3:
-                        let cumProspectProfit = 0;
-                        for (let j = 0; j <= index; j++) {
-                            const checkMonthKey = months[j].key;
-                            cardsData.forEach(card => {
-                                const monthData = card.monthlyData?.[checkMonthKey] || { salesIncreaseForecast: 0 };
-                                cumProspectProfit += calculateProfitIncrease(monthData.salesIncreaseForecast || 0);
-                            });
-                        }
-                        
-                        const profitIncreaseTarget = personalSettings.yearlyProfitIncreaseTarget;
-                        const prospectRate = profitIncreaseTarget > 0 ? (cumProspectProfit / profitIncreaseTarget) * 100 : 0;
-                        
-                        actualData.push(isPastMonth ? prospectRate : null);
-                        targetData.push(100);
-                        break;
-                }
-            });
-            
-            return { 
-                labels, 
-                actualData, 
-                targetData
-            };
         }
 
         function generateProgressChart(graphType) {
@@ -3257,6 +2325,76 @@
             updateGraphLegend(config.datasets);
         }
 
+        function generateFiscalYearData(graphType) {
+            const { months, currentMonthIndex } = getFiscalYearStructure();
+            
+            const actualData = [];
+            const targetData = [];
+            const labels = months.map(m => m.label.substring(m.label.indexOf('年') + 1));
+            
+            let cumActual = 0;
+            let cumTarget = 0;
+            let cumDifference = 0;
+            
+            months.forEach((monthInfo, index) => {
+                const isPastMonth = index <= currentMonthIndex;
+                const monthNum = monthInfo.month;
+                
+                switch(graphType) {
+                    case 0: // 月別目標（粗利）
+                        const monthlyTarget = personalSettings.monthlyProfitTargets[monthNum] || 0;
+                        const monthlyActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
+                        
+                        targetData.push(monthlyTarget);
+                        actualData.push(isPastMonth ? monthlyActual : null);
+                        break;
+                        
+                    case 1: // 年間目標（粗利）
+                        const yearlyMonthTarget = personalSettings.monthlyProfitTargets[monthNum] || 0;
+                        const yearlyMonthActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
+                        
+                        cumTarget += yearlyMonthTarget;
+                        cumActual += isPastMonth ? yearlyMonthActual : 0;
+                        
+                        targetData.push(cumTarget);
+                        actualData.push(isPastMonth ? cumActual : null);
+                        break;
+                        
+                    case 2: // 目標粗利増
+                        const profitTarget = personalSettings.monthlyProfitTargets[monthNum] || 0;
+                        const profitActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
+                        const profitDiff = profitActual - profitTarget;
+                        
+                        cumDifference += isPastMonth ? profitDiff : 0;
+                        actualData.push(isPastMonth ? cumDifference : null);
+                        break;
+                        
+                    case 3: // 年間粗利増予定（営業見込）
+                        let cumProspectProfit = 0;
+                        for (let j = 0; j <= index; j++) {
+                            const checkMonthKey = months[j].key;
+                            cardsData.forEach(card => {
+                                const monthData = card.monthlyData?.[checkMonthKey] || { salesIncreaseForecast: 0 };
+                                cumProspectProfit += calculateProfitIncrease(monthData.salesIncreaseForecast || 0);
+                            });
+                        }
+                        
+                        const profitIncreaseTarget = personalSettings.yearlyProfitIncreaseTarget;
+                        const prospectRate = profitIncreaseTarget > 0 ? (cumProspectProfit / profitIncreaseTarget) * 100 : 0;
+                        
+                        actualData.push(isPastMonth ? prospectRate : null);
+                        targetData.push(100); // 100%ライン
+                        break;
+                }
+            });
+            
+            return { 
+                labels, 
+                actualData, 
+                targetData
+            };
+        }
+
         function updateGraphLegend(datasets) {
             const legendContainer = document.getElementById('graphLegend');
             legendContainer.innerHTML = '';
@@ -3276,15 +2414,982 @@
             });
         }
 
-        // 完全な初期化処理
+        // フィルタリング・ソート
+        function filterByProbability(probability) {
+            document.getElementById('probabilityFilter').value = probability;
+            applyFilters();
+        }
+
+        function openNewCardModal() {
+            document.getElementById('newCardForm').reset();
+            updateAutoCalculations('new');
+            document.getElementById('newSalesActual').readOnly = true;
+            document.getElementById('newSalesActual').style.background = '#f8f9fa';
+            openModal('newCardModal');
+        }
+
+        function closeNewCardModal() {
+            document.getElementById('newCardForm').reset();
+            closeModal('newCardModal');
+        }
+
+        function openPersonalSettingsModal() {
+            document.getElementById('userName').value = personalSettings.userName;
+            document.getElementById('profitRate').value = personalSettings.profitRate;
+            document.getElementById('yearlyProfitTarget').value = personalSettings.yearlyProfitTarget;
+            document.getElementById('yearlyProfitIncreaseTarget').value = personalSettings.yearlyProfitIncreaseTarget;
+            
+            const monthlyContainer = document.getElementById('monthlyProfitContainer');
+            const fiscalMonths = getFiscalYearStructure().months;
+            
+            monthlyContainer.innerHTML = '';
+            
+            fiscalMonths.forEach(monthInfo => {
+                const monthDiv = document.createElement('div');
+                monthDiv.className = 'monthly-row';
+                const actualValue = personalSettings.monthlyProfitActuals[monthInfo.month] || 0;
+                const targetValue = personalSettings.monthlyProfitTargets[monthInfo.month] || 0;
+                const actualDisplay = actualValue === 0 ? '' : actualValue;
+                const targetDisplay = targetValue === 0 ? '' : targetValue;
+                
+                monthDiv.innerHTML = `
+                    <div class="month-name">${monthInfo.label.substring(monthInfo.label.indexOf('年') + 1)}</div>
+                    <input type="number" class="monthly-input" placeholder="実績" id="monthlyProfitActual${monthInfo.month}" value="${actualDisplay}">
+                    <input type="number" class="monthly-input" placeholder="目標" id="monthlyProfitTarget${monthInfo.month}" value="${targetDisplay}">
+                    <div style="font-size: 10px; color: rgba(0,0,0,0.7); text-align: center;"></div>
+                `;
+                monthlyContainer.appendChild(monthDiv);
+            });
+            
+            setTimeout(() => {
+                setupMonthlyInputHandlers('monthlyProfitContainer');
+            }, 100);
+            
+            openModal('personalSettingsModal');
+        }
+
+        function closePersonalSettingsModal() {
+            closeModal('personalSettingsModal');
+        }
+
+        function openImportModal() {
+            openModal('importModal');
+        }
+
+        function closeImportModal() {
+            closeModal('importModal');
+        }
+
+        function exportToExcel() {
+            const headers = [
+                '塾名', '区分', '住所', '年間売上増目標', '年間粗利増予定',
+                '年間粗利実績', '年間売上実績', '通年教材注文', '通年教材時期',
+                '季節入試使用', '季節入試時期', '最終更新日'
+            ];
+            
+            const data = [headers];
+            
+            cardsData.forEach(cardData => {
+                const statusText = cardData.status === 'new' ? '新規' : (cardData.status === 'existing' ? '既存' : '元既存');
+                const materials = cardData.annualMaterials || {
+                    yearRound: { hasOrder: false, orderPeriod: "" },
+                    seasonalExam: { hasUsage: false, usagePeriod: "" }
+                };
+                
+                data.push([
+                    cardData.jukuName,
+                    statusText,
+                    cardData.address,
+                    cardData.annualSalesIncreaseTarget,
+                    cardData.annualProfitIncreaseExpected,
+                    cardData.annualProfitActual,
+                    calculateSalesFromProfit(cardData.annualProfitActual || 0),
+                    materials.yearRound.hasOrder ? '注文あり' : '注文なし',
+                    materials.yearRound.orderPeriod,
+                    materials.seasonalExam.hasUsage ? '使用あり' : '使用なし',
+                    materials.seasonalExam.usagePeriod,
+                    cardData.lastUpdated ? cardData.lastUpdated.replace(/-/g, '/') : ''
+                ]);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "営業管理データ");
+            
+            const fileName = `営業管理データ_${personalSettings.userName}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            showToast(`Excel出力完了！`, 'success');
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = 'all';
+            document.getElementById('probabilityFilter').value = 'all';
+            document.getElementById('cityFilter').value = 'all';
+            document.getElementById('sortSelect').value = 'sales-desc';
+            renderCards();
+            showToast('フィルタをクリアしました', 'info');
+        }
+
+        function applySorting() {
+            renderCards();
+        }
+
+        function applyFilters() {
+            renderCards();
+        }
+
+        function changeCardDisplayMonth(cardId, newMonthKey) {
+            const cardData = cardsData.find(card => card.id === cardId);
+            if (!cardData) return;
+            
+            cardData.displayMonth = newMonthKey;
+            saveCardsData();
+            renderCards();
+        }
+
+        function changeAllCardsDisplayMonth(newMonthKey) {
+            cardsData.forEach(cardData => {
+                cardData.displayMonth = newMonthKey;
+            });
+            saveCardsData();
+            renderCards();
+            showToast(`全カードの表示月を変更しました`, 'info');
+        }
+
+        function openMonthlyHistoryModal(cardId) {
+            const cardData = cardsData.find(card => card.id === cardId);
+            if (!cardData) return;
+            
+            document.getElementById('historyModalTitle').textContent = `${cardData.jukuName} - 月別履歴（表示専用）`;
+            
+            const container = document.getElementById('monthlyHistoryContainer');
+            container.innerHTML = '';
+            
+            const fiscalStructure = getFiscalYearStructure();
+
+            fiscalStructure.months.forEach(monthInfo => {
+                const monthData = cardData.monthlyData?.[monthInfo.key] || { 
+                    salesIncreaseForecast: 0, probability: 50, memo: "" 
+                };
+
+                const monthRow = document.createElement('div');
+                monthRow.className = 'history-month-row past-month';
+                
+                monthRow.innerHTML = `
+                    <div class="history-month-label">
+                        ${monthInfo.label}
+                        <span class="readonly-badge">表示のみ</span>
+                    </div>
+                    <div class="history-data-grid">
+                        <div class="history-field">
+                            <label>売上増見込</label>
+                            <input type="number" class="history-input" value="${monthData.salesIncreaseForecast}" readonly>
+                        </div>
+                        <div class="history-field">
+                            <label>確率</label>
+                            <input type="text" class="history-input" value="${getProbabilityLabel(monthData.probability)}" readonly>
+                        </div>
+                        <div class="history-field">
+                            <label>メモ</label>
+                            <textarea class="history-memo" readonly>${monthData.memo}</textarea>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(monthRow);
+            });
+            
+            openModal('monthlyHistoryModal');
+        }
+
+        function closeMonthlyHistoryModal() {
+            closeModal('monthlyHistoryModal');
+        }
+
+        function editCard(button) {
+            const card = button.closest('.card');
+            const cardId = parseInt(card.dataset.cardId);
+            const cardData = cardsData.find(card => card.id === cardId);
+            
+            if (!cardData) return;
+
+            document.getElementById('editCardId').value = cardData.id;
+            document.getElementById('editModalTitle').textContent = `${cardData.jukuName} - 編集`;
+            document.getElementById('editJukuName').value = cardData.jukuName;
+            document.getElementById('editJukuStatus').value = cardData.status;
+            document.getElementById('editAddressInput').value = cardData.address;
+            document.getElementById('editSalesIncreaseTarget').value = cardData.annualSalesIncreaseTarget;
+            document.getElementById('editProfitIncreaseExpected').value = cardData.annualProfitIncreaseExpected;
+            document.getElementById('editProfitActual').value = cardData.annualProfitActual;
+            document.getElementById('editSalesActual').value = calculateSalesFromProfit(cardData.annualProfitActual || 0);
+            
+            const materials = cardData.annualMaterials || {
+                yearRound: { hasOrder: false, orderPeriod: "" },
+                seasonalExam: { hasUsage: false, usagePeriod: "" }
+            };
+            document.getElementById('editYearRoundOrder').value = String(materials.yearRound.hasOrder);
+            document.getElementById('editYearRoundPeriod').value = materials.yearRound.orderPeriod || '';
+            document.getElementById('editSeasonalUsage').value = String(materials.seasonalExam.hasUsage);
+            document.getElementById('editSeasonalPeriod').value = materials.seasonalExam.usagePeriod || '';
+            
+            openEditCardModal();
+        }
+
+        function openEditCardModal() {
+            updateAutoCalculations('edit');
+            document.getElementById('editSalesActual').readOnly = true;
+            document.getElementById('editSalesActual').style.background = '#f8f9fa';
+            openModal('editCardModal');
+        }
+
+        function closeEditCardModal() {
+            closeModal('editCardModal');
+        }
+
+        function deleteCard(cardId) {
+            const cardData = cardsData.find(card => card.id === cardId);
+            const cardName = cardData ? cardData.jukuName : 'この塾';
+            
+            if (confirm(`『${cardName}』を削除します。この操作は元に戻せません。よろしいですか？`)) {
+                cardsData = cardsData.filter(card => card.id !== cardId);
+                saveCardsData();
+                progressCache = null;
+                updateDashboard();
+                renderCards();
+                showToast('データを削除しました', 'success');
+            }
+        }
+
+        // メモ詳細モーダル（編集機能付き）
+        function openMemoDetailModal(cardId, monthKey) {
+            const cardData = cardsData.find(card => card.id === cardId);
+            if (!cardData) return;
+
+            const monthData = cardData.monthlyData?.[monthKey] || { memo: "" };
+            const fiscalStructure = getFiscalYearStructure();
+            const monthLabel = fiscalStructure.months.find(m => m.key === monthKey)?.label;
+
+            document.getElementById('memoModalTitle').textContent = `メモ詳細 - ${monthLabel}`;
+            document.getElementById('memoCardName').textContent = `塾名: ${cardData.jukuName}`;
+            document.getElementById('memoContentInput').value = monthData.memo || '';
+            
+            currentEditingMemo = { cardId, monthKey };
+            
+            openModal('memoDetailModal');
+        }
+
+        function closeMemoDetailModal() {
+            currentEditingMemo = null;
+            closeModal('memoDetailModal');
+        }
+
+        function saveMemoContent() {
+            if (!currentEditingMemo) return;
+
+            const { cardId, monthKey } = currentEditingMemo;
+            const cardData = cardsData.find(card => card.id === cardId);
+            if (!cardData) return;
+
+            const newMemoContent = document.getElementById('memoContentInput').value;
+            
+            if (!cardData.monthlyData) cardData.monthlyData = {};
+            if (!cardData.monthlyData[monthKey]) {
+                cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+            }
+
+            cardData.monthlyData[monthKey].memo = newMemoContent;
+            cardData.lastUpdated = new Date().toISOString().split('T')[0];
+
+            saveCardsData();
+            renderCards();
+            showToast('メモを保存しました', 'success');
+            closeMemoDetailModal();
+        }
+
+        // Excel・データ管理
+        function downloadPersonalTemplate() {
+            const fiscalMonths = getFiscalYearStructure().months.map(m => m.month);
+            const monthNames = getFiscalYearStructure().months.map(m => m.label.substring(m.label.indexOf('年') + 1));
+
+            const headers = ['項目名', ...monthNames, '年間目標'];
+            const data = [
+                headers,
+                ['粗利実績', ...fiscalMonths.map(m => personalSettings.monthlyProfitActuals[m] || 0), ''],
+                ['粗利目標', ...fiscalMonths.map(m => personalSettings.monthlyProfitTargets[m] || 0), ''],
+                ['年間粗利目標', '', '', '', '', '', '', '', '', '', '', '', '', personalSettings.yearlyProfitTarget]
+            ];
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "個人設定テンプレート");
+            
+            const fileName = `個人設定テンプレート_${personalSettings.userName}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            showToast(`個人設定テンプレートをダウンロードしました！`, 'success');
+        }
+
+        function openPersonalExcelImport() {
+            personalExcelImportData = null;
+            document.getElementById('personalFileInput').value = '';
+            openModal('personalExcelImportModal');
+        }
+
+        function closePersonalExcelImport() {
+            closeModal('personalExcelImportModal');
+        }
+
+        function handlePersonalExcelFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        personalExcelImportData = XLSX.utils.sheet_to_json(worksheet, {header: 1, raw: false});
+                        showToast(`個人設定データ読み込み準備完了しました。`, 'info');
+                    } catch (error) {
+                        showToast('個人設定ファイル読み込みエラーが発生しました。', 'error');
+                        console.error(error);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function importPersonalExcelData() {
+            if (!personalExcelImportData || personalExcelImportData.length < 4) {
+                showToast('読み込む個人設定データがありません。テンプレートを使用してください。', 'error');
+                return;
+            }
+
+            const fiscalMonths = getFiscalYearStructure().months.map(m => m.month);
+            let newMonthlyActuals = { ...personalSettings.monthlyProfitActuals };
+            let newMonthlyTargets = { ...personalSettings.monthlyProfitTargets };
+            let newYearlyProfitTarget = personalSettings.yearlyProfitTarget;
+
+            try {
+                if (personalExcelImportData[1] && personalExcelImportData[1][0] === '粗利実績') {
+                    fiscalMonths.forEach((monthNum, index) => {
+                        const value = parseInt(personalExcelImportData[1][index + 1]) || 0;
+                        newMonthlyActuals[monthNum] = value;
+                    });
+                } else {
+                    throw new Error('粗利実績の行が見つかりません。');
+                }
+
+                if (personalExcelImportData[2] && personalExcelImportData[2][0] === '粗利目標') {
+                    fiscalMonths.forEach((monthNum, index) => {
+                        const value = parseInt(personalExcelImportData[2][index + 1]) || 0;
+                        newMonthlyTargets[monthNum] = value;
+                    });
+                } else {
+                    throw new Error('粗利目標の行が見つかりません。');
+                }
+
+                if (personalExcelImportData[3] && personalExcelImportData[3][0] === '年間粗利目標') {
+                    newYearlyProfitTarget = parseInt(personalExcelImportData[3][personalExcelImportData[3].length - 1]) || 0;
+                } else {
+                    throw new Error('年間粗利目標の行が見つかりません。');
+                }
+
+                personalSettings.monthlyProfitActuals = newMonthlyActuals;
+                personalSettings.monthlyProfitTargets = newMonthlyTargets;
+                personalSettings.yearlyProfitTarget = newYearlyProfitTarget;
+                
+                savePersonalSettings();
+                progressCache = null;
+                updateDashboard();
+                showToast('個人設定データをExcelから取り込みました！', 'success');
+                closePersonalExcelImport();
+                closePersonalSettingsModal();
+                openPersonalSettingsModal();
+            } catch (error) {
+                showToast(`個人設定Excel取込エラー: ${error.message}`, 'error');
+                console.error("Personal Excel Import Error:", error);
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                        
+                        importedExcelData = jsonData;
+                        showToast(`${jsonData.length}件のデータを読み込み準備完了しました。`, 'info');
+                    } catch (error) {
+                        showToast('ファイル読み込みエラーが発生しました。', 'error');
+                        console.error(error);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function importExcelData() {
+            if (importedExcelData.length === 0) {
+                showToast('読み込むデータがありません。', 'error');
+                return;
+            }
+            
+            let addedCount = 0;
+            const fiscalStructure = getFiscalYearStructure();
+            const currentMonthKey = fiscalStructure.currentMonthKey;
+
+            importedExcelData.forEach((row) => {
+                const jukuName = row['塾名'] || row['学校名'] || row['名称'] || `塾${nextCardId}`;
+                const address = row['住所'] || row['所在地'] || row['市区町村'] || '';
+                
+                const monthlyData = {};
+                fiscalStructure.months.forEach(monthInfo => {
+                    monthlyData[monthInfo.key] = {
+                        salesIncreaseForecast: 0,
+                        probability: 50,
+                        memo: ""
+                    };
+                });                
+                const cardData = {
+                    id: nextCardId++,
+                    jukuName: jukuName,
+                    status: 'new',
+                    address: address,
+                    annualSalesIncreaseTarget: 0,
+                    annualProfitIncreaseExpected: 0,
+                    annualProfitActual: 0,
+                    displayMonth: currentMonthKey,
+                    monthlyData: monthlyData,
+                    annualMaterials: {
+                        yearRound: { hasOrder: false, orderPeriod: "" },
+                        seasonalExam: { hasUsage: false, usagePeriod: "" }
+                    },
+                    registeredMonth: currentMonthKey,
+                    lastUpdated: new Date().toISOString().split('T')[0]
+                };
+                
+                cardsData.push(cardData);
+                addedCount++;
+            });
+            
+            saveCardsData();
+            progressCache = null;
+            renderCards();
+            updateDashboard();
+            
+            showToast(`Excel読み込み完了！\n${addedCount}件の塾を追加しました。`, 'success');
+            closeImportModal();
+            importedExcelData = [];
+        }
+
+        function exportAppData() {
+            try {
+                const appData = {
+                    cardsData: cardsData,
+                    nextCardId: nextCardId,
+                    personalSettings: personalSettings,
+                    exportDate: new Date().toISOString(),
+                    version: '8.5-fixed'
+                };
+                
+                const dataStr = JSON.stringify(appData, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `営業ダッシュボード_backup_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showToast('データをエクスポートしました！', 'success');
+            } catch (e) {
+                showToast('データエクスポートに失敗しました。', 'error');
+                console.error('Export error:', e);
+            }
+        }
+
+        function openImportAppDataModal() {
+            importedAppData = null;
+            document.getElementById('appDataFileInput').value = '';
+            openModal('importAppDataModal');
+        }
+
+        function closeImportAppDataModal() {
+            closeModal('importAppDataModal');
+        }
+
+        function handleAppDataFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        importedAppData = JSON.parse(e.target.result);
+                        showToast('データファイルの読み込み準備ができました。', 'info');
+                    } catch (error) {
+                        showToast('データファイルの読み込みエラーが発生しました。', 'error');
+                        console.error(error);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function importAppData() {
+            if (!importedAppData) {
+                showToast('インポートするデータが選択されていません。', 'error');
+                return;
+            }
+
+            if (!confirm('現在のデータは上書きされます。続行しますか？')) {
+                return;
+            }
+
+            try {
+                if (importedAppData.cardsData && Array.isArray(importedAppData.cardsData)) {
+                    cardsData = importedAppData.cardsData;
+                }
+                if (typeof importedAppData.nextCardId === 'number') {
+                    nextCardId = importedAppData.nextCardId;
+                }
+                if (importedAppData.personalSettings && typeof importedAppData.personalSettings === 'object') {
+                    personalSettings = { ...personalSettings, ...importedAppData.personalSettings };
+                }
+                
+                saveCardsData();
+                savePersonalSettings();
+                progressCache = null;
+                updateDashboard();
+                renderCards();
+                updateGlobalMonthSelector();
+                
+                showToast('データのインポートが完了しました！', 'success');
+                closeImportAppDataModal();
+            } catch (error) {
+                showToast(`データのインポートに失敗しました: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        function updateAutoCalculations(prefix) {
+            const salesIncreaseTarget = parseInt(document.getElementById(`${prefix}SalesIncreaseTarget`).value) || 0;
+            const profitActual = parseInt(document.getElementById(`${prefix}ProfitActual`).value) || 0;
+            
+            const profitExpected = calculateProfitIncrease(salesIncreaseTarget);
+            const salesActual = calculateSalesFromProfit(profitActual);
+            
+            document.getElementById(`${prefix}ProfitIncreaseExpected`).value = profitExpected;
+            document.getElementById(`${prefix}SalesActual`).value = salesActual;
+        }
+
+        function setupMonthlyInputHandlers(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            const inputs = container.querySelectorAll('.monthly-input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    if (this.value === '0') {
+                        this.value = '';
+                    }
+                });
+            });
+        }
+
+        function initializeMonthlyDataForNewCard(cardData, registeredMonthKey, initialForecast = 0, initialProbability = 50) {
+            const fiscalStructure = getFiscalYearStructure();
+            const registeredIndex = fiscalStructure.months.findIndex(m => m.key === registeredMonthKey);
+            
+            cardData.monthlyData = {};
+            
+            fiscalStructure.months.forEach((monthInfo, index) => {
+                if (index >= registeredIndex) {
+                    cardData.monthlyData[monthInfo.key] = {
+                        salesIncreaseForecast: initialForecast,
+                        probability: initialProbability,
+                        memo: ""
+                    };
+                } else {
+                    cardData.monthlyData[monthInfo.key] = {
+                        salesIncreaseForecast: 0,
+                        probability: 50,
+                        memo: ""
+                    };
+                }
+            });
+            
+            cardData.registeredMonth = registeredMonthKey;
+        }
+
+        function propagateCurrentMonthChanges(cardId, newForecast, newProbability) {
+            const cardData = cardsData.find(card => card.id === cardId);
+            if (!cardData) return;
+            
+            const fiscalStructure = getFiscalYearStructure();
+            const currentMonthKey = fiscalStructure.currentMonthKey;
+            const registeredMonthKey = cardData.registeredMonth || currentMonthKey;
+            
+            const registeredIndex = fiscalStructure.months.findIndex(m => m.key === registeredMonthKey);
+            const currentIndex = fiscalStructure.months.findIndex(m => m.key === currentMonthKey);
+            
+            fiscalStructure.months.forEach((monthInfo, index) => {
+                if (index >= Math.max(registeredIndex, currentIndex)) {
+                    if (!cardData.monthlyData[monthInfo.key]) {
+                        cardData.monthlyData[monthInfo.key] = { 
+                            salesIncreaseForecast: 0, 
+                            probability: 50, 
+                            memo: "" 
+                        };
+                    }
+                    cardData.monthlyData[monthInfo.key].salesIncreaseForecast = newForecast;
+                    cardData.monthlyData[monthInfo.key].probability = newProbability;
+                }
+            });
+            
+            saveCardsData();
+            showToast('未来月のデータを一括更新しました', 'success');
+        }
+
+        function calculateAllProgress() {
+            const now = Date.now();
+            if (progressCache && (now - lastRenderTime) < 1000) {
+                return progressCache;
+            }
+
+            const currentMonth = getCurrentMonth();
+            
+            const monthlyTarget = personalSettings.monthlyProfitTargets[currentMonth] || 0;
+            const monthlyActual = personalSettings.monthlyProfitActuals[currentMonth] || 0;
+            const monthlyDifference = monthlyActual - monthlyTarget;
+            const monthlyRate = monthlyTarget > 0 ? (monthlyActual / monthlyTarget) * 100 : 0;
+            
+            const yearlyTarget = personalSettings.yearlyProfitTarget;
+            let yearlyActualCalculated = Object.values(personalSettings.monthlyProfitActuals)
+                                                .reduce((sum, monthlyProfit) => sum + (monthlyProfit || 0), 0);
+            
+            const yearlyActual = yearlyActualCalculated;
+            const yearlyRate = yearlyTarget > 0 ? (yearlyActual / yearlyTarget) * 100 : 0;
+            
+            const profitIncreaseTarget = personalSettings.yearlyProfitIncreaseTarget;
+            let cumulativeProfitDifference = 0;
+            const fiscalMonths = getFiscalYearStructure().months;
+            for(let i=0; i <= getFiscalYearStructure().currentMonthIndex; i++) {
+                const month = fiscalMonths[i].month;
+                const actual = personalSettings.monthlyProfitActuals[month] || 0;
+                const target = personalSettings.monthlyProfitTargets[month] || 0;
+                cumulativeProfitDifference += (actual - target);
+            }
+            const profitIncreaseActual = cumulativeProfitDifference;
+            const profitIncreaseRate = profitIncreaseTarget > 0 ? (profitIncreaseActual / profitIncreaseTarget) * 100 : 0;
+            
+            const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+            let probUnder50 = 0, prob5070 = 0, prob7090 = 0, prob90100 = 0;
+            cardsData.forEach(card => {
+                const monthData = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0, probability: 50 };
+                const profit = calculateProfitIncrease(monthData.salesIncreaseForecast || 0);
+                const probability = monthData.probability;
+                
+                if (probability < 50) {
+                    probUnder50 += profit;
+                } else if (probability < 70) {
+                    prob5070 += profit;
+                } else if (probability < 90) {
+                    prob7090 += profit;
+                } else {
+                    prob90100 += profit;
+                }
+            });
+
+            const prospectTotal = cardsData.reduce((sum, card) => {
+                const monthData = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0 };
+                return sum + calculateProfitIncrease(monthData.salesIncreaseForecast || 0);
+            }, 0);
+            const prospectRate = profitIncreaseTarget > 0 ? (prospectTotal / profitIncreaseTarget) * 100 : 0;
+            
+            progressCache = {
+                monthly: { target: monthlyTarget, actual: monthlyActual, difference: monthlyDifference, rate: monthlyRate },
+                yearly: { target: yearlyTarget, actual: yearlyActual, rate: yearlyRate },
+                profitIncrease: { target: profitIncreaseTarget, actual: profitIncreaseActual, rate: profitIncreaseRate },
+                prospect: { total: prospectTotal, rate: prospectRate },
+                funnel: { probUnder50, prob5070, prob7090, prob90100 }
+            };
+            
+            lastRenderTime = now;
+            return progressCache;
+        }
+
+        function updateDashboard() {
+            const progress = calculateAllProgress();
+            
+            document.getElementById('monthlyTargetDisplay').textContent = formatManYen(progress.monthly.target);
+            document.getElementById('monthlyDetail').textContent = 
+                `${formatAmount(progress.monthly.actual)}/${formatAmount(progress.monthly.target)}（${progress.monthly.rate.toFixed(1)}%）`;
+            
+            const monthlyDiffText = formatAmount(progress.monthly.difference);
+            document.getElementById('monthlyRate').textContent = `差分: ${monthlyDiffText}`;
+            document.getElementById('monthlyRate').className = 
+                progress.monthly.difference >= 0 ? 'progress-rate rate-positive' : 'progress-rate rate-negative';
+            
+            document.getElementById('monthlyProgressBar').style.width = `${Math.min(progress.monthly.rate, 100)}%`;
+            
+            document.getElementById('yearlyTargetDisplay').textContent = formatManYen(progress.yearly.target);
+            document.getElementById('yearlyDetail').textContent = 
+                `${formatAmount(progress.yearly.actual)}/${formatAmount(progress.yearly.target)}（${progress.yearly.rate.toFixed(1)}%）`;
+            document.getElementById('yearlyRate').textContent = `${progress.yearly.rate.toFixed(1)}%達成`;
+            document.getElementById('yearlyProgressBar').style.width = `${Math.min(progress.yearly.rate, 100)}%`;
+            
+            document.getElementById('profitIncreaseDisplay').textContent = formatManYen(progress.profitIncrease.target);
+            document.getElementById('profitIncreaseDetail').textContent = 
+                `${formatAmount(progress.profitIncrease.actual)}/${formatAmount(progress.profitIncrease.target)}（${progress.profitIncrease.rate.toFixed(1)}%）`;
+            document.getElementById('profitIncreaseRate').textContent = `期待: ${formatAmount(progress.profitIncrease.actual)}`;
+            document.getElementById('profitIncreaseBar').style.width = `${Math.min(Math.abs(progress.profitIncrease.rate), 100)}%`;
+            
+            document.getElementById('prospectTotalDisplay').textContent = formatManYen(progress.prospect.total);
+            document.getElementById('prospectDetail').textContent = `対目標${progress.prospect.rate.toFixed(1)}%`;
+            document.getElementById('prospectRate').textContent = 
+                progress.prospect.rate >= 100 ? '目標クリア見込み' : '追加営業必要';
+            document.getElementById('prospectBar').style.width = `${Math.min(progress.prospect.rate, 100)}%`;
+            
+            document.getElementById('probUnder50').textContent = formatManYen(progress.funnel.probUnder50);
+            document.getElementById('prob5070').textContent = formatManYen(progress.funnel.prob5070);
+            document.getElementById('prob7090').textContent = formatManYen(progress.funnel.prob7090);
+            document.getElementById('prob90100').textContent = formatManYen(progress.funnel.prob90100);
+        }
+
+        function getSortedCards(cards) {
+            const sortType = document.getElementById('sortSelect').value;
+            const sortedCards = [...cards];
+            
+            switch (sortType) {
+                case 'sales-desc':
+                    return sortedCards.sort((a, b) => {
+                        const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+                        const aForecast = a.monthlyData?.[currentMonthKey]?.salesIncreaseForecast || 0;
+                        const bForecast = b.monthlyData?.[currentMonthKey]?.salesIncreaseForecast || 0;
+                        return bForecast - aForecast;
+                    });
+                case 'sales-asc':
+                    return sortedCards.sort((a, b) => {
+                        const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+                        const aForecast = a.monthlyData?.[currentMonthKey]?.salesIncreaseForecast || 0;
+                        const bForecast = b.monthlyData?.[currentMonthKey]?.salesIncreaseForecast || 0;
+                        return aForecast - bForecast;
+                    });
+                case 'updated-desc':
+                    return sortedCards.sort((a, b) => new Date(b.lastUpdated || '1970-01-01') - new Date(a.lastUpdated || '1970-01-01'));
+                case 'updated-asc':
+                    return sortedCards.sort((a, b) => new Date(a.lastUpdated || '1970-01-01') - new Date(b.lastUpdated || '1970-01-01'));
+                case 'probability-desc':
+                    return sortedCards.sort((a, b) => {
+                        const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+                        const aProb = a.monthlyData?.[currentMonthKey]?.probability || 50;
+                        const bProb = b.monthlyData?.[currentMonthKey]?.probability || 50;
+                        return bProb - aProb;
+                    });
+                case 'probability-asc':
+                    return sortedCards.sort((a, b) => {
+                        const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+                        const aProb = a.monthlyData?.[currentMonthKey]?.probability || 50;
+                        const bProb = b.monthlyData?.[currentMonthKey]?.probability || 50;
+                        return aProb - bProb;
+                    });
+                default:
+                    return sortedCards;
+            }
+        }
+
+        function updateSortInfo() {
+            const sortType = document.getElementById('sortSelect').value;
+            const sortInfo = document.getElementById('sortInfo');
+            
+            const sortLabels = {
+                'sales-desc': '売上増見込順（大→小）',
+                'sales-asc': '売上増見込順（小→大）',
+                'updated-desc': '最終更新日順（新→古）',
+                'updated-asc': '最終更新日順（古→新）',
+                'probability-desc': '受注確率順（高→低）',
+                'probability-asc': '受注確率順（低→高）'
+            };
+            
+            sortInfo.textContent = sortLabels[sortType] || '売上増見込順（大→小）';
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = '';
+
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const probabilityFilter = document.getElementById('probabilityFilter').value;
+            const cityFilter = document.getElementById('cityFilter').value;
+
+            let filteredCards = cardsData.filter(cardData => {
+                const title = cardData.jukuName.toLowerCase();
+                const status = cardData.status;
+                const city = cardData.address;
+                
+                const displayMonth = cardData.displayMonth || getFiscalYearStructure().currentMonthKey;
+                const monthData = cardData.monthlyData?.[displayMonth] || { probability: 50 };
+                
+                let show = true;
+                if (searchTerm && !title.includes(searchTerm)) show = false;
+                if (statusFilter !== 'all' && status !== statusFilter) show = false;
+                if (probabilityFilter !== 'all' && !matchesProbabilityFilter(monthData.probability, probabilityFilter)) show = false;
+                if (cityFilter !== 'all' && !city.includes(cityFilter)) show = false;
+                return show;
+            });
+
+            filteredCards = getSortedCards(filteredCards);
+
+            filteredCards.forEach((cardData) => {
+                const cardElement = createNewCardElement(cardData);
+                container.appendChild(cardElement);
+            });
+            
+            updateSortInfo();
+            
+            if (Date.now() - lastRenderTime > 2000) {
+                progressCache = null;
+                updateDashboard();
+            }
+        }
+
+        function editSalesIncreaseForecast(cardId, monthKey, element) {
+            const cardData = cardsData.find(card => card.id === cardId);
+            if (!cardData) return;
+
+            const fiscalStructure = getFiscalYearStructure();
+            if (monthKey !== fiscalStructure.currentMonthKey) {
+                showToast('当月分のみ編集可能です。', 'info');
+                return;
+            }
+
+            const displaySpan = element.querySelector('.display-value');
+            const inputField = element.querySelector('.edit-input');
+
+            displaySpan.style.display = 'none';
+            inputField.style.display = 'block';
+            inputField.focus();
+            inputField.select();
+
+            const saveChanges = () => {
+                const newValue = parseInt(inputField.value) || 0;
+                if (!cardData.monthlyData) cardData.monthlyData = {};
+                if (!cardData.monthlyData[monthKey]) {
+                    cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+                }
+                
+                if (cardData.monthlyData[monthKey].salesIncreaseForecast !== newValue) {
+                    cardData.monthlyData[monthKey].salesIncreaseForecast = newValue;
+                    cardData.lastUpdated = new Date().toISOString().split('T')[0];
+                    
+                    propagateCurrentMonthChanges(cardId, newValue, cardData.monthlyData[monthKey].probability);
+                    
+                    progressCache = null;
+                    updateDashboard();
+                    renderCards();
+                    showToast('売上増見込を更新しました。', 'success');
+                } else {
+                    inputField.style.display = 'none';
+                    displaySpan.style.display = 'block';
+                }
+            };
+
+            const cancelEdit = () => {
+                inputField.style.display = 'none';
+                displaySpan.style.display = 'block';
+            };
+
+            inputField.onblur = saveChanges;
+            inputField.onkeydown = (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    saveChanges();
+                } else if (event.key === 'Escape') {
+                    event.preventDefault();
+                    cancelEdit();
+                }
+            };
+        }
+
+        function editProbability(cardId, monthKey, element) {
+            const cardData = cardsData.find(card => card.id === cardId);
+            if (!cardData) return;
+
+            const fiscalStructure = getFiscalYearStructure();
+            if (monthKey !== fiscalStructure.currentMonthKey) {
+                showToast('当月分のみ編集可能です。', 'info');
+                return;
+            }
+
+            const displaySpan = element.querySelector('.display-value');
+            const selectField = element.querySelector('.edit-select');
+
+            displaySpan.style.display = 'none';
+            selectField.style.display = 'block';
+            selectField.focus();
+
+            const saveChanges = () => {
+                const newValue = parseInt(selectField.value);
+                if (!cardData.monthlyData) cardData.monthlyData = {};
+                if (!cardData.monthlyData[monthKey]) {
+                    cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+                }
+                
+                if (cardData.monthlyData[monthKey].probability !== newValue) {
+                    cardData.monthlyData[monthKey].probability = newValue;
+                    cardData.lastUpdated = new Date().toISOString().split('T')[0];
+                    
+                    propagateCurrentMonthChanges(cardId, cardData.monthlyData[monthKey].salesIncreaseForecast, newValue);
+                    
+                    progressCache = null;
+                    updateDashboard();
+                    renderCards();
+                    showToast('確率を更新しました。', 'success');
+                } else {
+                    selectField.style.display = 'none';
+                    displaySpan.style.display = 'block';
+                }
+            };
+
+            const cancelEdit = () => {
+                selectField.style.display = 'none';
+                displaySpan.style.display = 'block';
+            };
+
+            selectField.onchange = saveChanges;
+            selectField.onblur = saveChanges;
+            selectField.onkeydown = (event) => {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    cancelEdit();
+                }
+            };
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             loadPersonalSettings();
             loadCardsData();
+            initializeDisplayMonth();
             migrateToNewCardStructure();
             
             updateProbabilityFilterOptions();
             updateCityFilterOptions();
             updateGlobalMonthSelector();
+            
+            document.getElementById('sortSelect').value = 'sales-desc';
             
             document.getElementById('searchInput').addEventListener('input', function() {
                 clearTimeout(searchTimeout);
@@ -3309,7 +3414,6 @@
                 }
             });
 
-            // 個人設定フォームの送信処理
             document.getElementById('personalSettingsForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 
@@ -3345,7 +3449,6 @@
                 closePersonalSettingsModal();
             });
 
-            // 新規塾登録フォームの送信処理
             document.getElementById('newCardForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 
@@ -3395,6 +3498,7 @@
                     displayMonth: currentMonthKey,
                     monthlyData: monthlyData,
                     annualMaterials: annualMaterials,
+                    registeredMonth: currentMonthKey,
                     lastUpdated: new Date().toISOString().split('T')[0]
                 };
                 
@@ -3409,7 +3513,6 @@
                 showToast(`新規塾「${cardData.jukuName}」を登録しました！`, 'success');
             });
 
-            // 塾編集フォームの送信処理
             document.getElementById('editCardForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 

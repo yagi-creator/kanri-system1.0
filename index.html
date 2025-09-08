@@ -3688,6 +3688,7 @@ function setupFirebaseAuth() {
         }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // 初期化処理
     loadPersonalSettings();
     loadCardsData();
     initializeDisplayMonth();
@@ -3701,189 +3702,190 @@ document.addEventListener('DOMContentLoaded', function() {
     
     setupSearchWithIMESupport();
     enhanceAccessibility();
-
-    // ★★★ ここに追加 ★★★
     setupFirebaseAuth();
-    // ★★★ 追加ここまで ★★★
 
-    // 既存のイベントリスナー設定...
-            document.addEventListener('click', function(e) {
-                const modals = document.querySelectorAll('.modal');
-                modals.forEach(modal => {
-                    if (e.target === modal) {
-                        closeModal(modal.id);
-                    }
-                });
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    const openModal = document.querySelector('.modal[style*="flex"]');
-                    if (openModal) {
-                        closeModal(openModal.id);
-                    }
-                }
-            });
-
-            document.getElementById('personalSettingsForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                personalSettings.userName = document.getElementById('userName').value;
-                personalSettings.profitRate = parseFloat(document.getElementById('profitRate').value);
-                personalSettings.yearlyProfitTarget = parseNumberSafely(document.getElementById('yearlyProfitTarget').value);
-                
-                updatePersonalSalesTarget();
-                
-                const fiscalMonths = getFiscalYearStructure().months;
-                fiscalMonths.forEach(monthInfo => {
-                    const actualInput = document.getElementById(`monthlyProfitActual${monthInfo.month}`);
-                    const targetInput = document.getElementById(`monthlyProfitTarget${monthInfo.month}`);
-                    if (actualInput) {
-                        personalSettings.monthlyProfitActuals[monthInfo.month] = parseNumberSafely(actualInput.value);
-                    }
-                    if (targetInput) {
-                        personalSettings.monthlyProfitTargets[monthInfo.month] = parseNumberSafely(targetInput.value);
-                    }
-                });
-                
-                savePersonalSettings();
-                progressCache = null;
-                updateDashboard();
-                renderCardsOptimized();
-                
-                showToast('個人設定を保存しました！', 'success');
-                closePersonalSettingsModal();
-            });
-
-            document.getElementById('newCardForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const jukuName = document.getElementById('newJukuName').value.trim();
-                const status = document.getElementById('newJukuStatus').value;
-                const address = document.getElementById('newAddressInput').value.trim();
-                const area = document.getElementById('newAreaInput').value.trim();
-                const salesIncreaseForecast = parseNumberSafely(document.getElementById('newSalesIncreaseForecast').value);
-                const probability = parseInt(document.getElementById('newProbability').value) || 50;
-                const annualProfitActual = parseNumberSafely(document.getElementById('newProfitActual').value);
-                
-                if (!jukuName) {
-                    showToast('塾名を入力してください', 'error');
-                    return;
-                }
-                
-                const fiscalStructure = getFiscalYearStructure();
-                const currentMonthKey = fiscalStructure.currentMonthKey;
-                const currentIndex = fiscalStructure.months.findIndex(m => m.key === currentMonthKey);
-
-                const monthlyData = {};
-                fiscalStructure.months.forEach((monthInfo, index) => {
-                    if (index < currentIndex) {
-                        monthlyData[monthInfo.key] = {
-                            salesIncreaseForecast: 0,
-                            probability: 50,
-                            memo: ""
-                        };
-                    } else {
-                        monthlyData[monthInfo.key] = {
-                            salesIncreaseForecast: salesIncreaseForecast,
-                            probability: probability,
-                            memo: ""
-                        };
-                    }
-                });
-
-                const annualMaterials = {
-                    yearRound: {
-                        hasOrder: document.getElementById('newYearRoundOrder').value === 'true',
-                        orderPeriod: document.getElementById('newYearRoundPeriod').value.trim()
-                    },
-                    seasonalExam: {
-                        hasUsage: document.getElementById('newSeasonalUsage').value === 'true',
-                        usagePeriod: document.getElementById('newSeasonalPeriod').value.trim()
-                    }
-                };
-
-                const cardData = {
-                    id: nextCardId++,
-                    jukuName: jukuName,
-                    status: status,
-                    address: address,
-                    area: area,
-                    assignedUser: personalSettings.userName,
-                    displayMonth: currentMonthKey,
-                    monthlyData: monthlyData,
-                    annualProfitActual: annualProfitActual,
-                    annualMaterials: annualMaterials,
-                    registeredMonth: currentMonthKey,
-                    lastUpdated: new Date().toISOString().split('T')[0]
-                };
-
-                const errors = validateCardData(cardData);
-                if (errors.length > 0) {
-                    showToast(errors[0], 'error');
-                    return;
-                }
-                
-                cardsData.push(cardData);
-                saveCardsData();
-                progressCache = null;
-                renderCardsOptimized();
-                updateDashboard();
-                
-                document.getElementById('newCardForm').reset();
-                closeNewCardModal();
-                showToast(`新規塾「${cardData.jukuName}」を登録しました！`, 'success');
-            });
-
-            document.getElementById('editCardForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const cardId = parseInt(document.getElementById('editCardId').value);
-                const cardData = cardsData.find(card => card.id === cardId);
-                
-                if (!cardData) {
-                    showToast('編集対象のデータが見つかりません', 'error');
-                    return;
-                }
-
-                const annualProfitActual = parseNumberSafely(document.getElementById('editProfitActual').value);
-                
-                cardData.jukuName = document.getElementById('editJukuName').value.trim();
-                cardData.status = document.getElementById('editJukuStatus').value;
-                cardData.address = document.getElementById('editAddressInput').value.trim();
-                cardData.area = document.getElementById('editAreaInput').value.trim();
-                cardData.annualProfitActual = annualProfitActual;
-                
-                cardData.annualMaterials = {
-                    yearRound: {
-                        hasOrder: document.getElementById('editYearRoundOrder').value === 'true',
-                        orderPeriod: document.getElementById('editYearRoundPeriod').value.trim()
-                    },
-                    seasonalExam: {
-                        hasUsage: document.getElementById('editSeasonalUsage').value === 'true',
-                        usagePeriod: document.getElementById('editSeasonalPeriod').value.trim()
-                    }
-                };
-                
-                cardData.lastUpdated = new Date().toISOString().split('T')[0];
-
-                const errors = validateCardData(cardData);
-                if (errors.length > 0) {
-                    showToast(errors[0], 'error');
-                    return;
-                }
-                
-                saveCardsData();
-                progressCache = null;
-                updateDashboard();
-                renderCardsOptimized();
-                
-                showToast(`${cardData.jukuName}のデータを更新しました！`, 'success');
-                closeEditCardModal();
-            });
-
-            renderCardsOptimized();
-            updateDashboard();
+    // モーダル関連イベントリスナー
+    document.addEventListener('click', function(e) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (e.target === modal) {
+                closeModal(modal.id);
+            }
         });
-    </script>
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const openModal = document.querySelector('.modal[style*="flex"]');
+            if (openModal) {
+                closeModal(openModal.id);
+            }
+        }
+    });
+
+    // フォームイベントリスナー
+    document.getElementById('personalSettingsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        personalSettings.userName = document.getElementById('userName').value;
+        personalSettings.profitRate = parseFloat(document.getElementById('profitRate').value);
+        personalSettings.yearlyProfitTarget = parseNumberSafely(document.getElementById('yearlyProfitTarget').value);
+        
+        updatePersonalSalesTarget();
+        
+        const fiscalMonths = getFiscalYearStructure().months;
+        fiscalMonths.forEach(monthInfo => {
+            const actualInput = document.getElementById(`monthlyProfitActual${monthInfo.month}`);
+            const targetInput = document.getElementById(`monthlyProfitTarget${monthInfo.month}`);
+            if (actualInput) {
+                personalSettings.monthlyProfitActuals[monthInfo.month] = parseNumberSafely(actualInput.value);
+            }
+            if (targetInput) {
+                personalSettings.monthlyProfitTargets[monthInfo.month] = parseNumberSafely(targetInput.value);
+            }
+        });
+        
+        savePersonalSettings();
+        progressCache = null;
+        updateDashboard();
+        renderCardsOptimized();
+        
+        showToast('個人設定を保存しました！', 'success');
+        closePersonalSettingsModal();
+    });
+
+    document.getElementById('newCardForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const jukuName = document.getElementById('newJukuName').value.trim();
+        const status = document.getElementById('newJukuStatus').value;
+        const address = document.getElementById('newAddressInput').value.trim();
+        const area = document.getElementById('newAreaInput').value.trim();
+        const salesIncreaseForecast = parseNumberSafely(document.getElementById('newSalesIncreaseForecast').value);
+        const probability = parseInt(document.getElementById('newProbability').value) || 50;
+        const annualProfitActual = parseNumberSafely(document.getElementById('newProfitActual').value);
+        
+        if (!jukuName) {
+            showToast('塾名を入力してください', 'error');
+            return;
+        }
+        
+        const fiscalStructure = getFiscalYearStructure();
+        const currentMonthKey = fiscalStructure.currentMonthKey;
+        const currentIndex = fiscalStructure.months.findIndex(m => m.key === currentMonthKey);
+
+        const monthlyData = {};
+        fiscalStructure.months.forEach((monthInfo, index) => {
+            if (index < currentIndex) {
+                monthlyData[monthInfo.key] = {
+                    salesIncreaseForecast: 0,
+                    probability: 50,
+                    memo: ""
+                };
+            } else {
+                monthlyData[monthInfo.key] = {
+                    salesIncreaseForecast: salesIncreaseForecast,
+                    probability: probability,
+                    memo: ""
+                };
+            }
+        });
+
+        const annualMaterials = {
+            yearRound: {
+                hasOrder: document.getElementById('newYearRoundOrder').value === 'true',
+                orderPeriod: document.getElementById('newYearRoundPeriod').value.trim()
+            },
+            seasonalExam: {
+                hasUsage: document.getElementById('newSeasonalUsage').value === 'true',
+                usagePeriod: document.getElementById('newSeasonalPeriod').value.trim()
+            }
+        };
+
+        const cardData = {
+            id: nextCardId++,
+            jukuName: jukuName,
+            status: status,
+            address: address,
+            area: area,
+            assignedUser: personalSettings.userName,
+            assignedUserId: currentUser?.uid || null, // ★重要：Firebase連携用
+            displayMonth: currentMonthKey,
+            monthlyData: monthlyData,
+            annualProfitActual: annualProfitActual,
+            annualMaterials: annualMaterials,
+            registeredMonth: currentMonthKey,
+            lastUpdated: new Date().toISOString().split('T')[0]
+        };
+
+        const errors = validateCardData(cardData);
+        if (errors.length > 0) {
+            showToast(errors[0], 'error');
+            return;
+        }
+        
+        cardsData.push(cardData);
+        saveCardsData();
+        progressCache = null;
+        renderCardsOptimized();
+        updateDashboard();
+        
+        document.getElementById('newCardForm').reset();
+        closeNewCardModal();
+        showToast(`新規塾「${cardData.jukuName}」を登録しました！`, 'success');
+    });
+
+    document.getElementById('editCardForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const cardId = parseInt(document.getElementById('editCardId').value);
+        const cardData = cardsData.find(card => card.id === cardId);
+        
+        if (!cardData) {
+            showToast('編集対象のデータが見つかりません', 'error');
+            return;
+        }
+
+        const annualProfitActual = parseNumberSafely(document.getElementById('editProfitActual').value);
+        
+        cardData.jukuName = document.getElementById('editJukuName').value.trim();
+        cardData.status = document.getElementById('editJukuStatus').value;
+        cardData.address = document.getElementById('editAddressInput').value.trim();
+        cardData.area = document.getElementById('editAreaInput').value.trim();
+        cardData.annualProfitActual = annualProfitActual;
+        
+        cardData.annualMaterials = {
+            yearRound: {
+                hasOrder: document.getElementById('editYearRoundOrder').value === 'true',
+                orderPeriod: document.getElementById('editYearRoundPeriod').value.trim()
+            },
+            seasonalExam: {
+                hasUsage: document.getElementById('editSeasonalUsage').value === 'true',
+                usagePeriod: document.getElementById('editSeasonalPeriod').value.trim()
+            }
+        };
+        
+        cardData.lastUpdated = new Date().toISOString().split('T')[0];
+
+        const errors = validateCardData(cardData);
+        if (errors.length > 0) {
+            showToast(errors[0], 'error');
+            return;
+        }
+        
+        saveCardsData();
+        progressCache = null;
+        updateDashboard();
+        renderCardsOptimized();
+        
+        showToast(`${cardData.jukuName}のデータを更新しました！`, 'success');
+        closeEditCardModal();
+    });
+
+    // 最終初期化
+    renderCardsOptimized();
+    updateDashboard();
+}); // ★★★ 重要：この1つの閉じ括弧で全て完了 ★★★
+</script>
 </body>
 </html>

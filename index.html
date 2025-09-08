@@ -1127,12 +1127,142 @@
                 margin-right: 0;
             }
         }
+        /* Step 6: 島谷チーム用ヘッダーCSS */
+.header-section {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.user-info-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.login-user-info {
+    font-size: 16px;
+    font-weight: bold;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    min-width: 150px;
+    text-align: center;
+}
+
+.view-selector-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.view-selector-label {
+    color: white;
+    font-weight: 500;
+}
+
+.view-selector {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    font-size: 14px;
+    min-width: 180px;
+}
+
+.view-permission-info {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+}
+
+.permission-edit {
+    background: rgba(40, 167, 69, 0.8);
+    color: white;
+}
+
+.permission-view {
+    background: rgba(255, 193, 7, 0.8);
+    color: #333;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-auth {
+    padding: 8px 16px;
+    font-size: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-auth:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 768px) {
+    .header-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .header-right {
+        align-items: stretch;
+    }
+    
+    .user-info-section {
+        align-items: stretch;
+    }
+    
+    .view-selector-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+    }
+    
+    .view-selector {
+        min-width: auto;
+    }
+}
     </style>
    <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-  import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, getDocs, collection, query, where, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   // ★重要：以下を Step 5-1 で取得した実際の値に置き換えてください
   const firebaseConfig = {
@@ -1153,13 +1283,49 @@
     signOut,
     onAuthStateChanged,
     doc,
-    getDoc
+    getDoc,
+    getDocs,      
+    collection,   
+    query,        
+    where,        
+    setDoc   
   };
 </script>
 </head>
 <body>
     <div class="container">
         <div class="header-section">
+    <div class="header-left">
+        <div class="header-title">営業支援ダッシュボード v9.1</div>
+        <div class="current-date-header" id="currentDateHeader">
+            <span id="currentDateDisplay">2025年8月</span>
+            <select class="global-month-selector" id="globalMonthSelector" onchange="changeAllCardsDisplayMonth(this.value)">
+            </select>
+        </div>
+    </div>
+    
+    <div class="header-right">
+        <div class="user-info-section">
+            <div class="login-user-info" id="loginUserInfo">
+                <span class="login-status">未ログイン</span>
+            </div>
+            
+            <div class="view-selector-section" id="viewSelectorSection" style="display: none;">
+                <label class="view-selector-label">データ表示:</label>
+                <select class="view-selector" id="viewSelector" onchange="changeViewTarget()">
+                    <option value="">選択してください</option>
+                </select>
+                <span class="view-permission-info" id="viewPermissionInfo"></span>
+            </div>
+        </div>
+        
+        <div class="auth-buttons" id="authButtons">
+            <button class="btn btn-auth" onclick="quickLogin()" id="loginBtn">🔐 ログイン</button>
+            <button class="btn btn-auth" onclick="quickLogout()" id="logoutBtn" style="display: none;">🚪 ログアウト</button>
+        </div>
+    </div>
+</div>
+
             <div class="header-title">営業支援ダッシュボード v9.1</div>
             <div class="current-date-header" id="currentDateHeader">
                 <span id="currentDateDisplay">2025年8月</span>
@@ -1274,10 +1440,7 @@
                 </select>
             </div>
         </div>
-<div class="control-buttons" style="margin-top: 12px;">
-    <button class="btn btn-secondary" onclick="quickLogin()">🔐 ログイン</button>
-    <button class="btn btn-secondary" onclick="quickLogout()">🚪 ログアウト</button>
-</div>
+    
         <div class="cards-section">
             <div class="section-header">
                 <div class="section-title">塾一覧</div>
@@ -1583,10 +1746,12 @@
 
     <script>
     　　 const RENDER_DEBOUNCE_MS = 100;
-        // 島谷チーム用グローバル変数
+// 島谷チーム用グローバル変数
 let currentUser = null;
 let currentUserData = null;
 let currentUserRole = null;
+let currentViewTarget = null; // 現在表示対象のユーザーUID
+let availableViewTargets = []; // 閲覧可能なユーザー一覧
 
 // 簡易ログイン機能（安全性向上版）
 async function quickLogin() {
@@ -1630,6 +1795,234 @@ async function quickLogout() {
         return;
     }
     
+    // 閲覧可能なユーザー一覧を取得
+    async function loadAvailableViewTargets() {
+        if (!currentUser || !currentUserRole) {
+            availableViewTargets = [];
+            return;
+        }
+        
+        try {
+            const usersCollection = await window.firebaseImports.getDocs(
+                window.firebaseImports.collection(window.db, 'users')
+            );
+            
+            availableViewTargets = [];
+            
+            usersCollection.forEach((doc) => {
+                const userData = doc.data();
+                const userId = doc.id;
+                
+                // 自分は常に含める
+                if (userId === currentUser.uid) {
+                    availableViewTargets.push({
+                        id: userId,
+                        name: userData.name,
+                        role: userData.role,
+                        canEdit: true
+                    });
+                    return;
+                }
+                
+                // 権限に応じて追加
+                if (currentUserRole === 'admin') {
+                    // 島谷さん（管理者）は全員閲覧可能
+                    availableViewTargets.push({
+                        id: userId,
+                        name: userData.name,
+                        role: userData.role,
+                        canEdit: false // A案：編集は自分のみ
+                    });
+                } else if (currentUserRole === 'manager') {
+                    // 門戸さん・梨木さん（マネージャー）は部下のみ閲覧可能
+                    if (currentUserData.subordinates && currentUserData.subordinates.includes(userId)) {
+                        availableViewTargets.push({
+                            id: userId,
+                            name: userData.name,
+                            role: userData.role,
+                            canEdit: false
+                        });
+                    }
+                }
+                // 八木さん・村上さん（スタッフ）は自分のみ（上記で既に追加済み）
+            });
+            
+            // 自分を最初に表示するようにソート
+            availableViewTargets.sort((a, b) => {
+                if (a.id === currentUser.uid) return -1;
+                if (b.id === currentUser.uid) return 1;
+                return a.name.localeCompare(b.name);
+            });
+            
+        } catch (error) {
+            console.error('Available view targets load error:', error);
+            availableViewTargets = [{
+                id: currentUser.uid,
+                name: currentUserData.name,
+                role: currentUserRole,
+                canEdit: true
+            }];
+        }
+    }
+
+    // 認証UI更新関数
+    function updateAuthUI() {
+        const loginUserInfo = document.getElementById('loginUserInfo');
+        const viewSelectorSection = document.getElementById('viewSelectorSection');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        if (currentUser && currentUserData) {
+            const roleIcons = {
+                'admin': '👑',
+                'manager': '👔', 
+                'staff': '💼'
+            };
+            
+            const roleNames = {
+                'admin': '管理者',
+                'manager': 'マネージャー',
+                'staff': '営業担当'
+            };
+            
+            loginUserInfo.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 20px;">${roleIcons[currentUserRole] || '🔐'}</span>
+                    <div>
+                        <div style="font-weight: bold; font-size: 16px;">${currentUserData.name}さん</div>
+                        <div style="font-size: 12px; opacity: 0.9;">${roleNames[currentUserRole] || 'ユーザー'}</div>
+                    </div>
+                </div>
+            `;
+            
+            // スタッフは自分のデータのみなのでプルダウン不要
+            if (currentUserRole === 'staff') {
+                viewSelectorSection.style.display = 'none';
+            } else {
+                viewSelectorSection.style.display = 'flex';
+            }
+            
+            loginBtn.style.display = 'none';
+            logoutBtn.style.display = 'inline-block';
+        } else {
+            loginUserInfo.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 20px;">🔐</span>
+                    <div>
+                        <div style="font-weight: bold; font-size: 16px;">未ログイン</div>
+                        <div style="font-size: 12px; opacity: 0.9;">ログインしてください</div>
+                    </div>
+                </div>
+            `;
+            viewSelectorSection.style.display = 'none';
+            loginBtn.style.display = 'inline-block';
+            logoutBtn.style.display = 'none';
+        }
+    }
+
+    function updateViewSelector() {
+        const viewSelector = document.getElementById('viewSelector');
+        const viewPermissionInfo = document.getElementById('viewPermissionInfo');
+        
+        if (!availableViewTargets.length) {
+            viewSelector.innerHTML = '<option value="">データなし</option>';
+            viewPermissionInfo.textContent = '';
+            return;
+        }
+        
+        viewSelector.innerHTML = '';
+        
+        availableViewTargets.forEach(target => {
+            const option = document.createElement('option');
+            option.value = target.id;
+            
+            if (target.id === currentUser.uid) {
+                option.textContent = `${target.name}さん (自分)`;
+            } else {
+                const roleLabel = {
+                    'admin': '管理者',
+                    'manager': 'マネージャー', 
+                    'staff': '営業担当'
+                }[target.role] || target.role;
+                option.textContent = `${target.name}さん (${roleLabel})`;
+            }
+            
+            if (target.id === currentViewTarget) {
+                option.selected = true;
+            }
+            
+            viewSelector.appendChild(option);
+        });
+        
+        // 権限情報表示
+        const currentTarget = availableViewTargets.find(t => t.id === currentViewTarget);
+        if (currentTarget) {
+            if (currentTarget.canEdit) {
+                viewPermissionInfo.textContent = '✏️ 編集可能';
+                viewPermissionInfo.className = 'view-permission-info permission-edit';
+            } else {
+                viewPermissionInfo.textContent = '👁️ 閲覧専用';
+                viewPermissionInfo.className = 'view-permission-info permission-view';
+            }
+        }
+    }
+
+    // 閲覧対象変更
+    async function changeViewTarget() {
+        const viewSelector = document.getElementById('viewSelector');
+        const newTargetId = viewSelector.value;
+        
+        if (newTargetId && newTargetId !== currentViewTarget) {
+            currentViewTarget = newTargetId;
+            updateViewSelector();
+            
+            await loadCardsDataForTarget(newTargetId);
+            progressCache = null;
+            renderCardsOptimized();
+            updateDashboard();
+            
+            const targetUser = availableViewTargets.find(t => t.id === newTargetId);
+            if (targetUser) {
+                showToast(`${targetUser.name}さんのデータを表示中`, 'info');
+            }
+        }
+    }
+
+    // 指定ユーザーのデータを読み込み
+    async function loadCardsDataForTarget(targetUserId) {
+        if (!currentUser || !targetUserId) {
+            cardsData = [];
+            return;
+        }
+        
+        try {
+            const cardsQuery = window.firebaseImports.query(
+                window.firebaseImports.collection(window.db, 'juku_cards'),
+                window.firebaseImports.where('assignedUserId', '==', targetUserId)
+            );
+            
+            const cardsCollection = await window.firebaseImports.getDocs(cardsQuery);
+            
+            cardsData = [];
+            let maxId = 0;
+            
+            cardsCollection.forEach((doc) => {
+                const cardData = { id: parseInt(doc.id), ...doc.data() };
+                cardsData.push(cardData);
+                if (cardData.id > maxId) {
+                    maxId = cardData.id;
+                }
+            });
+            
+            nextCardId = maxId + 1;
+            
+        } catch (error) {
+            console.error('Cards load error for target:', error);
+            cardsData = [];
+            nextCardId = 1;
+        }
+    }
+
     try {
         await window.firebaseImports.signOut(window.firebaseAuth);
         showToast('ログアウトしました', 'info');
@@ -1644,42 +2037,57 @@ async function quickLogout() {
 function setupFirebaseAuth() {
     if (window.firebaseImports && window.firebaseAuth && window.db) {
         // Firebase準備完了：認証状態の監視を開始
-        window.firebaseImports.onAuthStateChanged(window.firebaseAuth, async (user) => {
-            currentUser = user;
+        // 認証状態の監視（既存の関数を更新）
+window.firebaseImports.onAuthStateChanged(window.firebaseAuth, async (user) => {
+    currentUser = user;
+    
+    if (user) {
+        console.log('ログイン中 UID:', user.uid, 'メール:', user.email);
+        
+        // Step 4で登録したusersドキュメントを確認
+        try {
+            const userDoc = await window.firebaseImports.getDoc(
+                window.firebaseImports.doc(window.db, 'users', user.uid)
+            );
             
-            if (user) {
-                console.log('ログイン中 UID:', user.uid, 'メール:', user.email);
-                showToast(`ログイン中: ${user.email}`, 'info');
+            if (userDoc.exists()) {
+                currentUserData = userDoc.data();
+                currentUserRole = currentUserData.role;
                 
-                try {
-                    const userDoc = await window.firebaseImports.getDoc(
-                        window.firebaseImports.doc(window.db, 'users', user.uid)
-                    );
-                    
-                    if (userDoc.exists()) {
-                        currentUserData = userDoc.data();
-                        currentUserRole = currentUserData.role;
-                        console.log('ユーザーデータ:', currentUserData);
-                        showToast(`${currentUserData.name}さん（${currentUserRole}）として認識されました`, 'success');
-                    } else {
-                        console.warn('usersドキュメントが見つかりません（Step 4の設定を確認）');
-                        showToast('ユーザー情報が未登録です（Step 4を確認）', 'error');
-                    }
-                } catch (error) {
-                    console.error('ユーザーデータ取得エラー:', error);
-                    showToast('ユーザーデータの取得に失敗しました', 'error');
-                }
+                // ★重要：デフォルトは必ず自分のデータを表示
+                currentViewTarget = user.uid;
+                
+                await loadAvailableViewTargets();
+                updateAuthUI();
+                updateViewSelector();
+                
+                // データを読み込み
+                await loadCardsDataForTarget(currentViewTarget);
+                progressCache = null;
+                renderCardsOptimized();
+                updateDashboard();
+                
+                console.log('ユーザーデータ:', currentUserData);
+                showToast(`${currentUserData.name}さん（${currentUserRole}）として認識されました`, 'success');
             } else {
-                console.log('未ログイン状態');
-                currentUserData = null;
-                currentUserRole = null;
+                console.warn('usersドキュメントが見つかりません（Step 4の設定を確認）');
+                showToast('ユーザー情報が未登録です（Step 4を確認）', 'error');
             }
-        });
+        } catch (error) {
+            console.error('ユーザーデータ取得エラー:', error);
+            showToast('ユーザーデータの取得に失敗しました', 'error');
+        }
     } else {
-        // Firebase未準備：100ms後に再試行
-        setTimeout(setupFirebaseAuth, 100);
+        console.log('未ログイン状態');
+        currentUserData = null;
+        currentUserRole = null;
+        currentViewTarget = null;
+        availableViewTargets = [];
+        updateAuthUI();
+        cardsData = [];
+        renderCardsOptimized();
     }
-}
+});
 
 
         let cardsData = [];

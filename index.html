@@ -1262,7 +1262,7 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-  import { getFirestore, doc, getDoc, getDocs, collection, query, where, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, getDocs, collection, query, where, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   // ★重要：以下を Step 5-1 で取得した実際の値に置き換えてください
   const firebaseConfig = {
@@ -1288,7 +1288,8 @@
     collection,   
     query,        
     where,        
-    setDoc   
+    setDoc,
+    deleteDoc
   };
 </script>
 </head>
@@ -2315,38 +2316,60 @@ function setupFirebaseAuth() {
             }
         }
 
-        function saveCardsData() {
-            try {
-                const dataToSave = {
-                    cardsData: cardsData,
-                    nextCardId: nextCardId,
-                    timestamp: Date.now(),
-                    version: '9.1'
-                };
-                
-                localStorage.setItem('salesDashboard_cardsData_v9', JSON.stringify(dataToSave));
-                updateAreaFilterOptions();
-                saveBackup(dataToSave);
-                
-            } catch (e) {
-                if (e.name === 'QuotaExceededError') {
-                    cleanupOldBackups();
-                    try {
-                        localStorage.setItem('salesDashboard_cardsData_v9', JSON.stringify({
-                            cardsData: cardsData,
-                            nextCardId: nextCardId
-                        }));
-                        showToast('ストレージを整理してデータを保存しました', 'info');
-                    } catch (retryError) {
-                        showToast('ストレージ容量が不足しています。', 'error');
-                        console.error('Storage quota exceeded:', retryError);
-                    }
-                } else {
-                    showToast('データ保存エラー: ' + e.message, 'error');
-                    console.error('Save error:', e);
-                }
-            }
+        // 島谷チーム用：Firestoreにデータを保存
+async function saveCardsData() {
+    // オフライン時や未ログイン時はLocalStorageに保存
+    if (!currentUser || !window.firebaseImports || !window.db) {
+        try {
+            localStorage.setItem('salesDashboard_cardsData_v9', JSON.stringify({
+                cardsData: cardsData,
+                nextCardId: nextCardId
+            }));
+            console.log('LocalStorageに保存しました');
+        } catch (e) {
+            console.error('LocalStorage save error:', e);
         }
+        return;
+    }
+    
+    try {
+        // 各カードを個別にFirestoreに保存
+        for (const card of cardsData) {
+            const cardRef = window.firebaseImports.doc(window.db, 'juku_cards', String(card.id));
+            
+            // 担当者情報が設定されていない場合は現在のユーザーを設定
+            const cardToSave = {
+                ...card,
+                assignedUserId: card.assignedUserId || currentUser.uid,
+                assignedUserName: card.assignedUserName || (currentUserData?.name || personalSettings.userName),
+                lastUpdated: new Date().toISOString(),
+                updatedBy: currentUser.uid
+            };
+            
+            await window.firebaseImports.setDoc(cardRef, cardToSave);
+        }
+        
+        updateAreaFilterOptions();
+        showToast('チームデータを保存しました', 'success');
+        console.log('Firestoreに保存完了:', cardsData.length, '件');
+        
+    } catch (error) {
+        console.error('Firestore save error:', error);
+        showToast('保存エラー: ' + error.message, 'error');
+        
+        // エラー時はLocalStorageにフォールバック
+        try {
+            localStorage.setItem('salesDashboard_cardsData_v9', JSON.stringify({
+                cardsData: cardsData,
+                nextCardId: nextCardId
+            }));
+            showToast('ローカルに保存しました', 'info');
+        } catch (e) {
+            console.error('LocalStorage fallback error:', e);
+        }
+    }
+}
+
 
         function loadCardsData() {
             try {
@@ -3392,23 +3415,42 @@ return card;
             closeModal('editCardModal');
         }
 
-        function deleteCard(cardId) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!hasPermission('delete_data', cardData)) {
+        async function deleteCard(cardId) {
+    const cardData = cardsData.find(card => card.id === cardId);
+    if (!cardData) return;
+    
+    // 削除権限チェック（Step 7-6で追加済み）
+    if (!hasPermission('delete_data', cardData)) {
         showToast('削除権限がありません', 'error');
         return;
     }
-            const cardName = cardData ? cardData.jukuName : 'この塾';
-            
-            if (confirm(`『${cardName}』を削除します。この操作は元に戻せません。よろしいですか？`)) {
-                cardsData = cardsData.filter(card => card.id !== cardId);
-                saveCardsData();
-                progressCache = null;
-                updateDashboard();
-                renderCardsOptimized();
-                showToast('データを削除しました', 'success');
+    
+    const cardName = cardData ? cardData.jukuName : 'この塾';
+    
+    if (confirm(`『${cardName}』を削除します。この操作は元に戻せません。よろしいですか？`)) {
+        // ローカル配列から削除
+        cardsData = cardsData.filter(card => card.id !== cardId);
+        
+        // Firestoreからも削除（ログイン時のみ）
+        if (currentUser && window.firebaseImports && window.db) {
+            try {
+                const cardRef = window.firebaseImports.doc(window.db, 'juku_cards', String(cardId));
+                await window.firebaseImports.deleteDoc(cardRef);
+                console.log('Firestoreから削除完了:', cardId);
+            } catch (error) {
+                console.error('Firestore delete error:', error);
+                showToast('クラウド削除でエラーが発生しました', 'error');
             }
         }
+        
+        // 残りデータを同期保存
+        await saveCardsData();
+        progressCache = null;
+        updateDashboard();
+        renderCardsOptimized();
+        showToast('データを削除しました', 'success');
+    }
+}
 
         function openMemoDetailModal(cardId, monthKey) {
             const cardData = cardsData.find(card => card.id === cardId);
@@ -3826,7 +3868,7 @@ document.addEventListener('DOMContentLoaded', function() {
         closePersonalSettingsModal();
     });
 
-    document.getElementById('newCardForm').addEventListener('submit', function(e) {
+    document.getElementById('newCardForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const jukuName = document.getElementById('newJukuName').value.trim();
@@ -3880,8 +3922,8 @@ document.addEventListener('DOMContentLoaded', function() {
             status: status,
             address: address,
             area: area,
-            assignedUser: personalSettings.userName,
-            assignedUserId: currentUser?.uid || null, // ★重要：Firebase連携用
+            assignedUserId: currentUser.uid,
+            assignedUserName: currentUserData.name,
             displayMonth: currentMonthKey,
             monthlyData: monthlyData,
             annualProfitActual: annualProfitActual,
@@ -3897,7 +3939,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         cardsData.push(cardData);
-        saveCardsData();
+        await saveCardsData();
         progressCache = null;
         renderCardsOptimized();
         updateDashboard();
@@ -3907,7 +3949,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showToast(`新規塾「${cardData.jukuName}」を登録しました！`, 'success');
     });
 
-    document.getElementById('editCardForm').addEventListener('submit', function(e) {
+    document.getElementById('editCardForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const cardId = parseInt(document.getElementById('editCardId').value);
@@ -3945,7 +3987,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        saveCardsData();
+        await saveCardsData();
         progressCache = null;
         updateDashboard();
         renderCardsOptimized();

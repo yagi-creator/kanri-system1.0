@@ -1128,6 +1128,34 @@
             }
         }
     </style>
+   <!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+  // ★重要：以下を Step 5-1 で取得した実際の値に置き換えてください
+  const firebaseConfig = {
+    apiKey: "AIzaSyC_EUgAAVFfk0TonQgKVMxs8TcuvFdXKIQ",
+    authDomain: "eigyo-shiendashboard.firebaseapp.com",
+    projectId: "eigyo-shiendashboard",
+    storageBucket: "eigyo-shiendashboard.firebasestorage.app",
+    messagingSenderId: "665404365898",
+    appId: "1:665404365898:web:a60374339c99ea5c16dab3"
+  };
+
+
+  const app = initializeApp(firebaseConfig);
+  window.firebaseAuth = getAuth(app);
+  window.db = getFirestore(app);
+  window.firebaseImports = {
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+    doc,
+    getDoc
+  };
+</script>
 </head>
 <body>
     <div class="container">
@@ -1246,7 +1274,10 @@
                 </select>
             </div>
         </div>
-
+<div class="control-buttons" style="margin-top: 12px;">
+    <button class="btn btn-secondary" onclick="quickLogin()">🔐 ログイン</button>
+    <button class="btn btn-secondary" onclick="quickLogout()">🚪 ログアウト</button>
+</div>
         <div class="cards-section">
             <div class="section-header">
                 <div class="section-title">塾一覧</div>
@@ -1552,7 +1583,71 @@
 
     <script>
     　　 const RENDER_DEBOUNCE_MS = 100;
+        // 島谷チーム用グローバル変数
+let currentUser = null;
+let currentUserData = null;
+let currentUserRole = null;
+
+// 簡易ログイン機能
+async function quickLogin() {
+    try {
+        const email = prompt('メールアドレスを入力してください\n例: shimatani@eigyo-team.local');
+        const password = prompt('パスワードを入力してください');
         
+        if (!email || !password) return;
+        
+        await window.firebaseImports.signInWithEmailAndPassword(window.firebaseAuth, email, password);
+        showToast('ログインしました', 'success');
+    } catch (error) {
+        console.error('ログインエラー:', error);
+        showToast('ログイン失敗: ' + (error.code || error.message), 'error');
+    }
+}
+
+// ログアウト機能
+async function quickLogout() {
+    try {
+        await window.firebaseImports.signOut(window.firebaseAuth);
+        showToast('ログアウトしました', 'info');
+    } catch (error) {
+        console.error('ログアウトエラー:', error);
+        showToast('ログアウト失敗: ' + (error.code || error.message), 'error');
+    }
+}
+
+// 認証状態の監視
+window.firebaseImports.onAuthStateChanged(window.firebaseAuth, async (user) => {
+    currentUser = user;
+    
+    if (user) {
+        console.log('ログイン中 UID:', user.uid, 'メール:', user.email);
+        showToast(`ログイン中: ${user.email}`, 'info');
+        
+        // Step 4で登録したusersドキュメントを確認
+        try {
+            const userDoc = await window.firebaseImports.getDoc(
+                window.firebaseImports.doc(window.db, 'users', user.uid)
+            );
+            
+            if (userDoc.exists()) {
+                currentUserData = userDoc.data();
+                currentUserRole = currentUserData.role;
+                console.log('ユーザーデータ:', currentUserData);
+                showToast(`${currentUserData.name}さん（${currentUserRole}）として認識されました`, 'success');
+            } else {
+                console.warn('usersドキュメントが見つかりません（Step 4の設定を確認）');
+                showToast('ユーザー情報が未登録です（Step 4を確認）', 'error');
+            }
+        } catch (error) {
+            console.error('ユーザーデータ取得エラー:', error);
+            showToast('ユーザーデータの取得に失敗しました', 'error');
+        }
+    } else {
+        console.log('未ログイン状態');
+        currentUserData = null;
+        currentUserRole = null;
+    }
+});
         let cardsData = [];
         let nextCardId = 1;
         let progressCache = null;

@@ -2021,6 +2021,32 @@ async function quickLogout() {
             nextCardId = 1;
         }
     }
+        
+// A案対応：権限チェック関数
+function hasPermission(action, targetData = null) {
+    if (!currentUserRole || !currentUser) return false;
+    
+    switch (action) {
+        case 'view_data':
+            // 現在表示中のターゲットのデータのみ表示
+            return targetData ? targetData.assignedUserId === currentViewTarget : false;
+        case 'edit_data':
+            // 編集は自分のデータのみ（A案：管理者も例外なし）
+            return targetData ? targetData.assignedUserId === currentUser.uid : false;
+        case 'delete_data':
+            // 削除は自分のデータのみ（A案：管理者も例外なし）
+            return targetData ? targetData.assignedUserId === currentUser.uid : false;
+        case 'create_data':
+            // 新規作成は自分のデータ表示中のみ
+            return currentViewTarget === currentUser.uid;
+        case 'edit_own_settings':
+            return true;
+        case 'edit_any_settings':
+            return currentUserRole === 'admin';
+        default:
+            return false;
+    }
+}
 
 // Firebase準備完了を待つ安全な関数
 function setupFirebaseAuth() {
@@ -2797,13 +2823,42 @@ function setupFirebaseAuth() {
                 <div class="card-footer">
                     <div class="last-updated">最終更新: ${lastUpdated}</div>
                     <div class="card-actions">
-                        <button class="action-btn" title="編集" aria-label="編集" onclick="editCard(this)">✏️</button>
-                        <button class="action-btn" title="履歴" aria-label="履歴" onclick="openMonthlyHistoryModal(${cardData.id})">📊</button>
-                        <button class="action-btn" title="削除" aria-label="削除" onclick="deleteCard(${cardData.id})">🗑️</button>
-                    </div>
+    <button class="action-btn" title="履歴" aria-label="履歴" onclick="openMonthlyHistoryModal(${cardData.id})">📊</button>
+    ${hasPermission('edit_data', cardData) ? `<button class="action-btn" title="編集" aria-label="編集" onclick="editCard(this)">✏️</button>` : ''}
+    ${hasPermission('delete_data', cardData) ? `<button class="action-btn" title="削除" aria-label="削除" onclick="deleteCard(${cardData.id})">🗑️</button>` : ''}
+</div>
+
                 </div>
             `;
-            
+            // 他人のデータの場合は視覚的に区別
+if (cardData.assignedUserId !== currentUser.uid) {
+    card.style.opacity = '0.8';
+    card.style.border = '2px solid #ffc107';
+    card.style.position = 'relative';
+    
+    // 閲覧専用バッジを追加
+    const readOnlyBadge = document.createElement('div');
+    readOnlyBadge.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #ffc107;
+        color: #333;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 10;
+    `;
+    readOnlyBadge.textContent = '👁️ 閲覧専用';
+    card.appendChild(readOnlyBadge);
+    
+    const assignedUserName = cardData.assignedUserName || '不明';
+    card.title = `担当者: ${assignedUserName}さんのデータ（閲覧専用）`;
+}
+
+return card;
+
             return card;
         }
 
@@ -3147,12 +3202,19 @@ function setupFirebaseAuth() {
         }
 
         function openNewCardModal() {
-            document.getElementById('newCardForm').reset();
-            updateActualSales('new');
-            document.getElementById('newSalesActual').readOnly = true;
-            document.getElementById('newSalesActual').style.background = '#f8f9fa';
-            openModal('newCardModal');
-        }
+    // 自分のデータ表示中のみ新規登録可能
+    if (!hasPermission('create_data')) {
+        showToast('自分のデータ表示中のみ新規登録できます', 'error');
+        return;
+    }
+    
+    document.getElementById('newCardForm').reset();
+    updateActualSales('new');
+    document.getElementById('newSalesActual').readOnly = true;
+    document.getElementById('newSalesActual').style.background = '#f8f9fa';
+    openModal('newCardModal');
+}
+
 
         function closeNewCardModal() {
             document.getElementById('newCardForm').reset();
@@ -3332,6 +3394,10 @@ function setupFirebaseAuth() {
 
         function deleteCard(cardId) {
             const cardData = cardsData.find(card => card.id === cardId);
+            if (!hasPermission('delete_data', cardData)) {
+        showToast('削除権限がありません', 'error');
+        return;
+    }
             const cardName = cardData ? cardData.jukuName : 'この塾';
             
             if (confirm(`『${cardName}』を削除します。この操作は元に戻せません。よろしいですか？`)) {
@@ -3533,7 +3599,10 @@ function setupFirebaseAuth() {
         function editSalesIncreaseForecast(cardId, monthKey, element) {
             const cardData = cardsData.find(card => card.id === cardId);
             if (!cardData) return;
-
+  if (!hasPermission('edit_data', cardData)) {
+        showToast('編集権限がありません（閲覧専用）', 'error');
+        return;
+    }
             const fiscalStructure = getFiscalYearStructure();
             if (monthKey !== fiscalStructure.currentMonthKey) {
                 showToast('当月分のみ編集可能です', 'info');
@@ -3595,7 +3664,10 @@ function setupFirebaseAuth() {
         function editProbability(cardId, monthKey, element) {
             const cardData = cardsData.find(card => card.id === cardId);
             if (!cardData) return;
-
+ if (!hasPermission('edit_data', cardData)) {
+        showToast('編集権限がありません（閲覧専用）', 'error');
+        return;
+    }
             const fiscalStructure = getFiscalYearStructure();
             if (monthKey !== fiscalStructure.currentMonthKey) {
                 showToast('当月分のみ編集可能です', 'info');

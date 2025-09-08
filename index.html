@@ -3707,13 +3707,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // ★★★ 追加ここまで ★★★
 
     // 既存のイベントリスナー設定...
-    document.addEventListener('click', function(e) {
-        // ...既存のコード...
-    });
-    
-    // ...以下既存のコード継続...
-});
-
             document.addEventListener('click', function(e) {
                 const modals = document.querySelectorAll('.modal');
                 modals.forEach(modal => {
@@ -3721,7 +3714,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         closeModal(modal.id);
                     }
                 });
-            });
 
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {

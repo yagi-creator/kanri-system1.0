@@ -2942,9 +2942,12 @@
             const sortType = document.getElementById('sortSelect').value;
             const sortInfo = document.getElementById('sortInfo');
             
+                    function updateSortInfo() {
+            const sortType = document.getElementById('sortSelect').value;
+            const sortInfo = document.getElementById('sortInfo');
+            
             const sortLabels = {
                 'sales-desc': '売上増見込順（大→小）',
-                'sales-asc': '売上増                
                 'sales-asc': '売上増見込順（小→大）',
                 'updated-desc': '最終更新日順（新→古）',
                 'updated-asc': '最終更新日順（古→新）',
@@ -2954,6 +2957,7 @@
             
             sortInfo.textContent = sortLabels[sortType] || '売上増見込順（大→小）';
         }
+
 
         function renderCardsOptimized() {
             clearTimeout(renderTimeout);

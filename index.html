@@ -1324,16 +1324,7 @@
             <button class="btn btn-auth" onclick="quickLogout()" id="logoutBtn" style="display: none;">🚪 ログアウト</button>
         </div>
     </div>
-</div>
-
-            <div class="header-title">営業支援ダッシュボード v9.1</div>
-            <div class="current-date-header" id="currentDateHeader">
-                <span id="currentDateDisplay">2025年8月</span>
-                <select class="global-month-selector" id="globalMonthSelector" onchange="changeAllCardsDisplayMonth(this.value)">
-                </select>
-            </div>
-        </div>
-
+</div> 
         <div class="progress-section">
             <div class="progress-cards">
                 <div class="progress-card" onclick="openProgressGraphModal(0)" aria-label="月別目標（粗利）の進捗グラフを開く">
@@ -1745,7 +1736,7 @@
     </div>
 
     <script>
-    　　 const RENDER_DEBOUNCE_MS = 100;
+const RENDER_DEBOUNCE_MS = 100;
 // 島谷チーム用グローバル変数
 let currentUser = null;
 let currentUserData = null;
@@ -1795,6 +1786,14 @@ async function quickLogout() {
         return;
     }
     
+    try {
+        await window.firebaseImports.signOut(window.firebaseAuth);
+        showToast('ログアウトしました', 'info');
+    } catch (error) {
+        console.error('ログアウトエラー:', error);
+        showToast('ログアウト失敗: ' + (error.code || error.message), 'error');
+    }
+}
     // 閲覧可能なユーザー一覧を取得
     async function loadAvailableViewTargets() {
         if (!currentUser || !currentUserRole) {
@@ -2023,71 +2022,58 @@ async function quickLogout() {
         }
     }
 
-    try {
-        await window.firebaseImports.signOut(window.firebaseAuth);
-        showToast('ログアウトしました', 'info');
-    } catch (error) {
-        console.error('ログアウトエラー:', error);
-        showToast('ログアウト失敗: ' + (error.code || error.message), 'error');
-    }
-}
-
-
 // Firebase準備完了を待つ安全な関数
 function setupFirebaseAuth() {
     if (window.firebaseImports && window.firebaseAuth && window.db) {
-        // Firebase準備完了：認証状態の監視を開始
-        // 認証状態の監視（既存の関数を更新）
-window.firebaseImports.onAuthStateChanged(window.firebaseAuth, async (user) => {
-    currentUser = user;
-    
-    if (user) {
-        console.log('ログイン中 UID:', user.uid, 'メール:', user.email);
-        
-        // Step 4で登録したusersドキュメントを確認
-        try {
-            const userDoc = await window.firebaseImports.getDoc(
-                window.firebaseImports.doc(window.db, 'users', user.uid)
-            );
+        window.firebaseImports.onAuthStateChanged(window.firebaseAuth, async (user) => {
+            currentUser = user;
             
-            if (userDoc.exists()) {
-                currentUserData = userDoc.data();
-                currentUserRole = currentUserData.role;
+            if (user) {
+                console.log('ログイン中 UID:', user.uid, 'メール:', user.email);
                 
-                // ★重要：デフォルトは必ず自分のデータを表示
-                currentViewTarget = user.uid;
-                
-                await loadAvailableViewTargets();
-                updateAuthUI();
-                updateViewSelector();
-                
-                // データを読み込み
-                await loadCardsDataForTarget(currentViewTarget);
-                progressCache = null;
-                renderCardsOptimized();
-                updateDashboard();
-                
-                console.log('ユーザーデータ:', currentUserData);
-                showToast(`${currentUserData.name}さん（${currentUserRole}）として認識されました`, 'success');
+                try {
+                    const userDoc = await window.firebaseImports.getDoc(
+                        window.firebaseImports.doc(window.db, 'users', user.uid)
+                    );
+                    
+                    if (userDoc.exists()) {
+                        currentUserData = userDoc.data();
+                        currentUserRole = currentUserData.role;
+                        currentViewTarget = user.uid;
+                        
+                        await loadAvailableViewTargets();
+                        updateAuthUI();
+                        updateViewSelector();
+                        
+                        await loadCardsDataForTarget(currentViewTarget);
+                        progressCache = null;
+                        renderCardsOptimized();
+                        updateDashboard();
+                        
+                        showToast(`${currentUserData.name}さん（${currentUserRole}）として認識されました`, 'success');
+                    } else {
+                        showToast('ユーザー情報が未登録です（Step 4を確認）', 'error');
+                    }
+                } catch (error) {
+                    console.error('ユーザーデータ取得エラー:', error);
+                    showToast('ユーザーデータの取得に失敗しました', 'error');
+                }
             } else {
-                console.warn('usersドキュメントが見つかりません（Step 4の設定を確認）');
-                showToast('ユーザー情報が未登録です（Step 4を確認）', 'error');
+                console.log('未ログイン状態');
+                currentUserData = null;
+                currentUserRole = null;
+                currentViewTarget = null;
+                availableViewTargets = [];
+                updateAuthUI();
+                cardsData = [];
+                renderCardsOptimized();
             }
-        } catch (error) {
-            console.error('ユーザーデータ取得エラー:', error);
-            showToast('ユーザーデータの取得に失敗しました', 'error');
-        }
+        });
     } else {
-        console.log('未ログイン状態');
-        currentUserData = null;
-        currentUserRole = null;
-        currentViewTarget = null;
-        availableViewTargets = [];
-        updateAuthUI();
-        cardsData = [];
-        renderCardsOptimized();
+        setTimeout(setupFirebaseAuth, 100);
     }
-});
+}
+
 
 
         let cardsData = [];
@@ -3701,20 +3687,6 @@ window.firebaseImports.onAuthStateChanged(window.firebaseAuth, async (user) => {
             });
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            loadPersonalSettings();
-            loadCardsData();
-            initializeDisplayMonth();
-            migrateToV9Structure();
-            
-            updateProbabilityFilterOptions();
-            updateAreaFilterOptions();
-            updateGlobalMonthSelector();
-            
-            document.getElementById('sortSelect').value = 'sales-desc';
-            
-            setupSearchWithIMESupport();
-            enhanceAccessibility();
 document.addEventListener('DOMContentLoaded', function() {
     loadPersonalSettings();
     loadCardsData();

@@ -1588,8 +1588,14 @@ let currentUser = null;
 let currentUserData = null;
 let currentUserRole = null;
 
-// 簡易ログイン機能
+// 簡易ログイン機能（安全性向上版）
 async function quickLogin() {
+    // Firebase初期化チェック
+    if (!window.firebaseImports || !window.firebaseAuth) {
+        showToast('Firebase初期化中です。数秒後に再度お試しください', 'info');
+        return;
+    }
+    
     try {
         const email = prompt('メールアドレスを入力してください\n例: shimatani@eigyo-team.local');
         const password = prompt('パスワードを入力してください');
@@ -1600,12 +1606,30 @@ async function quickLogin() {
         showToast('ログインしました', 'success');
     } catch (error) {
         console.error('ログインエラー:', error);
-        showToast('ログイン失敗: ' + (error.code || error.message), 'error');
+        
+        // エラーコードに応じた分かりやすいメッセージ
+        const errorMessages = {
+            'auth/invalid-credential': 'メールアドレスまたはパスワードが違います',
+            'auth/user-not-found': 'ユーザーが見つかりません',
+            'auth/wrong-password': 'パスワードが違います',
+            'auth/too-many-requests': '試行回数が多すぎます。少し待って再実行してください',
+            'auth/network-request-failed': 'ネットワークエラーです。接続を確認してください'
+        };
+        
+        const message = errorMessages[error.code] || (error.code || error.message);
+        showToast('ログイン失敗: ' + message, 'error');
     }
 }
 
-// ログアウト機能
+
+// ログアウト機能（安全性向上版）
 async function quickLogout() {
+    // Firebase初期化チェック
+    if (!window.firebaseImports || !window.firebaseAuth) {
+        showToast('Firebase初期化中です。数秒後に再度お試しください', 'info');
+        return;
+    }
+    
     try {
         await window.firebaseImports.signOut(window.firebaseAuth);
         showToast('ログアウトしました', 'info');
@@ -1615,39 +1639,49 @@ async function quickLogout() {
     }
 }
 
-// 認証状態の監視
-window.firebaseImports.onAuthStateChanged(window.firebaseAuth, async (user) => {
-    currentUser = user;
-    
-    if (user) {
-        console.log('ログイン中 UID:', user.uid, 'メール:', user.email);
-        showToast(`ログイン中: ${user.email}`, 'info');
-        
-        // Step 4で登録したusersドキュメントを確認
-        try {
-            const userDoc = await window.firebaseImports.getDoc(
-                window.firebaseImports.doc(window.db, 'users', user.uid)
-            );
+
+// Firebase準備完了を待つ安全な関数
+function setupFirebaseAuth() {
+    if (window.firebaseImports && window.firebaseAuth && window.db) {
+        // Firebase準備完了：認証状態の監視を開始
+        window.firebaseImports.onAuthStateChanged(window.firebaseAuth, async (user) => {
+            currentUser = user;
             
-            if (userDoc.exists()) {
-                currentUserData = userDoc.data();
-                currentUserRole = currentUserData.role;
-                console.log('ユーザーデータ:', currentUserData);
-                showToast(`${currentUserData.name}さん（${currentUserRole}）として認識されました`, 'success');
+            if (user) {
+                console.log('ログイン中 UID:', user.uid, 'メール:', user.email);
+                showToast(`ログイン中: ${user.email}`, 'info');
+                
+                try {
+                    const userDoc = await window.firebaseImports.getDoc(
+                        window.firebaseImports.doc(window.db, 'users', user.uid)
+                    );
+                    
+                    if (userDoc.exists()) {
+                        currentUserData = userDoc.data();
+                        currentUserRole = currentUserData.role;
+                        console.log('ユーザーデータ:', currentUserData);
+                        showToast(`${currentUserData.name}さん（${currentUserRole}）として認識されました`, 'success');
+                    } else {
+                        console.warn('usersドキュメントが見つかりません（Step 4の設定を確認）');
+                        showToast('ユーザー情報が未登録です（Step 4を確認）', 'error');
+                    }
+                } catch (error) {
+                    console.error('ユーザーデータ取得エラー:', error);
+                    showToast('ユーザーデータの取得に失敗しました', 'error');
+                }
             } else {
-                console.warn('usersドキュメントが見つかりません（Step 4の設定を確認）');
-                showToast('ユーザー情報が未登録です（Step 4を確認）', 'error');
+                console.log('未ログイン状態');
+                currentUserData = null;
+                currentUserRole = null;
             }
-        } catch (error) {
-            console.error('ユーザーデータ取得エラー:', error);
-            showToast('ユーザーデータの取得に失敗しました', 'error');
-        }
+        });
     } else {
-        console.log('未ログイン状態');
-        currentUserData = null;
-        currentUserRole = null;
+        // Firebase未準備：100ms後に再試行
+        setTimeout(setupFirebaseAuth, 100);
     }
-});
+}
+
+
         let cardsData = [];
         let nextCardId = 1;
         let progressCache = null;
@@ -3273,6 +3307,32 @@ window.firebaseImports.onAuthStateChanged(window.firebaseAuth, async (user) => {
             
             setupSearchWithIMESupport();
             enhanceAccessibility();
+document.addEventListener('DOMContentLoaded', function() {
+    loadPersonalSettings();
+    loadCardsData();
+    initializeDisplayMonth();
+    migrateToV9Structure();
+    
+    updateProbabilityFilterOptions();
+    updateAreaFilterOptions();
+    updateGlobalMonthSelector();
+    
+    document.getElementById('sortSelect').value = 'sales-desc';
+    
+    setupSearchWithIMESupport();
+    enhanceAccessibility();
+
+    // ★★★ ここに追加 ★★★
+    setupFirebaseAuth();
+    // ★★★ 追加ここまで ★★★
+
+    // 既存のイベントリスナー設定...
+    document.addEventListener('click', function(e) {
+        // ...既存のコード...
+    });
+    
+    // ...以下既存のコード継続...
+});
 
             document.addEventListener('click', function(e) {
                 const modals = document.querySelectorAll('.modal');

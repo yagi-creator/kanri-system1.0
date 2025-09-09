@@ -63,6 +63,100 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+        }
+
+        .user-info-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .login-user-info {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .view-selector-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .view-selector-label {
+            color: white;
+            font-weight: 500;
+        }
+
+        .view-selector {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 14px;
+            min-width: 180px;
+        }
+
+        .view-permission-info {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .permission-edit {
+            background: rgba(40, 167, 69, 0.8);
+            color: white;
+        }
+
+        .permission-view {
+            background: rgba(255, 193, 7, 0.8);
+            color: #333;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-auth {
+            padding: 6px 12px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-auth:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.8);
         }
 
         .header-title {
@@ -364,8 +458,108 @@
             color: rgba(0,0,0,0.8);
         }
 
+        /* PCテーブル用CSS */
+        .desktop-table-container {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 16px;
+        }
+
+        .juku-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .juku-table th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .juku-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .juku-table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .juku-table tbody tr:nth-child(odd) {
+            background: #fff;
+        }
+
+        .juku-table tbody tr:hover {
+            background: #e3f2fd !important;
+        }
+
+        .col-level {
+            width: 8px;
+            padding: 0 !important;
+        }
+
+        .level-indicator {
+            width: 8px;
+            height: 40px;
+            display: block;
+        }
+
+        .level-0 { background: #fff; }
+        .level-1 { background: #BBDEFB; }
+        .level-2 { background: #C8E6C9; }
+        .level-3 { background: #FFF9C4; }
+        .level-4 { background: #FFCDD2; }
+
+        .editable-cell {
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .editable-cell:hover {
+            background: rgba(0,123,255,0.1);
+        }
+
+        .change-positive { color: #2E7D32; font-weight: bold; }
+        .change-negative { color: #D32F2F; font-weight: bold; }
+        .change-neutral { color: #666; }
+
+        .detail-btn {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .detail-btn:hover {
+            background: #0056b3;
+        }
+
+        @media (max-width: 1024px) {
+            .desktop-table-container {
+                display: none;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .mobile-cards-container {
+                display: none;
+            }
+        }
+
         .card {
-            background: #A5D6A7 !important;
+            background: #fff !important;
             color: #333 !important;
             border-radius: 12px;
             padding: 20px;
@@ -378,17 +572,16 @@
         .card:hover,
         .card:active,
         .card:focus {
-            background: #A5D6A7 !important;
+            background: #fff !important;
             transform: none !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
         }
 
-        .card-level-0 { background: #E0E0E0 !important; border-left: 4px solid #BDBDBD; }
-        .card-level-1 { background: #A5D6A7 !important; border-left: 4px solid #66BB6A; }
-        .card-level-2 { background: #81C784 !important; border-left: 4px solid #4CAF50; }
-        .card-level-3 { background: #66BB6A !important; border-left: 4px solid #388E3C; }
-        .card-level-4 { background: #FFD54F !important; border-left: 4px solid #FFC107; }
-        .card-level-5 { background: #FFAB91 !important; border-left: 4px solid #FF7043; }
+        .card-level-0 { background: #fff !important; border-left: 6px solid #fff; }
+        .card-level-1 { background: #fff !important; border-left: 6px solid #BBDEFB; }
+        .card-level-2 { background: #fff !important; border-left: 6px solid #C8E6C9; }
+        .card-level-3 { background: #fff !important; border-left: 6px solid #FFF9C4; }
+        .card-level-4 { background: #fff !important; border-left: 6px solid #FFCDD2; }
 
         .card-header-new {
             display: flex;
@@ -867,9 +1060,69 @@
         }
 
         .monthly-history-container {
-            max-height: 65vh;
+            max-height: 32vh;
             overflow-y: auto;
             padding: 10px;
+        }
+
+        /* コンパクトモーダル用CSS */
+        .compact-month-row {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: #f9f9f9;
+        }
+
+        .compact-month-row.past-month {
+            opacity: 0.75;
+            background: #f5f5f5;
+        }
+
+        .compact-month-header {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .compact-data-grid {
+            display: grid;
+            grid-template-columns: 1fr 80px 2fr;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .compact-field {
+            background: rgba(255,255,255,0.8);
+            padding: 6px 8px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .compact-field-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .compact-field-value {
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .compact-memo {
+            font-size: 12px;
+            line-height: 1.3;
+            color: #333;
+            max-height: 40px;
+            overflow: hidden;
+            word-wrap: break-word;
         }
 
         .history-month-row {
@@ -1051,8 +1304,25 @@
             
             .header-section {
                 flex-direction: column;
-                text-align: center;
-                padding: 16px;
+                align-items: stretch;
+            }
+            
+            .header-right {
+                align-items: stretch;
+            }
+            
+            .user-info-section {
+                align-items: stretch;
+            }
+            
+            .view-selector-section {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 4px;
+            }
+            
+            .view-selector {
+                min-width: auto;
             }
 
             .current-date-header {
@@ -1127,136 +1397,6 @@
                 margin-right: 0;
             }
         }
-        /* Step 6: 島谷チーム用ヘッダーCSS */
-.header-section {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    color: white;
-    padding: 16px 20px;
-    border-radius: 12px;
-    margin-bottom: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-    flex-wrap: wrap;
-    gap: 16px;
-}
-
-.header-left {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.header-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
-}
-
-.user-info-section {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-}
-
-.login-user-info {
-    font-size: 16px;
-    font-weight: bold;
-    padding: 8px 16px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 25px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    min-width: 150px;
-    text-align: center;
-}
-
-.view-selector-section {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-}
-
-.view-selector-label {
-    color: white;
-    font-weight: 500;
-}
-
-.view-selector {
-    padding: 6px 12px;
-    border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
-    font-size: 14px;
-    min-width: 180px;
-}
-
-.view-permission-info {
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-weight: bold;
-}
-
-.permission-edit {
-    background: rgba(40, 167, 69, 0.8);
-    color: white;
-}
-
-.permission-view {
-    background: rgba(255, 193, 7, 0.8);
-    color: #333;
-}
-
-.auth-buttons {
-    display: flex;
-    gap: 8px;
-}
-
-.btn-auth {
-    padding: 8px 16px;
-    font-size: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-auth:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.8);
-}
-
-@media (max-width: 768px) {
-    .header-section {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .header-right {
-        align-items: stretch;
-    }
-    
-    .user-info-section {
-        align-items: stretch;
-    }
-    
-    .view-selector-section {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 4px;
-    }
-    
-    .view-selector {
-        min-width: auto;
-    }
-}
     </style>
    <!-- Firebase SDK -->
 <script type="module">
@@ -1264,7 +1404,6 @@
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
   import { getFirestore, doc, getDoc, getDocs, collection, query, where, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-  // ★重要：以下を Step 5-1 で取得した実際の値に置き換えてください
   const firebaseConfig = {
     apiKey: "AIzaSyC_EUgAAVFfk0TonQgKVMxs8TcuvFdXKIQ",
     authDomain: "eigyo-shiendashboard.firebaseapp.com",
@@ -1273,7 +1412,6 @@
     messagingSenderId: "665404365898",
     appId: "1:665404365898:web:a60374339c99ea5c16dab3"
   };
-
 
   const app = initializeApp(firebaseConfig);
   window.firebaseAuth = getAuth(app);
@@ -1348,11 +1486,11 @@
                     </div>
                 </div>
                 
-                <div class="progress-card" onclick="openProgressGraphModal(2)" aria-label="年間売上目標の進捗グラフを開く">
-                    <h3>年間売上目標</h3>
+                <div class="progress-card" onclick="openProgressGraphModal(2)" aria-label="年間売上増目標の進捗グラフを開く">
+                    <h3>年間売上増目標</h3>
                     <div class="progress-value" id="salesTargetDisplay">¥0万</div>
                     <div class="progress-detail" id="salesTargetDetail">自動計算</div>
-                    <div class="progress-rate" id="salesTargetRate">粗利率から逆算</div>
+                    <div class="progress-rate" id="salesTargetRate">粗利増目標から逆算</div>
                     <div class="progress-chart">
                         <div class="progress-bar" id="salesTargetBar" style="width: 0%; background: #60a5fa;"></div>
                     </div>
@@ -1438,8 +1576,25 @@
                 <div class="section-title">塾一覧</div>
                 <div class="sort-info" id="sortInfo">売上増見込順（大→小）</div>
             </div>
-
-            <div id="cardsContainer"></div>
+            
+            <div class="desktop-table-container" id="desktopTableContainer">
+                <table class="juku-table">
+                    <thead>
+                        <tr>
+                            <th class="col-level"></th>
+                            <th class="col-name">塾名</th>
+                            <th class="col-forecast">今月売上増見込</th>
+                            <th class="col-probability">確率</th>
+                            <th class="col-memo">今月備考</th>
+                            <th class="col-change">先月からの変化</th>
+                            <th class="col-detail">詳細</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jukuTableBody"></tbody>
+                </table>
+            </div>
+            
+            <div class="mobile-cards-container" id="cardsContainer"></div>
         </div>
     </div>
 
@@ -1469,12 +1624,17 @@
                     <h4>年間目標</h4>
                     <div class="form-group">
                         <label class="form-label" for="yearlyProfitTarget">年間粗利目標</label>
-                        <input type="number" class="form-input" value="13000000" id="yearlyProfitTarget" oninput="updatePersonalSalesTarget()">
+                        <input type="number" class="form-input" value="13000000" id="yearlyProfitTarget">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="yearlySalesTarget">年間売上目標</label>
-                        <input type="number" class="form-input" value="43333333" id="yearlySalesTarget" readonly>
-                        <small>※上記を個人粗利率で逆算した値</small>
+                        <label class="form-label" for="yearlyProfitIncreaseTarget">粗利増目標</label>
+                        <input type="number" class="form-input" value="3000000" id="yearlyProfitIncreaseTarget" oninput="updatePersonalSalesTarget()">
+                        <small>昨年からの粗利増加目標額</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="yearlySalesIncreaseTarget">年間売上増目標</label>
+                        <input type="number" class="form-input" value="10000000" id="yearlySalesIncreaseTarget" readonly>
+                        <small>粗利増目標を個人粗利率で逆算した値</small>
                     </div>
                 </div>
 
@@ -1738,16 +1898,13 @@
 
     <script>
 const RENDER_DEBOUNCE_MS = 100;
-// 島谷チーム用グローバル変数
 let currentUser = null;
 let currentUserData = null;
 let currentUserRole = null;
-let currentViewTarget = null; // 現在表示対象のユーザーUID
-let availableViewTargets = []; // 閲覧可能なユーザー一覧
+let currentViewTarget = null;
+let availableViewTargets = [];
 
-// 簡易ログイン機能（安全性向上版）
 async function quickLogin() {
-    // Firebase初期化チェック
     if (!window.firebaseImports || !window.firebaseAuth) {
         showToast('Firebase初期化中です。数秒後に再度お試しください', 'info');
         return;
@@ -1764,7 +1921,6 @@ async function quickLogin() {
     } catch (error) {
         console.error('ログインエラー:', error);
         
-        // エラーコードに応じた分かりやすいメッセージ
         const errorMessages = {
             'auth/invalid-credential': 'メールアドレスまたはパスワードが違います',
             'auth/user-not-found': 'ユーザーが見つかりません',
@@ -1778,10 +1934,7 @@ async function quickLogin() {
     }
 }
 
-
-// ログアウト機能（安全性向上版）
 async function quickLogout() {
-    // Firebase初期化チェック
     if (!window.firebaseImports || !window.firebaseAuth) {
         showToast('Firebase初期化中です。数秒後に再度お試しください', 'info');
         return;
@@ -1795,250 +1948,206 @@ async function quickLogout() {
         showToast('ログアウト失敗: ' + (error.code || error.message), 'error');
     }
 }
-    // 閲覧可能なユーザー一覧を取得
-    async function loadAvailableViewTargets() {
-        if (!currentUser || !currentUserRole) {
-            availableViewTargets = [];
-            return;
-        }
+
+async function loadAvailableViewTargets() {
+    if (!currentUser || !currentUserRole) {
+        availableViewTargets = [];
+        return;
+    }
+    
+    try {
+        const usersCollection = await window.firebaseImports.getDocs(
+            window.firebaseImports.collection(window.db, 'users')
+        );
         
-        try {
-            const usersCollection = await window.firebaseImports.getDocs(
-                window.firebaseImports.collection(window.db, 'users')
-            );
+        availableViewTargets = [];
+        
+        usersCollection.forEach((doc) => {
+            const userData = doc.data();
+            const userId = doc.id;
             
-            availableViewTargets = [];
+            if (userId === currentUser.uid) {
+                availableViewTargets.push({
+                    id: userId,
+                    name: userData.name,
+                    role: userData.role,
+                    canEdit: true
+                });
+                return;
+            }
             
-            usersCollection.forEach((doc) => {
-                const userData = doc.data();
-                const userId = doc.id;
-                
-                // 自分は常に含める
-                if (userId === currentUser.uid) {
+            if (currentUserRole === 'admin') {
+                availableViewTargets.push({
+                    id: userId,
+                    name: userData.name,
+                    role: userData.role,
+                    canEdit: false
+                });
+            } else if (currentUserRole === 'manager') {
+                if (currentUserData.subordinates && currentUserData.subordinates.includes(userId)) {
                     availableViewTargets.push({
                         id: userId,
                         name: userData.name,
                         role: userData.role,
-                        canEdit: true
+                        canEdit: false
                     });
-                    return;
                 }
-                
-                // 権限に応じて追加
-                if (currentUserRole === 'admin') {
-                    // 島谷さん（管理者）は全員閲覧可能
-                    availableViewTargets.push({
-                        id: userId,
-                        name: userData.name,
-                        role: userData.role,
-                        canEdit: false // A案：編集は自分のみ
-                    });
-                } else if (currentUserRole === 'manager') {
-                    // 門戸さん・梨木さん（マネージャー）は部下のみ閲覧可能
-                    if (currentUserData.subordinates && currentUserData.subordinates.includes(userId)) {
-                        availableViewTargets.push({
-                            id: userId,
-                            name: userData.name,
-                            role: userData.role,
-                            canEdit: false
-                        });
-                    }
-                }
-                // 八木さん・村上さん（スタッフ）は自分のみ（上記で既に追加済み）
-            });
-            
-            // 自分を最初に表示するようにソート
-            availableViewTargets.sort((a, b) => {
-                if (a.id === currentUser.uid) return -1;
-                if (b.id === currentUser.uid) return 1;
-                return a.name.localeCompare(b.name);
-            });
-            
-        } catch (error) {
-            console.error('Available view targets load error:', error);
-            availableViewTargets = [{
-                id: currentUser.uid,
-                name: currentUserData.name,
-                role: currentUserRole,
-                canEdit: true
-            }];
-        }
-    }
-
-    // 認証UI更新関数
-    function updateAuthUI() {
-        const loginUserInfo = document.getElementById('loginUserInfo');
-        const viewSelectorSection = document.getElementById('viewSelectorSection');
-        const loginBtn = document.getElementById('loginBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        
-        if (currentUser && currentUserData) {
-            const roleIcons = {
-                'admin': '👑',
-                'manager': '👔', 
-                'staff': '💼'
-            };
-            
-            const roleNames = {
-                'admin': '管理者',
-                'manager': 'マネージャー',
-                'staff': '営業担当'
-            };
-            
-            loginUserInfo.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 20px;">${roleIcons[currentUserRole] || '🔐'}</span>
-                    <div>
-                        <div style="font-weight: bold; font-size: 16px;">${currentUserData.name}さん</div>
-                        <div style="font-size: 12px; opacity: 0.9;">${roleNames[currentUserRole] || 'ユーザー'}</div>
-                    </div>
-                </div>
-            `;
-            
-            // スタッフは自分のデータのみなのでプルダウン不要
-            if (currentUserRole === 'staff') {
-                viewSelectorSection.style.display = 'none';
-            } else {
-                viewSelectorSection.style.display = 'flex';
             }
-            
-            loginBtn.style.display = 'none';
-            logoutBtn.style.display = 'inline-block';
-        } else {
-            loginUserInfo.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 20px;">🔐</span>
-                    <div>
-                        <div style="font-weight: bold; font-size: 16px;">未ログイン</div>
-                        <div style="font-size: 12px; opacity: 0.9;">ログインしてください</div>
-                    </div>
-                </div>
-            `;
-            viewSelectorSection.style.display = 'none';
-            loginBtn.style.display = 'inline-block';
-            logoutBtn.style.display = 'none';
-        }
-    }
-
-    function updateViewSelector() {
-        const viewSelector = document.getElementById('viewSelector');
-        const viewPermissionInfo = document.getElementById('viewPermissionInfo');
-        
-        if (!availableViewTargets.length) {
-            viewSelector.innerHTML = '<option value="">データなし</option>';
-            viewPermissionInfo.textContent = '';
-            return;
-        }
-        
-        viewSelector.innerHTML = '';
-        
-        availableViewTargets.forEach(target => {
-            const option = document.createElement('option');
-            option.value = target.id;
-            
-            if (target.id === currentUser.uid) {
-                option.textContent = `${target.name}さん (自分)`;
-            } else {
-                const roleLabel = {
-                    'admin': '管理者',
-                    'manager': 'マネージャー', 
-                    'staff': '営業担当'
-                }[target.role] || target.role;
-                option.textContent = `${target.name}さん (${roleLabel})`;
-            }
-            
-            if (target.id === currentViewTarget) {
-                option.selected = true;
-            }
-            
-            viewSelector.appendChild(option);
         });
         
-        // 権限情報表示
-        const currentTarget = availableViewTargets.find(t => t.id === currentViewTarget);
-        if (currentTarget) {
-            if (currentTarget.canEdit) {
-                viewPermissionInfo.textContent = '✏️ 編集可能';
-                viewPermissionInfo.className = 'view-permission-info permission-edit';
-            } else {
-                viewPermissionInfo.textContent = '👁️ 閲覧専用';
-                viewPermissionInfo.className = 'view-permission-info permission-view';
-            }
-        }
+        availableViewTargets.sort((a, b) => {
+            if (a.id === currentUser.uid) return -1;
+            if (b.id === currentUser.uid) return 1;
+            return a.name.localeCompare(b.name);
+        });
+        
+    } catch (error) {
+        console.error('Available view targets load error:', error);
+        availableViewTargets = [{
+            id: currentUser.uid,
+            name: currentUserData.name,
+            role: currentUserRole,
+            canEdit: true
+        }];
     }
+}
 
-    // 閲覧対象変更
-    async function changeViewTarget() {
-        const viewSelector = document.getElementById('viewSelector');
-        const newTargetId = viewSelector.value;
+function updateAuthUI() {
+    const loginUserInfo = document.getElementById('loginUserInfo');
+    const viewSelectorSection = document.getElementById('viewSelectorSection');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    if (currentUser && currentUserData) {
+        loginUserInfo.textContent = currentUserData.name;
         
-        if (newTargetId && newTargetId !== currentViewTarget) {
-            currentViewTarget = newTargetId;
-            updateViewSelector();
-            
-            await loadCardsDataForTarget(newTargetId);
-            progressCache = null;
-            renderCardsOptimized();
-            updateDashboard();
-            
-            const targetUser = availableViewTargets.find(t => t.id === newTargetId);
-            if (targetUser) {
-                showToast(`${targetUser.name}さんのデータを表示中`, 'info');
-            }
+        if (currentUserRole === 'staff') {
+            viewSelectorSection.style.display = 'none';
+        } else {
+            viewSelectorSection.style.display = 'flex';
         }
+        
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+    } else {
+        loginUserInfo.textContent = '未ログイン';
+        viewSelectorSection.style.display = 'none';
+        loginBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'none';
     }
+}
 
-    // 指定ユーザーのデータを読み込み
-    async function loadCardsDataForTarget(targetUserId) {
-        if (!currentUser || !targetUserId) {
-            cardsData = [];
-            return;
+function updateViewSelector() {
+    const viewSelector = document.getElementById('viewSelector');
+    const viewPermissionInfo = document.getElementById('viewPermissionInfo');
+    
+    if (!availableViewTargets.length) {
+        viewSelector.innerHTML = '<option value="">データなし</option>';
+        viewPermissionInfo.textContent = '';
+        return;
+    }
+    
+    viewSelector.innerHTML = '';
+    
+    availableViewTargets.forEach(target => {
+        const option = document.createElement('option');
+        option.value = target.id;
+        
+        if (target.id === currentUser.uid) {
+            option.textContent = `${target.name}さん (自分)`;
+        } else {
+            const roleLabel = {
+                'admin': '管理者',
+                'manager': 'マネージャー', 
+                'staff': '営業担当'
+            }[target.role] || target.role;
+            option.textContent = `${target.name}さん (${roleLabel})`;
         }
         
-        try {
-            const cardsQuery = window.firebaseImports.query(
-                window.firebaseImports.collection(window.db, 'juku_cards'),
-                window.firebaseImports.where('assignedUserId', '==', targetUserId)
-            );
-            
-            const cardsCollection = await window.firebaseImports.getDocs(cardsQuery);
-            
-            cardsData = [];
-            let maxId = 0;
-            
-            cardsCollection.forEach((doc) => {
-                const cardData = { id: parseInt(doc.id), ...doc.data() };
-                cardsData.push(cardData);
-                if (cardData.id > maxId) {
-                    maxId = cardData.id;
-                }
-            });
-            
-            nextCardId = maxId + 1;
-            
-        } catch (error) {
-            console.error('Cards load error for target:', error);
-            cardsData = [];
-            nextCardId = 1;
+        if (target.id === currentViewTarget) {
+            option.selected = true;
+        }
+        
+        viewSelector.appendChild(option);
+    });
+    
+    const currentTarget = availableViewTargets.find(t => t.id === currentViewTarget);
+    if (currentTarget) {
+        if (currentTarget.canEdit) {
+            viewPermissionInfo.textContent = '✏️ 編集可能';
+            viewPermissionInfo.className = 'view-permission-info permission-edit';
+        } else {
+            viewPermissionInfo.textContent = '👁️ 閲覧専用';
+            viewPermissionInfo.className = 'view-permission-info permission-view';
         }
     }
+}
+
+async function changeViewTarget() {
+    const viewSelector = document.getElementById('viewSelector');
+    const newTargetId = viewSelector.value;
+    
+    if (newTargetId && newTargetId !== currentViewTarget) {
+        currentViewTarget = newTargetId;
+        updateViewSelector();
         
-// A案対応：権限チェック関数
+        await loadCardsDataForTarget(newTargetId);
+        progressCache = null;
+        renderCardsOptimized();
+        updateDashboard();
+        
+        const targetUser = availableViewTargets.find(t => t.id === newTargetId);
+        if (targetUser) {
+            showToast(`${targetUser.name}さんのデータを表示中`, 'info');
+        }
+    }
+}
+
+async function loadCardsDataForTarget(targetUserId) {
+    if (!currentUser || !targetUserId) {
+        cardsData = [];
+        return;
+    }
+    
+    try {
+        const cardsQuery = window.firebaseImports.query(
+            window.firebaseImports.collection(window.db, 'juku_cards'),
+            window.firebaseImports.where('assignedUserId', '==', targetUserId)
+        );
+        
+        const cardsCollection = await window.firebaseImports.getDocs(cardsQuery);
+        
+        cardsData = [];
+        let maxId = 0;
+        
+        cardsCollection.forEach((doc) => {
+            const cardData = { id: parseInt(doc.id), ...doc.data() };
+            cardsData.push(cardData);
+            if (cardData.id > maxId) {
+                maxId = cardData.id;
+            }
+        });
+        
+        nextCardId = maxId + 1;
+        
+    } catch (error) {
+        console.error('Cards load error for target:', error);
+        cardsData = [];
+        nextCardId = 1;
+    }
+}
+
 function hasPermission(action, targetData = null) {
     if (!currentUserRole || !currentUser) return false;
     
     switch (action) {
         case 'view_data':
-            // 現在表示中のターゲットのデータのみ表示
             return targetData ? targetData.assignedUserId === currentViewTarget : false;
         case 'edit_data':
-            // 編集は自分のデータのみ（A案：管理者も例外なし）
             return targetData ? targetData.assignedUserId === currentUser.uid : false;
         case 'delete_data':
-            // 削除は自分のデータのみ（A案：管理者も例外なし）
             return targetData ? targetData.assignedUserId === currentUser.uid : false;
         case 'create_data':
-            // 新規作成は自分のデータ表示中のみ
             return currentViewTarget === currentUser.uid;
         case 'edit_own_settings':
             return true;
@@ -2049,7 +2158,6 @@ function hasPermission(action, targetData = null) {
     }
 }
 
-// Firebase準備完了を待つ安全な関数
 function setupFirebaseAuth() {
     if (window.firebaseImports && window.firebaseAuth && window.db) {
         window.firebaseImports.onAuthStateChanged(window.firebaseAuth, async (user) => {
@@ -2101,224 +2209,236 @@ function setupFirebaseAuth() {
     }
 }
 
+let cardsData = [];
+let nextCardId = 1;
+let progressCache = null;
+let progressChart = null;
+let searchTimeout;
+let renderTimeout;
+let scrollPosition = 0;
+let currentEditingMemo = null;
+let isComposing = false;
 
+let personalSettings = {
+    userName: '担当者',
+    profitRate: 30,
+    yearlyProfitTarget: 13000000,
+    yearlyProfitIncreaseTarget: 3000000,
+    yearlySalesIncreaseTarget: 10000000,
+    monthlyProfitActuals: {
+        10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+        4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+    },
+    monthlyProfitTargets: {
+        10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+        4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+    }
+};
 
-        let cardsData = [];
-        let nextCardId = 1;
-        let progressCache = null;
-        let progressChart = null;
-        let searchTimeout;
-        let renderTimeout;
-        let scrollPosition = 0;
-        let currentEditingMemo = null;
-        let isComposing = false;
+const PROBABILITY_CONFIG = {
+    options: [
+        { value: 40, label: '50未満' },
+        { value: 50, label: '50%' },
+        { value: 60, label: '60%' },
+        { value: 70, label: '70%' },
+        { value: 80, label: '80%' },
+        { value: 90, label: '90%' },
+        { value: 100, label: '100%' }
+    ],
+    
+    filters: [
+        { value: 'all', label: '全確率' },
+        { value: 'under50', label: '50未満' },
+        { value: '50-70', label: '50-70%' },
+        { value: '70-90', label: '70-90%' },
+        { value: '90-100', label: '90-100%' }
+    ]
+};
 
-        let personalSettings = {
-            userName: '担当者',
-            profitRate: 30,
-            yearlyProfitTarget: 13000000,
-            yearlySalesTarget: 43333333,
-            monthlyProfitActuals: {
-                10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
-                4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
-            },
-            monthlyProfitTargets: {
-                10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
-                4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+function getCurrentMonth() { 
+    return new Date().getMonth() + 1; 
+}
+
+function formatManYen(amount, decimals = 1) {
+    const absAmount = Math.abs(amount || 0);
+    const manYen = absAmount / 10000;
+    const sign = amount < 0 ? '-' : '';
+    return `${sign}¥${manYen.toFixed(decimals)}万`;
+}
+
+function formatAmount(amount) { 
+    const absAmount = Math.abs(amount || 0);
+    const sign = amount < 0 ? '-' : '';
+    return `${sign}¥${absAmount.toLocaleString()}`;
+}
+
+function formatDateForDisplay(s) {
+    if (!s) return '—';
+    try {
+        const d = new Date(s);
+        if (isNaN(d.getTime())) return '—';
+        const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), da = String(d.getDate()).padStart(2, '0'), h = String(d.getHours()).padStart(2, '0'), mi = String(d.getMinutes()).padStart(2, '0');
+        return `${y}/${m}/${da} ${h}:${mi}`;
+    } catch (e) {
+        return '—';
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+}
+
+function parseNumberSafely(value) {
+    if (value == null || value === '') return 0;
+    
+    const normalized = String(value)
+        .replace(/[０-９]/g, (match) => String.fromCharCode(match.charCodeAt(0) - 0xFEE0))
+        .replace(/[,，\s]/g, '')
+        .replace(/[^0-9.-]/g, '');
+    
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+}
+
+function getProbabilityLabel(value) {
+    if (value === 40) return '50未満';
+    return `${value}%`;
+}
+
+function getProbabilityFilterGroup(value) {
+    if (value < 50) return 'under50';
+    if (value < 70) return '50-70';
+    if (value < 90) return '70-90';
+    return '90-100';
+}
+
+function matchesProbabilityFilter(probability, filterValue) {
+    if (filterValue === 'all') return true;
+    return getProbabilityFilterGroup(probability) === filterValue;
+}
+
+function getFiscalYearStructure() {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    
+    const fiscalStartYear = currentMonth >= 10 ? currentYear : currentYear - 1;
+    
+    const months = [];
+    for (let i = 0; i < 12; i++) {
+        const month = ((10 + i - 1) % 12) + 1;
+        const year = month >= 10 ? fiscalStartYear : fiscalStartYear + 1;
+        months.push({
+            key: `${year}-${String(month).padStart(2, '0')}`,
+            year: year,
+            month: month,
+            label: `${year}年${month}月`
+        });
+    }
+    
+    return {
+        months: months,
+        currentMonthKey: `${currentYear}-${String(currentMonth).padStart(2, '0')}`,
+        currentMonthIndex: months.findIndex(m => m.key === `${currentYear}-${String(currentMonth).padStart(2, '0')}`)
+    };
+}
+
+function getPreviousMonth(monthKey) {
+    const fiscalStructure = getFiscalYearStructure();
+    const currentIndex = fiscalStructure.months.findIndex(m => m.key === monthKey);
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : 11;
+    return fiscalStructure.months[prevIndex];
+}
+
+function calculateMonthlyChange(cardData, monthKey) {
+    const f = getFiscalYearStructure();
+    const m = f.months.find(x => x.key === monthKey);
+    const cur = (cardData.monthlyData?.[monthKey] || { salesIncreaseForecast: 0 }).salesIncreaseForecast || 0;
+    if (m && m.month === 10) return { amount: cur, direction: cur > 0 ? 'increase' : 'neutral' };
+    const prev = getPreviousMonth(monthKey);
+    const p = (cardData.monthlyData?.[prev.key] || { salesIncreaseForecast: 0 }).salesIncreaseForecast || 0;
+    const d = cur - p;
+    return { amount: d, direction: d > 0 ? 'increase' : d < 0 ? 'decrease' : 'neutral' };
+}
+
+function calculateSalesFromProfit(profitActual) {
+    const profitRate = personalSettings.profitRate / 100;
+    if (profitRate <= 0) return 0;
+    return Math.round(profitActual / profitRate);
+}
+
+function getCardLevel(v) {
+    if (v < 100000) return 0;
+    if (v < 300000) return 1;
+    if (v < 500000) return 2;
+    if (v < 1000000) return 3;
+    return 4;
+}
+
+function updatePersonalSalesTarget() {
+    const p = personalSettings.profitRate / 100;
+    personalSettings.yearlySalesIncreaseTarget = p > 0 ? Math.round(personalSettings.yearlyProfitIncreaseTarget / p) : 0;
+    const el = document.getElementById('yearlySalesIncreaseTarget');
+    if (el) el.value = personalSettings.yearlySalesIncreaseTarget;
+}
+
+function validateCardData(cardData) {
+    const errors = [];
+    
+    if (!cardData.jukuName || cardData.jukuName.trim().length === 0) {
+        errors.push('塾名は必須です');
+    }
+    
+    if (cardData.jukuName && cardData.jukuName.length > 100) {
+        errors.push('塾名は100文字以内で入力してください');
+    }
+    
+    if (cardData.annualProfitActual < 0) {
+        errors.push('年間粗利実績は0以上で入力してください');
+    }
+    
+    if (cardData.monthlyData) {
+        Object.entries(cardData.monthlyData).forEach(([monthKey, monthData]) => {
+            if (monthData.salesIncreaseForecast < 0) {
+                errors.push(`${monthKey}の売上増見込みは0以上で入力してください`);
             }
-        };
-
-        const PROBABILITY_CONFIG = {
-            options: [
-                { value: 40, label: '50未満' },
-                { value: 50, label: '50%' },
-                { value: 60, label: '60%' },
-                { value: 70, label: '70%' },
-                { value: 80, label: '80%' },
-                { value: 90, label: '90%' },
-                { value: 100, label: '100%' }
-            ],
             
-            filters: [
-                { value: 'all', label: '全確率' },
-                { value: 'under50', label: '50未満' },
-                { value: '50-70', label: '50-70%' },
-                { value: '70-90', label: '70-90%' },
-                { value: '90-100', label: '90-100%' }
-            ]
-        };
-
-        function getCurrentMonth() { 
-            return new Date().getMonth() + 1; 
-        }
-        
-        function formatManYen(amount, decimals = 1) {
-            const absAmount = Math.abs(amount || 0);
-            const manYen = absAmount / 10000;
-            const sign = amount < 0 ? '-' : '';
-            return `${sign}¥${manYen.toFixed(decimals)}万`;
-        }
-        
-        function formatAmount(amount) { 
-            const absAmount = Math.abs(amount || 0);
-            const sign = amount < 0 ? '-' : '';
-            return `${sign}¥${absAmount.toLocaleString()}`;
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text || '';
-            return div.innerHTML;
-        }
-
-        function parseNumberSafely(value) {
-            if (value == null || value === '') return 0;
-            
-            const normalized = String(value)
-                .replace(/[０-９]/g, (match) => String.fromCharCode(match.charCodeAt(0) - 0xFEE0))
-                .replace(/[,，\s]/g, '')
-                .replace(/[^0-9.-]/g, '');
-            
-            const parsed = Number(normalized);
-            return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
-        }
-
-        function getProbabilityLabel(value) {
-            if (value === 40) return '50未満';
-            return `${value}%`;
-        }
-
-        function getProbabilityFilterGroup(value) {
-            if (value < 50) return 'under50';
-            if (value < 70) return '50-70';
-            if (value < 90) return '70-90';
-            return '90-100';
-        }
-
-        function matchesProbabilityFilter(probability, filterValue) {
-            if (filterValue === 'all') return true;
-            return getProbabilityFilterGroup(probability) === filterValue;
-        }
-
-        function getFiscalYearStructure() {
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth() + 1;
-            
-            const fiscalStartYear = currentMonth >= 10 ? currentYear : currentYear - 1;
-            
-            const months = [];
-            for (let i = 0; i < 12; i++) {
-                const month = ((10 + i - 1) % 12) + 1;
-                const year = month >= 10 ? fiscalStartYear : fiscalStartYear + 1;
-                months.push({
-                    key: `${year}-${String(month).padStart(2, '0')}`,
-                    year: year,
-                    month: month,
-                    label: `${year}年${month}月`
-                });
+            if (monthData.probability < 0 || monthData.probability > 100) {
+                errors.push(`${monthKey}の確率は0-100%の範囲で入力してください`);
             }
-            
-            return {
-                months: months,
-                currentMonthKey: `${currentYear}-${String(currentMonth).padStart(2, '0')}`,
-                currentMonthIndex: months.findIndex(m => m.key === `${currentYear}-${String(currentMonth).padStart(2, '0')}`)
-            };
-        }
+        });
+    }
+    
+    return errors;
+}
 
-        function getPreviousMonth(monthKey) {
-            const fiscalStructure = getFiscalYearStructure();
-            const currentIndex = fiscalStructure.months.findIndex(m => m.key === monthKey);
-            const prevIndex = currentIndex > 0 ? currentIndex - 1 : 11;
-            return fiscalStructure.months[prevIndex];
-        }
+function saveBackup(data) {
+    try {
+        const backups = JSON.parse(localStorage.getItem('salesDashboard_backups') || '[]');
+        backups.unshift({ ...data, backupTime: Date.now() });
+        backups.splice(3);
+        localStorage.setItem('salesDashboard_backups', JSON.stringify(backups));
+    } catch (e) {
+        console.warn('Backup save failed:', e);
+    }
+}
 
-        function calculateSalesFromProfit(profitActual) {
-            const profitRate = personalSettings.profitRate / 100;
-            if (profitRate <= 0) return 0;
-            return Math.round(profitActual / profitRate);
-        }
-
-        function getCardLevel(salesIncreaseForecast) {
-            if (salesIncreaseForecast === 0) return 0;
-            if (salesIncreaseForecast <= 200000) return 1;
-            if (salesIncreaseForecast <= 500000) return 2;
-            if (salesIncreaseForecast <= 1000000) return 3;
-            if (salesIncreaseForecast <= 2000000) return 4;
-            return 5;
-        }
-
-        function updatePersonalSalesTarget() {
-            const profitRate = personalSettings.profitRate / 100;
-            if (profitRate > 0) {
-                personalSettings.yearlySalesTarget = Math.round(personalSettings.yearlyProfitTarget / profitRate);
-            } else {
-                personalSettings.yearlySalesTarget = 0;
-            }
-            
-            const yearlySalesTargetInput = document.getElementById('yearlySalesTarget');
-            if (yearlySalesTargetInput) {
-                yearlySalesTargetInput.value = personalSettings.yearlySalesTarget;
+function cleanupOldBackups() {
+    try {
+        localStorage.removeItem('salesDashboard_backups');
+        for (let key in localStorage) {
+            if (key.startsWith('salesDashboard_') && key.includes('_old')) {
+                localStorage.removeItem(key);
             }
         }
+    } catch (e) {
+        console.warn('Cleanup failed:', e);
+    }
+}
 
-        function validateCardData(cardData) {
-            const errors = [];
-            
-            if (!cardData.jukuName || cardData.jukuName.trim().length === 0) {
-                errors.push('塾名は必須です');
-            }
-            
-            if (cardData.jukuName && cardData.jukuName.length > 100) {
-                errors.push('塾名は100文字以内で入力してください');
-            }
-            
-            if (cardData.annualProfitActual < 0) {
-                errors.push('年間粗利実績は0以上で入力してください');
-            }
-            
-            if (cardData.monthlyData) {
-                Object.entries(cardData.monthlyData).forEach(([monthKey, monthData]) => {
-                    if (monthData.salesIncreaseForecast < 0) {
-                        errors.push(`${monthKey}の売上増見込みは0以上で入力してください`);
-                    }
-                    
-                    if (monthData.probability < 0 || monthData.probability > 100) {
-                        errors.push(`${monthKey}の確率は0-100%の範囲で入力してください`);
-                    }
-                });
-            }
-            
-            return errors;
-        }
-
-        function saveBackup(data) {
-            try {
-                const backups = JSON.parse(localStorage.getItem('salesDashboard_backups') || '[]');
-                backups.unshift({ ...data, backupTime: Date.now() });
-                backups.splice(3);
-                localStorage.setItem('salesDashboard_backups', JSON.stringify(backups));
-            } catch (e) {
-                console.warn('Backup save failed:', e);
-            }
-        }
-
-        function cleanupOldBackups() {
-            try {
-                localStorage.removeItem('salesDashboard_backups');
-                for (let key in localStorage) {
-                    if (key.startsWith('salesDashboard_') && key.includes('_old')) {
-                        localStorage.removeItem(key);
-                    }
-                }
-            } catch (e) {
-                console.warn('Cleanup failed:', e);
-            }
-        }
-
-        // 島谷チーム用：Firestoreにデータを保存
 async function saveCardsData() {
-    // オフライン時や未ログイン時はLocalStorageに保存
     if (!currentUser || !window.firebaseImports || !window.db) {
         try {
             localStorage.setItem('salesDashboard_cardsData_v9', JSON.stringify({
@@ -2333,11 +2453,9 @@ async function saveCardsData() {
     }
     
     try {
-        // 各カードを個別にFirestoreに保存
         for (const card of cardsData) {
             const cardRef = window.firebaseImports.doc(window.db, 'juku_cards', String(card.id));
             
-            // 担当者情報が設定されていない場合は現在のユーザーを設定
             const cardToSave = {
                 ...card,
                 assignedUserId: card.assignedUserId || currentUser.uid,
@@ -2357,7 +2475,6 @@ async function saveCardsData() {
         console.error('Firestore save error:', error);
         showToast('保存エラー: ' + error.message, 'error');
         
-        // エラー時はLocalStorageにフォールバック
         try {
             localStorage.setItem('salesDashboard_cardsData_v9', JSON.stringify({
                 cardsData: cardsData,
@@ -2370,862 +2487,945 @@ async function saveCardsData() {
     }
 }
 
-
-        function loadCardsData() {
-            try {
-                const saved = localStorage.getItem('salesDashboard_cardsData_v9');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    if (data.cardsData) {
-                        cardsData = data.cardsData;
-                        nextCardId = data.nextCardId || 1;
-                    } else {
-                        cardsData = data;
-                        const savedNextId = localStorage.getItem('salesDashboard_nextCardId_v9');
-                        nextCardId = parseInt(savedNextId) || 1;
-                    }
-                } else {
-                    cardsData = [];
-                    nextCardId = 1;
-                }
-            } catch (e) {
-                showToast('データ読み込みエラー', 'error');
-                console.error('Load error:', e);
-                cardsData = [];
-                nextCardId = 1;
-            }
-        }
-
-        function savePersonalSettings() {
-            try {
-                localStorage.setItem('salesDashboard_personalSettings_v9', JSON.stringify(personalSettings));
-            } catch (e) {
-                showToast('個人設定保存エラー', 'error');
-                console.error('Personal settings save error:', e);
-            }
-        }
-
-        function loadPersonalSettings() {
-            try {
-                const saved = localStorage.getItem('salesDashboard_personalSettings_v9');
-                if (saved) {
-                    const savedSettings = JSON.parse(saved);
-                    personalSettings = { ...personalSettings, ...savedSettings };
-                    
-                    if (!personalSettings.monthlyProfitTargets) {
-                        personalSettings.monthlyProfitTargets = {
-                            10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
-                            4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
-                        };
-                    }
-                    if (!personalSettings.monthlyProfitActuals) {
-                        personalSettings.monthlyProfitActuals = {
-                            10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
-                            4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
-                        };
-                    }
-                    updatePersonalSalesTarget();
-                }
-            } catch (e) {
-                showToast('個人設定読み込みエラー', 'error');
-                console.error('Personal settings load error:', e);
-            }
-        }
-
-        function migrateToV9Structure() {
-            const fiscalStructure = getFiscalYearStructure();
-            let migrationCount = 0;
-            
-            cardsData.forEach(cardData => {
-                let needsMigration = false;
-                
-                if (cardData.hasOwnProperty('annualSalesIncreaseTarget')) {
-                    delete cardData.annualSalesIncreaseTarget;
-                    needsMigration = true;
-                }
-                if (cardData.hasOwnProperty('annualProfitIncreaseExpected')) {
-                    delete cardData.annualProfitIncreaseExpected;
-                    needsMigration = true;
-                }
-                
-                if (!cardData.monthlyData) {
-                    cardData.monthlyData = {};
-                    needsMigration = true;
-                    
-                    fiscalStructure.months.forEach(monthInfo => {
-                        cardData.monthlyData[monthInfo.key] = {
-                            salesIncreaseForecast: 0,
-                            probability: 50,
-                            memo: ""
-                        };
-                    });
-                    
-                    if (cardData.memo) {
-                        cardData.monthlyData[fiscalStructure.currentMonthKey].memo = cardData.memo;
-                        delete cardData.memo;
-                    }
-                    
-                    if (cardData.probability) {
-                        let numericProbability = 50;
-                        switch(cardData.probability) {
-                            case '80+': numericProbability = 90; break;
-                            case '60-80': numericProbability = 70; break;
-                            case '50-60': numericProbability = 60; break;
-                            case '50-': numericProbability = 40; break;
-                        }
-                        cardData.monthlyData[fiscalStructure.currentMonthKey].probability = numericProbability;
-                        delete cardData.probability;
-                    }
-                }
-                
-                if (!cardData.displayMonth) {
-                    cardData.displayMonth = fiscalStructure.currentMonthKey;
-                    needsMigration = true;
-                }
-                
-                if (!cardData.annualMaterials) {
-                    cardData.annualMaterials = {
-                        yearRound: { hasOrder: false, orderPeriod: "" },
-                        seasonalExam: { hasUsage: false, usagePeriod: "" }
-                    };
-                    needsMigration = true;
-                }
-
-                if (!cardData.registeredMonth) {
-                    cardData.registeredMonth = cardData.lastUpdated ? 
-                        cardData.lastUpdated.substring(0, 7) : 
-                        fiscalStructure.currentMonthKey;
-                    needsMigration = true;
-                }
-
-                if (!cardData.hasOwnProperty('area')) {
-                    cardData.area = "";
-                    needsMigration = true;
-                }
-
-                if (!cardData.hasOwnProperty('assignedUser')) {
-                    cardData.assignedUser = personalSettings.userName;
-                    needsMigration = true;
-                }
-
-                if (needsMigration) {
-                    migrationCount++;
-                }
-            });
-            
-            if (migrationCount > 0) {
-                saveCardsData();
-                showToast(`${migrationCount}件のデータをv9.1形式に移行しました`, 'info');
-            }
-        }
-
-        function initializeDisplayMonth() {
-            const currentMonthKey = getFiscalYearStructure().currentMonthKey;
-            
-            cardsData.forEach(cardData => {
-                if (!cardData.displayMonth) {
-                    cardData.displayMonth = currentMonthKey;
-                }
-            });
-            
-            const globalSelector = document.getElementById('globalMonthSelector');
-            if (globalSelector) {
-                globalSelector.value = currentMonthKey;
-            }
-            
-            saveCardsData();
-        }
-
-        function updateAreaFilterOptions() {
-            const areaFilter = document.getElementById('areaFilter');
-            if (!areaFilter) return;
-            
-            const currentValue = areaFilter.value || 'all';
-            areaFilter.innerHTML = '<option value="all">全地域</option>';
-            
-            const uniqueAreas = [...new Set(cardsData.map(card => card.area).filter(area => area && area.trim()))];
-            uniqueAreas.sort().forEach(area => {
-                const option = document.createElement('option');
-                option.value = area;
-                option.textContent = area;
-                areaFilter.appendChild(option);
-            });
-            
-            if (uniqueAreas.includes(currentValue) || currentValue === 'all') {
-                areaFilter.value = currentValue;
+function loadCardsData() {
+    try {
+        const saved = localStorage.getItem('salesDashboard_cardsData_v9');
+        if (saved) {
+            const data = JSON.parse(saved);
+            if (data.cardsData) {
+                cardsData = data.cardsData;
+                nextCardId = data.nextCardId || 1;
             } else {
-                areaFilter.value = 'all';
+                cardsData = data;
+                const savedNextId = localStorage.getItem('salesDashboard_nextCardId_v9');
+                nextCardId = parseInt(savedNextId) || 1;
             }
+        } else {
+            cardsData = [];
+            nextCardId = 1;
         }
-
-        function updateProbabilityFilterOptions() {
-            const probabilityFilter = document.getElementById('probabilityFilter');
-            if (!probabilityFilter) return;
-            
-            probabilityFilter.innerHTML = '';
-            
-            PROBABILITY_CONFIG.filters.forEach(filter => {
-                const option = document.createElement('option');
-                option.value = filter.value;
-                option.textContent = filter.label;
-                probabilityFilter.appendChild(option);
-            });
-        }
-
-        function updateGlobalMonthSelector() {
-            const selector = document.getElementById('globalMonthSelector');
-            if (!selector) return;
-            
-            const fiscalStructure = getFiscalYearStructure();
-            selector.innerHTML = '';
-            
-            fiscalStructure.months.forEach(month => {
-                const option = document.createElement('option');
-                option.value = month.key;
-                option.textContent = `${month.month}月`;
-                if (month.key === fiscalStructure.currentMonthKey) {
-                    option.selected = true;
-                }
-                selector.appendChild(option);
-            });
-            
-            const currentMonthInfo = fiscalStructure.months.find(m => m.key === fiscalStructure.currentMonthKey);
-            if (currentMonthInfo) {
-                document.getElementById('currentDateDisplay').textContent = currentMonthInfo.label;
-            }
-        }
-
-        function showToast(message, type = 'success') {
-            const existingToast = document.querySelector('.toast');
-            if (existingToast) existingToast.remove();
-
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-
-            requestAnimationFrame(() => {
-                toast.classList.add('show');
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                    setTimeout(() => toast.remove(), 200);
-                }, 2500);
-            });
-        }
-
-        function calculateQualifiedProspects() {
-            const currentMonthKey = getFiscalYearStructure().currentMonthKey;
-            
-            const qualifiedProfit = cardsData.reduce((total, card) => {
-                const monthData = card.monthlyData?.[currentMonthKey] || { 
-                    salesIncreaseForecast: 0, 
-                    probability: 50 
-                };
-                
-                if (monthData.probability < 70) {
-                    return total;
-                }
-                
-                const profit = (monthData.salesIncreaseForecast || 0) 
-                             * (personalSettings.profitRate / 100);
-                
-                return total + profit;
-            }, 0);
-            
-            return qualifiedProfit;
-        }
-
-        function calculateAllProgress() {
-            const now = Date.now();
-            const cacheKey = `${cardsData.length}-${personalSettings.yearlyProfitTarget}-${getCurrentMonth()}`;
-            
-            if (progressCache && 
-                progressCache.cacheKey === cacheKey && 
-                (now - progressCache.timestamp) < 5000) {
-                return progressCache.data;
-            }
-
-            const currentMonth = getCurrentMonth();
-            
-            const monthlyTarget = personalSettings.monthlyProfitTargets[currentMonth] || 0;
-            const monthlyActual = personalSettings.monthlyProfitActuals[currentMonth] || 0;
-            const monthlyDifference = monthlyActual - monthlyTarget;
-            const monthlyRate = monthlyTarget > 0 ? (monthlyActual / monthlyTarget) * 100 : 0;
-            
-            const yearlyTarget = personalSettings.yearlyProfitTarget;
-            let yearlyActualCalculated = Object.values(personalSettings.monthlyProfitActuals)
-                                                .reduce((sum, monthlyProfit) => sum + (monthlyProfit || 0), 0);
-            
-            const yearlyActual = yearlyActualCalculated;
-            const yearlyRate = yearlyTarget > 0 ? (yearlyActual / yearlyTarget) * 100 : 0;
-            
-            const salesTarget = personalSettings.yearlySalesTarget;
-            const currentMonthKey = getFiscalYearStructure().currentMonthKey;
-            const totalSalesProspect = cardsData.reduce((sum, card) => {
-                const monthData = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0 };
-                return sum + (monthData.salesIncreaseForecast || 0);
-            }, 0);
-            const salesTargetRate = salesTarget > 0 ? (totalSalesProspect / salesTarget) * 100 : 0;
-            
-            const prospectTotal = calculateQualifiedProspects();
-            const prospectRate = personalSettings.yearlyProfitTarget > 0 ? 
-                (prospectTotal / personalSettings.yearlyProfitTarget) * 100 : 0;
-            
-            let probUnder50 = 0, prob5070 = 0, prob7090 = 0, prob90100 = 0;
-            cardsData.forEach(card => {
-                const monthData = card.monthlyData?.[currentMonthKey] || { 
-                    salesIncreaseForecast: 0, 
-                    probability: 50 
-                };
-                
-                const profit = (monthData.salesIncreaseForecast || 0) 
-                             * (personalSettings.profitRate / 100);
-                
-                if (monthData.probability < 50) {
-                    probUnder50 += profit;
-                } else if (monthData.probability < 70) {
-                    prob5070 += profit;
-                } else if (monthData.probability < 90) {
-                    prob7090 += profit;
-                } else {
-                    prob90100 += profit;
-                }
-            });
-            
-            const result = {
-                monthly: { target: monthlyTarget, actual: monthlyActual, difference: monthlyDifference, rate: monthlyRate },
-                yearly: { target: yearlyTarget, actual: yearlyActual, rate: yearlyRate },
-                salesTarget: { target: salesTarget, prospect: totalSalesProspect, rate: salesTargetRate },
-                prospect: { total: prospectTotal, rate: prospectRate },
-                funnel: { probUnder50, prob5070, prob7090, prob90100 }
-            };
-            
-            progressCache = {
-                data: result,
-                cacheKey: cacheKey,
-                timestamp: now
-            };
-            
-            return result;
-        }
-
-        function updateDashboard() {
-            const progress = calculateAllProgress();
-            
-            document.getElementById('monthlyTargetDisplay').textContent = formatManYen(progress.monthly.target);
-            document.getElementById('monthlyDetail').textContent = 
-                `${formatAmount(progress.monthly.actual)}/${formatAmount(progress.monthly.target)}（${progress.monthly.rate.toFixed(1)}%）`;
-            
-            const monthlyDiffText = formatAmount(progress.monthly.difference);
-            document.getElementById('monthlyRate').textContent = `差分: ${monthlyDiffText}`;
-            document.getElementById('monthlyRate').className = 
-                progress.monthly.difference >= 0 ? 'progress-rate rate-positive' : 'progress-rate rate-negative';
-            
-            document.getElementById('monthlyProgressBar').style.width = `${Math.min(progress.monthly.rate, 100)}%`;
-            
-            document.getElementById('yearlyTargetDisplay').textContent = formatManYen(progress.yearly.target);
-            document.getElementById('yearlyDetail').textContent = 
-                `${formatAmount(progress.yearly.actual)}/${formatAmount(progress.yearly.target)}（${progress.yearly.rate.toFixed(1)}%）`;
-            document.getElementById('yearlyRate').textContent = `${progress.yearly.rate.toFixed(1)}%達成`;
-            document.getElementById('yearlyProgressBar').style.width = `${Math.min(progress.yearly.rate, 100)}%`;
-            
-            document.getElementById('salesTargetDisplay').textContent = formatManYen(progress.salesTarget.target);
-            document.getElementById('salesTargetDetail').textContent = '自動計算';
-            document.getElementById('salesTargetRate').textContent = '粗利率から逆算';
-            document.getElementById('salesTargetBar').style.width = `${Math.min(progress.salesTarget.rate, 100)}%`;
-            
-            document.getElementById('prospectTotalDisplay').textContent = formatManYen(progress.prospect.total);
-            document.getElementById('prospectDetail').textContent = `対目標${progress.prospect.rate.toFixed(1)}%`;
-            document.getElementById('prospectRate').textContent = '確度70%以上のみ集計';
-            document.getElementById('prospectBar').style.width = `${Math.min(progress.prospect.rate, 100)}%`;
-            
-            document.getElementById('probUnder50').textContent = formatManYen(progress.funnel.probUnder50);
-            document.getElementById('prob5070').textContent = formatManYen(progress.funnel.prob5070);
-            document.getElementById('prob7090').textContent = formatManYen(progress.funnel.prob7090);
-            document.getElementById('prob90100').textContent = formatManYen(progress.funnel.prob90100);
-        }
-
-        function createNewCardElement(cardData) {
-            const fiscalStructure = getFiscalYearStructure();
-            const displayMonth = cardData.displayMonth || fiscalStructure.currentMonthKey;
-            const previousMonth = getPreviousMonth(displayMonth);
-            
-            const currentData = cardData.monthlyData?.[displayMonth] || { 
-                salesIncreaseForecast: 0, probability: 50, memo: "" 
-            };
-            const previousData = cardData.monthlyData?.[previousMonth.key] || { 
-                salesIncreaseForecast: 0, probability: 50, memo: "" 
-            };
-            
-            const cardLevel = getCardLevel(currentData.salesIncreaseForecast || 0);
-            
-            const card = document.createElement('div');
-            card.className = `card card-level-${cardLevel}`;
-            card.dataset.cardId = cardData.id;
-            
-            const lastUpdated = cardData.lastUpdated ? cardData.lastUpdated.replace(/-/g, '/') : '—';
-            
-            const currentForecast = currentData.salesIncreaseForecast || 0;
-            const previousForecast = previousData.salesIncreaseForecast || 0;
-            const difference = currentForecast - previousForecast;
-            const changeIcon = difference > 0 ? '📈' : difference < 0 ? '📉' : '➡️';
-            const changeClass = difference > 0 ? 'comparison-positive' : difference < 0 ? 'comparison-negative' : 'comparison-neutral';
-            
-            card.innerHTML = `
-                <div class="card-header-new">
-                    <div class="card-title-clickable" onclick="openMonthlyHistoryModal(${cardData.id})">
-                        ${escapeHtml(cardData.jukuName)}
-                    </div>
-                    <select class="month-selector" onchange="changeCardDisplayMonth(${cardData.id}, this.value)">
-                        ${fiscalStructure.months.map(month => 
-                            `<option value="${month.key}" ${month.key === displayMonth ? 'selected' : ''}>${month.month}月</option>`
-                        ).join('')}
-                    </select>
-                </div>
-                
-                <div class="annual-metrics-row">
-                    <div class="annual-metric">
-                        <div class="annual-metric-label">売上増見込（${fiscalStructure.months.find(m => m.key === displayMonth)?.month}月時点）</div>
-                        <div class="annual-metric-value">${formatAmount(currentData.salesIncreaseForecast || 0)}</div>
-                        <div class="change-indicator ${changeClass}">
-                            ${changeIcon} ${formatAmount(difference)}
-                        </div>
-                    </div>
-                    <div class="annual-metric">
-                        <div class="annual-metric-label">エリア</div>
-                        <div class="annual-metric-value">${escapeHtml(cardData.area || '未設定')}</div>
-                    </div>
-                    <div class="annual-metric">
-                        <div class="annual-metric-label">年間粗利実績</div>
-                        <div class="annual-metric-value">${formatAmount(cardData.annualProfitActual || 0)}</div>
-                    </div>
-                    <div class="annual-metric">
-                        <div class="annual-metric-label">年間売上実績</div>
-                        <div class="annual-metric-value">${formatAmount(calculateSalesFromProfit(cardData.annualProfitActual || 0))}</div>
-                    </div>
-                </div>
-                
-                <div class="monthly-comparison-section">
-                    <div class="month-data-column">
-                        <div class="month-data-header">先月 (${previousMonth.month}月)</div>
-                        <div class="month-data-content">
-                            <div class="forecast-amount">売上増見込: ${formatAmount(previousData.salesIncreaseForecast)}</div>
-                            <div class="forecast-probability">確率: ${getProbabilityLabel(previousData.probability)}</div>
-                        </div>
-                    </div>
-                    <div class="month-data-column">
-                        <div class="month-data-header">今月 (${fiscalStructure.months.find(m => m.key === displayMonth)?.month}月)</div>
-                        <div class="month-data-content">
-                            <div class="editable-field" onclick="editSalesIncreaseForecast(${cardData.id}, '${displayMonth}', this)">
-                                <span class="display-value">売上増見込: ${formatAmount(currentData.salesIncreaseForecast)}</span>
-                                <input type="number" class="edit-input" value="${currentData.salesIncreaseForecast}" style="display:none;">
-                            </div>
-                            <div class="editable-field" onclick="editProbability(${cardData.id}, '${displayMonth}', this)">
-                                <span class="display-value">確率: ${getProbabilityLabel(currentData.probability)}</span>
-                                <select class="edit-select" style="display:none;">
-                                    ${PROBABILITY_CONFIG.options.map(opt => 
-                                        `<option value="${opt.value}" ${currentData.probability === opt.value ? 'selected' : ''}>${opt.label}</option>`
-                                    ).join('')}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="memo-comparison-section">
-                    <div class="memo-column">
-                        <div class="memo-header">先月メモ</div>
-                        <div class="memo-content">${escapeHtml(previousData.memo || '未入力')}</div>
-                    </div>
-                    <div class="memo-column">
-                        <div class="memo-header">今月メモ</div>
-                        <div class="memo-content" onclick="openMemoDetailModal(${cardData.id}, '${displayMonth}')">${escapeHtml(currentData.memo || '未入力')}</div>
-                    </div>
-                </div>
-                
-                <div class="card-footer">
-                    <div class="last-updated">最終更新: ${lastUpdated}</div>
-                    <div class="card-actions">
-    <button class="action-btn" title="履歴" aria-label="履歴" onclick="openMonthlyHistoryModal(${cardData.id})">📊</button>
-    ${hasPermission('edit_data', cardData) ? `<button class="action-btn" title="編集" aria-label="編集" onclick="editCard(this)">✏️</button>` : ''}
-    ${hasPermission('delete_data', cardData) ? `<button class="action-btn" title="削除" aria-label="削除" onclick="deleteCard(${cardData.id})">🗑️</button>` : ''}
-</div>
-
-                </div>
-            `;
-            // 他人のデータの場合は視覚的に区別
-if (cardData.assignedUserId !== currentUser.uid) {
-    card.style.opacity = '0.8';
-    card.style.border = '2px solid #ffc107';
-    card.style.position = 'relative';
-    
-    // 閲覧専用バッジを追加
-    const readOnlyBadge = document.createElement('div');
-    readOnlyBadge.style.cssText = `
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: #ffc107;
-        color: #333;
-        padding: 4px 8px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: bold;
-        z-index: 10;
-    `;
-    readOnlyBadge.textContent = '👁️ 閲覧専用';
-    card.appendChild(readOnlyBadge);
-    
-    const assignedUserName = cardData.assignedUserName || '不明';
-    card.title = `担当者: ${assignedUserName}さんのデータ（閲覧専用）`;
+    } catch (e) {
+        showToast('データ読み込みエラー', 'error');
+        console.error('Load error:', e);
+        cardsData = [];
+        nextCardId = 1;
+    }
 }
 
-return card;
+function savePersonalSettings() {
+    try {
+        localStorage.setItem('salesDashboard_personalSettings_v9', JSON.stringify(personalSettings));
+    } catch (e) {
+        showToast('個人設定保存エラー', 'error');
+        console.error('Personal settings save error:', e);
+    }
+}
 
-            return card;
+function loadPersonalSettings() {
+    try {
+        const saved = localStorage.getItem('salesDashboard_personalSettings_v9');
+        if (saved) {
+            const savedSettings = JSON.parse(saved);
+            personalSettings = { ...personalSettings, ...savedSettings };
+            
+            if (!personalSettings.monthlyProfitTargets) {
+                personalSettings.monthlyProfitTargets = {
+                    10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+                    4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+                };
+            }
+            if (!personalSettings.monthlyProfitActuals) {
+                personalSettings.monthlyProfitActuals = {
+                    10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+                    4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+                };
+            }
+            updatePersonalSalesTarget();
+        }
+    } catch (e) {
+        showToast('個人設定読み込みエラー', 'error');
+        console.error('Personal settings load error:', e);
+    }
+}
+
+function migrateToV9Structure() {
+    const fiscalStructure = getFiscalYearStructure();
+    let migrationCount = 0;
+    
+    cardsData.forEach(cardData => {
+        let needsMigration = false;
+        
+        if (cardData.hasOwnProperty('annualSalesIncreaseTarget')) {
+            delete cardData.annualSalesIncreaseTarget;
+            needsMigration = true;
+        }
+        if (cardData.hasOwnProperty('annualProfitIncreaseExpected')) {
+            delete cardData.annualProfitIncreaseExpected;
+            needsMigration = true;
+        }
+        
+        if (!cardData.monthlyData) {
+            cardData.monthlyData = {};
+            needsMigration = true;
+            
+            fiscalStructure.months.forEach(monthInfo => {
+                cardData.monthlyData[monthInfo.key] = {
+                    salesIncreaseForecast: 0,
+                    probability: 50,
+                    memo: ""
+                };
+            });
+            
+            if (cardData.memo) {
+                cardData.monthlyData[fiscalStructure.currentMonthKey].memo = cardData.memo;
+                delete cardData.memo;
+            }
+            
+            if (cardData.probability) {
+                let numericProbability = 50;
+                switch(cardData.probability) {
+                    case '80+': numericProbability = 90; break;
+                    case '60-80': numericProbability = 70; break;
+                    case '50-60': numericProbability = 60; break;
+                    case '50-': numericProbability = 40; break;
+                }
+                cardData.monthlyData[fiscalStructure.currentMonthKey].probability = numericProbability;
+                delete cardData.probability;
+            }
+        }
+        
+        if (!cardData.displayMonth) {
+            cardData.displayMonth = fiscalStructure.currentMonthKey;
+            needsMigration = true;
+        }
+        
+        if (!cardData.annualMaterials) {
+            cardData.annualMaterials = {
+                yearRound: { hasOrder: false, orderPeriod: "" },
+                seasonalExam: { hasUsage: false, usagePeriod: "" }
+            };
+            needsMigration = true;
         }
 
-        function propagateToFutureMonths(cardId, newForecast, newProbability) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!cardData) return;
-            
-            const fiscalStructure = getFiscalYearStructure();
-            const currentMonthKey = fiscalStructure.currentMonthKey;
-            const registeredIndex = fiscalStructure.months.findIndex(m => 
-                m.key === (cardData.registeredMonth || currentMonthKey)
-            );
-            const currentIndex = fiscalStructure.months.findIndex(m => m.key === currentMonthKey);
-            
-            fiscalStructure.months.forEach((monthInfo, index) => {
-                if (index > Math.max(registeredIndex, currentIndex)) {
-                    if (!cardData.monthlyData[monthInfo.key]) {
-                        cardData.monthlyData[monthInfo.key] = { 
-                            salesIncreaseForecast: 0, probability: 50, memo: "" 
+        if (!cardData.registeredMonth) {
+            cardData.registeredMonth = cardData.lastUpdated ? 
+                cardData.lastUpdated.substring(0, 7) : 
+                fiscalStructure.currentMonthKey;
+            needsMigration = true;
+        }
+
+        if (!cardData.hasOwnProperty('area')) {
+            cardData.area = "";
+            needsMigration = true;
+        }
+
+        if (!cardData.hasOwnProperty('assignedUser')) {
+            cardData.assignedUser = personalSettings.userName;
+            needsMigration = true;
+        }
+
+        if (needsMigration) {
+            migrationCount++;
+        }
+    });
+    
+    if (migrationCount > 0) {
+        saveCardsData();
+        showToast(`${migrationCount}件のデータをv9.1形式に移行しました`, 'info');
+    }
+}
+
+function initializeDisplayMonth() {
+    const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+    
+    cardsData.forEach(cardData => {
+        if (!cardData.displayMonth) {
+            cardData.displayMonth = currentMonthKey;
+        }
+    });
+    
+    const globalSelector = document.getElementById('globalMonthSelector');
+    if (globalSelector) {
+        globalSelector.value = currentMonthKey;
+    }
+    
+    saveCardsData();
+}
+
+function updateAreaFilterOptions() {
+    const areaFilter = document.getElementById('areaFilter');
+    if (!areaFilter) return;
+    
+    const currentValue = areaFilter.value || 'all';
+    areaFilter.innerHTML = '<option value="all">全地域</option>';
+    
+    const uniqueAreas = [...new Set(cardsData.map(card => card.area).filter(area => area && area.trim()))];
+    uniqueAreas.sort().forEach(area => {
+        const option = document.createElement('option');
+        option.value = area;
+        option.textContent = area;
+        areaFilter.appendChild(option);
+    });
+    
+    if (uniqueAreas.includes(currentValue) || currentValue === 'all') {
+        areaFilter.value = currentValue;
+    } else {
+        areaFilter.value = 'all';
+    }
+}
+
+function updateProbabilityFilterOptions() {
+    const probabilityFilter = document.getElementById('probabilityFilter');
+    if (!probabilityFilter) return;
+    
+    probabilityFilter.innerHTML = '';
+    
+    PROBABILITY_CONFIG.filters.forEach(filter => {
+        const option = document.createElement('option');
+        option.value = filter.value;
+        option.textContent = filter.label;
+        probabilityFilter.appendChild(option);
+    });
+}
+
+function updateGlobalMonthSelector() {
+    const selector = document.getElementById('globalMonthSelector');
+    if (!selector) return;
+    
+    const fiscalStructure = getFiscalYearStructure();
+    selector.innerHTML = '';
+    
+    fiscalStructure.months.forEach(month => {
+        const option = document.createElement('option');
+        option.value = month.key;
+        option.textContent = `${month.month}月`;
+        if (month.key === fiscalStructure.currentMonthKey) {
+            option.selected = true;
+        }
+        selector.appendChild(option);
+    });
+    
+    const currentMonthInfo = fiscalStructure.months.find(m => m.key === fiscalStructure.currentMonthKey);
+    if (currentMonthInfo) {
+        document.getElementById('currentDateDisplay').textContent = currentMonthInfo.label;
+    }
+}
+
+function showToast(message, type = 'success') {
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 200);
+        }, 2500);
+    });
+}
+
+function calculateQualifiedProspects() {
+    const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+    
+    const qualifiedProfit = cardsData.reduce((total, card) => {
+        const monthData = card.monthlyData?.[currentMonthKey] || { 
+            salesIncreaseForecast: 0, 
+            probability: 50 
+        };
+        
+        if (monthData.probability < 70) {
+            return total;
+        }
+        
+        const profit = (monthData.salesIncreaseForecast || 0) 
+                     * (personalSettings.profitRate / 100);
+        
+        return total + profit;
+    }, 0);
+    
+    return qualifiedProfit;
+}
+
+function calculateAllProgress() {
+    const now = Date.now();
+    const cacheKey = `${cardsData.length}-${personalSettings.yearlyProfitIncreaseTarget}-${getCurrentMonth()}`;
+    
+    if (progressCache && 
+        progressCache.cacheKey === cacheKey && 
+        (now - progressCache.timestamp) < 5000) {
+        return progressCache.data;
+    }
+
+    const currentMonth = getCurrentMonth();
+    
+    const monthlyTarget = personalSettings.monthlyProfitTargets[currentMonth] || 0;
+    const monthlyActual = personalSettings.monthlyProfitActuals[currentMonth] || 0;
+    const monthlyDifference = monthlyActual - monthlyTarget;
+    const monthlyRate = monthlyTarget > 0 ? (monthlyActual / monthlyTarget) * 100 : 0;
+    
+    const yearlyTarget = personalSettings.yearlyProfitTarget;
+    let yearlyActualCalculated = Object.values(personalSettings.monthlyProfitActuals)
+                                        .reduce((sum, monthlyProfit) => sum + (monthlyProfit || 0), 0);
+    
+    const yearlyActual = yearlyActualCalculated;
+    const yearlyRate = yearlyTarget > 0 ? (yearlyActual / yearlyTarget) * 100 : 0;
+    
+    const salesIncreaseTarget = personalSettings.yearlySalesIncreaseTarget;
+    const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+    const totalSalesProspect = cardsData.reduce((sum, card) => {
+        const monthData = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0 };
+        return sum + (monthData.salesIncreaseForecast || 0);
+    }, 0);
+    const salesTargetRate = salesIncreaseTarget > 0 ? (totalSalesProspect / salesIncreaseTarget) * 100 : 0;
+    
+    const prospectTotal = calculateQualifiedProspects();
+    const prospectRate = personalSettings.yearlyProfitIncreaseTarget > 0 ? 
+        (prospectTotal / personalSettings.yearlyProfitIncreaseTarget) * 100 : 0;
+    
+    let probUnder50 = 0, prob5070 = 0, prob7090 = 0, prob90100 = 0;
+    cardsData.forEach(card => {
+        const monthData = card.monthlyData?.[currentMonthKey] || { 
+            salesIncreaseForecast: 0, 
+            probability: 50 
+        };
+        
+        const profit = (monthData.salesIncreaseForecast || 0) 
+                     * (personalSettings.profitRate / 100);
+        
+        if (monthData.probability < 50) {
+            probUnder50 += profit;
+        } else if (monthData.probability < 70) {
+            prob5070 += profit;
+        } else if (monthData.probability < 90) {
+            prob7090 += profit;
+        } else {
+            prob90100 += profit;
+        }
+    });
+    
+    const result = {
+        monthly: { target: monthlyTarget, actual: monthlyActual, difference: monthlyDifference, rate: monthlyRate },
+        yearly: { target: yearlyTarget, actual: yearlyActual, rate: yearlyRate },
+        salesTarget: { target: salesIncreaseTarget, prospect: totalSalesProspect, rate: salesTargetRate },
+        prospect: { total: prospectTotal, rate: prospectRate },
+        funnel: { probUnder50, prob5070, prob7090, prob90100 }
+    };
+    
+    progressCache = {
+        data: result,
+        cacheKey: cacheKey,
+        timestamp: now
+    };
+    
+    return result;
+}
+
+function updateDashboard() {
+    const progress = calculateAllProgress();
+    
+    document.getElementById('monthlyTargetDisplay').textContent = formatManYen(progress.monthly.target);
+    document.getElementById('monthlyDetail').textContent = 
+        `${formatAmount(progress.monthly.actual)}/${formatAmount(progress.monthly.target)}（${progress.monthly.rate.toFixed(1)}%）`;
+    
+    const monthlyDiffText = formatAmount(progress.monthly.difference);
+    document.getElementById('monthlyRate').textContent = `差分: ${monthlyDiffText}`;
+    document.getElementById('monthlyRate').className = 
+        progress.monthly.difference >= 0 ? 'progress-rate rate-positive' : 'progress-rate rate-negative';
+    
+    document.getElementById('monthlyProgressBar').style.width = `${Math.min(progress.monthly.rate, 100)}%`;
+    
+    document.getElementById('yearlyTargetDisplay').textContent = formatManYen(progress.yearly.target);
+    document.getElementById('yearlyDetail').textContent = 
+        `${formatAmount(progress.yearly.actual)}/${formatAmount(progress.yearly.target)}（${progress.yearly.rate.toFixed(1)}%）`;
+    document.getElementById('yearlyRate').textContent = `${progress.yearly.rate.toFixed(1)}%達成`;
+    document.getElementById('yearlyProgressBar').style.width = `${Math.min(progress.yearly.rate, 100)}%`;
+    
+    document.getElementById('salesTargetDisplay').textContent = formatManYen(progress.salesTarget.target);
+    document.getElementById('salesTargetDetail').textContent = '自動計算';
+    document.getElementById('salesTargetRate').textContent = '粗利増目標から逆算';
+    document.getElementById('salesTargetBar').style.width = `${Math.min(progress.salesTarget.rate, 100)}%`;
+    
+    document.getElementById('prospectTotalDisplay').textContent = formatManYen(progress.prospect.total);
+    document.getElementById('prospectDetail').textContent = `対目標${progress.prospect.rate.toFixed(1)}%`;
+    document.getElementById('prospectRate').textContent = '確度70%以上のみ集計';
+    document.getElementById('prospectBar').style.width = `${Math.min(progress.prospect.rate, 100)}%`;
+    
+    document.getElementById('probUnder50').textContent = formatManYen(progress.funnel.probUnder50);
+    document.getElementById('prob5070').textContent = formatManYen(progress.funnel.prob5070);
+    document.getElementById('prob7090').textContent = formatManYen(progress.funnel.prob7090);
+    document.getElementById('prob90100').textContent = formatManYen(progress.funnel.prob90100);
+}
+
+function createTableRow(cardData) {
+    const f = getFiscalYearStructure();
+    const month = cardData.displayMonth || f.currentMonthKey;
+    const cur = cardData.monthlyData?.[month] || { salesIncreaseForecast: 0, probability: 50, memo: "" };
+    const lvl = getCardLevel(cur.salesIncreaseForecast || 0);
+    const ch = calculateMonthlyChange(cardData, month);
+    const icon = ch.direction === 'increase' ? '↗' : ch.direction === 'decrease' ? '↘' : '→';
+    const cls = `change-${ch.direction === 'increase' ? 'positive' : ch.direction === 'decrease' ? 'negative' : 'neutral'}`;
+    const row = document.createElement('tr');
+    row.dataset.cardId = cardData.id;
+    row.innerHTML = `<td class="col-level"><div class="level-indicator level-${lvl}"></div></td><td class="col-name"><div class="editable-cell" onclick="editTableName(${cardData.id})">${escapeHtml(cardData.jukuName)}</div></td><td class="col-forecast"><div class="editable-cell" onclick="editTableForecast(${cardData.id},'${month}')">${formatManYen(cur.salesIncreaseForecast || 0)}</div></td><td class="col-probability"><div class="editable-cell" onclick="editTableProbability(${cardData.id},'${month}')">${getProbabilityLabel(cur.probability)}</div></td><td class="col-memo"><div class="editable-cell" onclick="openMemoDetailModal(${cardData.id},'${month}')" title="${escapeHtml(cur.memo || '')}">${escapeHtml((cur.memo || '未入力').substring(0, 20))}${(cur.memo || '').length > 20 ? '...' : ''}</div></td><td class="col-change"><span class="${cls}">${formatManYen(ch.amount)} ${icon}</span></td><td class="col-detail"><button class="detail-btn" onclick="openMonthlyHistoryModal(${cardData.id})">詳細</button></td>`;
+    if (cardData.assignedUserId !== (currentUser?.uid || '')) row.style.cssText = 'opacity:.7;background:#fff3cd';
+    return row;
+}
+
+function editTableName(id) {
+    const c = cardsData.find(x => x.id === id);
+    if (!c || !hasPermission('edit_data', c)) {
+        showToast('編集権限がありません', 'error');
+        return;
+    }
+    const v = prompt('塾名を編集', c.jukuName);
+    if (v !== null && v.trim() !== c.jukuName) {
+        c.jukuName = v.trim();
+        c.lastUpdated = new Date().toISOString();
+        saveCardsData();
+        renderCardsOptimized();
+        showToast('塾名を更新', 'success');
+    }
+}
+
+function editTableForecast(id, key) {
+    const c = cardsData.find(x => x.id === id);
+    if (!c || !hasPermission('edit_data', c)) {
+        showToast('編集権限がありません', 'error');
+        return;
+    }
+    if (key !== getFiscalYearStructure().currentMonthKey) {
+        showToast('当月分のみ編集可能', 'info');
+        return;
+    }
+    const cur = c.monthlyData?.[key] || { salesIncreaseForecast: 0 };
+    const v = prompt('売上増見込を入力（円）', cur.salesIncreaseForecast || 0);
+    if (v !== null) {
+        const n = parseNumberSafely(v);
+        if (!c.monthlyData) c.monthlyData = {};
+        if (!c.monthlyData[key]) c.monthlyData[key] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+        c.monthlyData[key].salesIncreaseForecast = n;
+        c.lastUpdated = new Date().toISOString();
+        if (confirm('将来月も更新?')) propagateToFutureMonths(id, n, c.monthlyData[key].probability);
+        else saveCardsData();
+        progressCache = null;
+        updateDashboard();
+        renderCardsOptimized();
+        showToast('売上増見込を更新', 'success');
+    }
+}
+
+function editTableProbability(id, key) {
+    const c = cardsData.find(x => x.id === id);
+    if (!c || !hasPermission('edit_data', c)) {
+        showToast('編集権限がありません', 'error');
+        return;
+    }
+    if (key !== getFiscalYearStructure().currentMonthKey) {
+        showToast('当月分のみ編集可能', 'info');
+        return;
+    }
+    const opts = ['50未満', '50%', '60%', '70%', '80%', '90%', '100%'], vals = [40, 50, 60, 70, 80, 90, 100];
+    const cur = c.monthlyData?.[key] || { probability: 50 };
+    const idx = vals.indexOf(cur.probability);
+    const choice = prompt(`確率選択:\n0:${opts[0]}\n1:${opts[1]}\n2:${opts[2]}\n3:${opts[3]}\n4:${opts[4]}\n5:${opts[5]}\n6:${opts[6]}\n現在:${opts[idx >= 0 ? idx : 1]}`, idx >= 0 ? idx : 1);
+    if (choice !== null) {
+        const i = parseInt(choice);
+        if (i >= 0 && i < vals.length) {
+            const nv = vals[i];
+            if (!c.monthlyData) c.monthlyData = {};
+            if (!c.monthlyData[key]) c.monthlyData[key] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+            c.monthlyData[key].probability = nv;
+            c.lastUpdated = new Date().toISOString();
+            if (confirm('将来月も更新?')) propagateToFutureMonths(id, c.monthlyData[key].salesIncreaseForecast, nv);
+            else saveCardsData();
+            progressCache = null;
+            updateDashboard();
+            renderCardsOptimized();
+            showToast('確率を更新', 'success');
+        }
+    }
+}
+
+function createNewCardElement(cardData) {
+    const fiscalStructure = getFiscalYearStructure();
+    const displayMonth = cardData.displayMonth || fiscalStructure.currentMonthKey;
+    const previousMonth = getPreviousMonth(displayMonth);
+    
+    const currentData = cardData.monthlyData?.[displayMonth] || { 
+        salesIncreaseForecast: 0, probability: 50, memo: "" 
+    };
+    const previousData = cardData.monthlyData?.[previousMonth.key] || { 
+        salesIncreaseForecast: 0, probability: 50, memo: "" 
+    };
+    
+    const cardLevel = getCardLevel(currentData.salesIncreaseForecast || 0);
+    
+    const card = document.createElement('div');
+    card.className = `card card-level-${cardLevel}`;
+    card.dataset.cardId = cardData.id;
+    
+    const lastUpdated = formatDateForDisplay(cardData.lastUpdated);
+    
+    const currentForecast = currentData.salesIncreaseForecast || 0;
+    const previousForecast = previousData.salesIncreaseForecast || 0;
+    const difference = currentForecast - previousForecast;
+    const changeIcon = difference > 0 ? '📈' : difference < 0 ? '📉' : '➡️';
+    const changeClass = difference > 0 ? 'comparison-positive' : difference < 0 ? 'comparison-negative' : 'comparison-neutral';
+    
+    card.innerHTML = `
+        <div class="card-header-new">
+            <div class="card-title-clickable" onclick="openMonthlyHistoryModal(${cardData.id})">
+                ${escapeHtml(cardData.jukuName)}
+            </div>
+            <select class="month-selector" onchange="changeCardDisplayMonth(${cardData.id}, this.value)">
+                ${fiscalStructure.months.map(month => 
+                    `<option value="${month.key}" ${month.key === displayMonth ? 'selected' : ''}>${month.month}月</option>`                ).join('')}
+            </select>
+        </div>
+        
+        <div class="annual-metrics-row">
+            <div class="annual-metric">
+                <div class="annual-metric-label">売上増見込（${fiscalStructure.months.find(m => m.key === displayMonth)?.month}月時点）</div>
+                <div class="annual-metric-value">${formatAmount(currentData.salesIncreaseForecast || 0)}</div>
+                <div class="change-indicator ${changeClass}">
+                    ${changeIcon} ${formatAmount(difference)}
+                </div>
+            </div>
+            <div class="annual-metric">
+                <div class="annual-metric-label">エリア</div>
+                <div class="annual-metric-value">${escapeHtml(cardData.area || '未設定')}</div>
+            </div>
+            <div class="annual-metric">
+                <div class="annual-metric-label">年間粗利実績</div>
+                <div class="annual-metric-value">${formatAmount(cardData.annualProfitActual || 0)}</div>
+            </div>
+            <div class="annual-metric">
+                <div class="annual-metric-label">年間売上実績</div>
+                <div class="annual-metric-value">${formatAmount(calculateSalesFromProfit(cardData.annualProfitActual || 0))}</div>
+            </div>
+        </div>
+        
+        <div class="monthly-comparison-section">
+            <div class="month-data-column">
+                <div class="month-data-header">先月 (${previousMonth.month}月)</div>
+                <div class="month-data-content">
+                    <div class="forecast-amount">売上増見込: ${formatAmount(previousData.salesIncreaseForecast)}</div>
+                    <div class="forecast-probability">確率: ${getProbabilityLabel(previousData.probability)}</div>
+                </div>
+            </div>
+            <div class="month-data-column">
+                <div class="month-data-header">今月 (${fiscalStructure.months.find(m => m.key === displayMonth)?.month}月)</div>
+                <div class="month-data-content">
+                    <div class="editable-field" onclick="editSalesIncreaseForecast(${cardData.id}, '${displayMonth}', this)">
+                        <span class="display-value">売上増見込: ${formatAmount(currentData.salesIncreaseForecast)}</span>
+                        <input type="number" class="edit-input" value="${currentData.salesIncreaseForecast}" style="display:none;">
+                    </div>
+                    <div class="editable-field" onclick="editProbability(${cardData.id}, '${displayMonth}', this)">
+                        <span class="display-value">確率: ${getProbabilityLabel(currentData.probability)}</span>
+                        <select class="edit-select" style="display:none;">
+                            ${PROBABILITY_CONFIG.options.map(opt => 
+                                `<option value="${opt.value}" ${currentData.probability === opt.value ? 'selected' : ''}>${opt.label}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="memo-comparison-section">
+            <div class="memo-column">
+                <div class="memo-header">先月メモ</div>
+                <div class="memo-content">${escapeHtml(previousData.memo || '未入力')}</div>
+            </div>
+            <div class="memo-column">
+                <div class="memo-header">今月メモ</div>
+                <div class="memo-content" onclick="openMemoDetailModal(${cardData.id}, '${displayMonth}')">${escapeHtml(currentData.memo || '未入力')}</div>
+            </div>
+        </div>
+        
+        <div class="card-footer">
+            <div class="last-updated">最終更新: ${lastUpdated}</div>
+            <div class="card-actions">
+                <button class="action-btn" title="履歴" aria-label="履歴" onclick="openMonthlyHistoryModal(${cardData.id})">📊</button>
+                ${hasPermission('edit_data', cardData) ? `<button class="action-btn" title="編集" aria-label="編集" onclick="editCard(this)">✏️</button>` : ''}
+                ${hasPermission('delete_data', cardData) ? `<button class="action-btn" title="削除" aria-label="削除" onclick="deleteCard(${cardData.id})">🗑️</button>` : ''}
+            </div>
+        </div>
+    `;
+    
+    if (cardData.assignedUserId !== currentUser.uid) {
+        card.style.opacity = '0.8';
+        card.style.border = '2px solid #ffc107';
+        card.style.position = 'relative';
+        
+        const readOnlyBadge = document.createElement('div');
+        readOnlyBadge.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ffc107;
+            color: #333;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 10;
+        `;
+        readOnlyBadge.textContent = '👁️ 閲覧専用';
+        card.appendChild(readOnlyBadge);
+        
+        const assignedUserName = cardData.assignedUserName || '不明';
+        card.title = `担当者: ${assignedUserName}さんのデータ（閲覧専用）`;
+    }
+
+    return card;
+}
+
+function propagateToFutureMonths(cardId, newForecast, newProbability) {
+    const cardData = cardsData.find(card => card.id === cardId);
+    if (!cardData) return;
+    
+    const fiscalStructure = getFiscalYearStructure();
+    const currentMonthKey = fiscalStructure.currentMonthKey;
+    const registeredIndex = fiscalStructure.months.findIndex(m => 
+        m.key === (cardData.registeredMonth || currentMonthKey)
+    );
+    const currentIndex = fiscalStructure.months.findIndex(m => m.key === currentMonthKey);
+    
+    fiscalStructure.months.forEach((monthInfo, index) => {
+        if (index > Math.max(registeredIndex, currentIndex)) {
+            if (!cardData.monthlyData[monthInfo.key]) {
+                cardData.monthlyData[monthInfo.key] = { 
+                    salesIncreaseForecast: 0, probability: 50, memo: "" 
+                };
+            }
+            cardData.monthlyData[monthInfo.key].salesIncreaseForecast = newForecast;
+            cardData.monthlyData[monthInfo.key].probability = newProbability;
+        }
+    });
+    
+    saveCardsData();
+    showToast('将来月のデータを一括更新しました', 'success');
+}
+
+function openModal(modalId) {
+    scrollPosition = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollPosition}px`;
+    document.body.style.width = '100%';
+    document.body.classList.add('modal-open');
+    document.getElementById(modalId).style.display = 'flex';
+}
+
+function closeModal(modalId) {
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    document.body.classList.remove('modal-open');
+    window.scrollTo(0, scrollPosition);
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function openProgressGraphModal(cardIndex) {
+    const cardTitles = ['月別目標（粗利）', '年間目標（粗利）', '年間売上増目標', '営業見込（粗利増）'];
+    document.getElementById('graphModalTitle').textContent = `${cardTitles[cardIndex]} - 年間進捗グラフ`;
+    
+    generateProgressChart(cardIndex);
+    openModal('progressGraphModal');
+}
+
+function closeProgressGraphModal() {
+    if (progressChart) {
+        progressChart.destroy();
+        progressChart = null;
+    }
+    closeModal('progressGraphModal');
+}
+
+function generateProgressChart(graphType) {
+    const ctx = document.getElementById('progressChart').getContext('2d');
+    const data = generateFiscalYearData(graphType);
+    
+    if (progressChart) {
+        progressChart.destroy();
+    }
+    
+    const chartColors = {
+        actual: '#00E5FF',
+        target: '#FFEA00',
+        positive: '#00E676',
+        negative: '#FF1744',
+        line: '#E040FB'
+    };
+
+    const chartConfigs = {
+        0: {
+            type: 'bar',
+            datasets: [
+                {
+                    label: '実績値',
+                    data: data.actualData,
+                    backgroundColor: chartColors.actual,
+                    borderColor: chartColors.actual,
+                    borderWidth: 2
+                },
+                {
+                    label: '目標値',
+                    data: data.targetData,
+                    backgroundColor: chartColors.target,
+                    borderColor: chartColors.target,
+                    borderWidth: 2
+                }
+            ]
+        },
+        1: {
+            type: 'bar',
+            datasets: [
+                {
+                    label: '累積実績',
+                    data: data.actualData,
+                    backgroundColor: chartColors.actual,
+                    borderColor: chartColors.actual,
+                    borderWidth: 2
+                },
+                {
+                    label: '累積目標',
+                    data: data.targetData,
+                    backgroundColor: chartColors.target,
+                    borderColor: chartColors.target,
+                    borderWidth: 2
+                }
+            ]
+        },
+        2: {
+            type: 'bar',
+            datasets: [
+                {
+                    label: '売上増見込',
+                    data: data.actualData,
+                    backgroundColor: chartColors.actual,
+                    borderColor: chartColors.actual,
+                    borderWidth: 2
+                },
+                {
+                    label: '売上増目標',
+                    data: data.targetData,
+                    backgroundColor: chartColors.target,
+                    borderColor: chartColors.target,
+                    borderWidth: 2
+                }
+            ]
+        },
+        3: {
+            type: 'line',
+            datasets: [
+                {
+                    label: '営業見込達成率（%）',
+                    data: data.actualData,
+                    borderColor: chartColors.line,
+                    backgroundColor: 'rgba(224, 64, 251, 0.1)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0,
+                    pointRadius: 6,
+                    pointBackgroundColor: chartColors.line,
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2
+                },
+                {
+                    label: '100%ライン',
+                    data: data.targetData,
+                    borderColor: chartColors.target,
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0
+                }
+            ]
+        }
+    };
+    
+    const config = chartConfigs[graphType];
+    
+    progressChart = new Chart(ctx, {
+        type: config.type,
+        data: {
+            labels: data.labels,
+            datasets: config.datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    borderColor: 'rgba(0,176,255,0.7)',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            if (context.parsed.y === null) return null;
+                            if (graphType === 3) {
+                                return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
+                            }
+                            return `${context.dataset.label}: ${formatAmount(context.parsed.y)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.2)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#E0E0E0'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.2)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#E0E0E0',
+                        callback: function(value) {
+                            if (graphType === 3) {
+                                return value + '%';
+                            }
+                            return formatManYen(value, 0);
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+
+    updateGraphLegend(config.datasets);
+}
+
+function generateFiscalYearData(graphType) {
+    const { months, currentMonthIndex } = getFiscalYearStructure();
+    
+    const actualData = [];
+    const targetData = [];
+    const labels = months.map(m => m.label.substring(m.label.indexOf('年') + 1));
+    
+    let cumActual = 0;
+    let cumTarget = 0;
+    
+    months.forEach((monthInfo, index) => {
+        const isPastMonth = index <= currentMonthIndex;
+        const monthNum = monthInfo.month;
+        
+        switch(graphType) {
+            case 0:
+                const monthlyTarget = personalSettings.monthlyProfitTargets[monthNum] || 0;
+                const monthlyActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
+                
+                targetData.push(monthlyTarget);
+                actualData.push(isPastMonth ? monthlyActual : null);
+                break;
+                
+            case 1:
+                const yearlyMonthTarget = personalSettings.monthlyProfitTargets[monthNum] || 0;
+                const yearlyMonthActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
+                
+                cumTarget += yearlyMonthTarget;
+                cumActual += isPastMonth ? yearlyMonthActual : 0;
+                
+                targetData.push(cumTarget);
+                actualData.push(isPastMonth ? cumActual : null);
+                break;
+                
+            case 2:
+                const salesIncreaseTarget = personalSettings.yearlySalesIncreaseTarget;
+                let cumSalesProspect = 0;
+                
+                for (let j = 0; j <= index; j++) {
+                    const checkMonthKey = months[j].key;
+                    cardsData.forEach(card => {
+                        const monthData = card.monthlyData?.[checkMonthKey] || { salesIncreaseForecast: 0 };
+                        cumSalesProspect += monthData.salesIncreaseForecast || 0;
+                    });
+                }
+                
+                targetData.push(salesIncreaseTarget);
+                actualData.push(isPastMonth ? cumSalesProspect : null);
+                break;
+                
+            case 3:
+                let cumProspectProfit = 0;
+                for (let j = 0; j <= index; j++) {
+                    const checkMonthKey = months[j].key;
+                    cardsData.forEach(card => {
+                        const monthData = card.monthlyData?.[checkMonthKey] || { 
+                            salesIncreaseForecast: 0, 
+                            probability: 50 
                         };
-                    }
-                    cardData.monthlyData[monthInfo.key].salesIncreaseForecast = newForecast;
-                    cardData.monthlyData[monthInfo.key].probability = newProbability;
+                        if (monthData.probability >= 70) {
+                            cumProspectProfit += (monthData.salesIncreaseForecast || 0) * (personalSettings.profitRate / 100);
+                        }
+                    });
                 }
-            });
-            
-            saveCardsData();
-            showToast('将来月のデータを一括更新しました', 'success');
-        }
-
-        function openModal(modalId) {
-            scrollPosition = window.scrollY;
-            document.body.style.position = 'fixed';
-            document.body.style.top = `-${scrollPosition}px`;
-            document.body.style.width = '100%';
-            document.body.classList.add('modal-open');
-            document.getElementById(modalId).style.display = 'flex';
-        }
-
-        function closeModal(modalId) {
-            document.body.style.position = '';
-            document.body.style.top = '';
-            document.body.style.width = '';
-            document.body.classList.remove('modal-open');
-            window.scrollTo(0, scrollPosition);
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function openProgressGraphModal(cardIndex) {
-            const cardTitles = ['月別目標（粗利）', '年間目標（粗利）', '年間売上増目標', '営業見込（粗利増）'];
-            document.getElementById('graphModalTitle').textContent = `${cardTitles[cardIndex]} - 年間進捗グラフ`;
-            
-            generateProgressChart(cardIndex);
-            openModal('progressGraphModal');
-        }
-
-        function closeProgressGraphModal() {
-            if (progressChart) {
-                progressChart.destroy();
-                progressChart = null;
-            }
-            closeModal('progressGraphModal');
-        }
-
-        function generateProgressChart(graphType) {
-            const ctx = document.getElementById('progressChart').getContext('2d');
-            const data = generateFiscalYearData(graphType);
-            
-            if (progressChart) {
-                progressChart.destroy();
-            }
-            
-            const chartColors = {
-                actual: '#00E5FF',
-                target: '#FFEA00',
-                positive: '#00E676',
-                negative: '#FF1744',
-                line: '#E040FB'
-            };
-
-            const chartConfigs = {
-                0: {
-                    type: 'bar',
-                    datasets: [
-                        {
-                            label: '実績値',
-                            data: data.actualData,
-                            backgroundColor: chartColors.actual,
-                            borderColor: chartColors.actual,
-                            borderWidth: 2
-                        },
-                        {
-                            label: '目標値',
-                            data: data.targetData,
-                            backgroundColor: chartColors.target,
-                            borderColor: chartColors.target,
-                            borderWidth: 2
-                        }
-                    ]
-                },
-                1: {
-                    type: 'bar',
-                    datasets: [
-                        {
-                            label: '累積実績',
-                            data: data.actualData,
-                            backgroundColor: chartColors.actual,
-                            borderColor: chartColors.actual,
-                            borderWidth: 2
-                        },
-                        {
-                            label: '累積目標',
-                            data: data.targetData,
-                            backgroundColor: chartColors.target,
-                            borderColor: chartColors.target,
-                            borderWidth: 2
-                        }
-                    ]
-                },
-                2: {
-                    type: 'bar',
-                    datasets: [
-                        {
-                            label: '売上増見込',
-                            data: data.actualData,
-                            backgroundColor: chartColors.actual,
-                            borderColor: chartColors.actual,
-                            borderWidth: 2
-                        },
-                        {
-                            label: '売上増目標',
-                            data: data.targetData,
-                            backgroundColor: chartColors.target,
-                            borderColor: chartColors.target,
-                            borderWidth: 2
-                        }
-                    ]
-                },
-                3: {
-                    type: 'line',
-                    datasets: [
-                        {
-                            label: '営業見込達成率（%）',
-                            data: data.actualData,
-                            borderColor: chartColors.line,
-                            backgroundColor: 'rgba(224, 64, 251, 0.1)',
-                            borderWidth: 3,
-                            fill: false,
-                            tension: 0,
-                            pointRadius: 6,
-                            pointBackgroundColor: chartColors.line,
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2
-                        },
-                        {
-                            label: '100%ライン',
-                            data: data.targetData,
-                            borderColor: chartColors.target,
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            fill: false,
-                            pointRadius: 0,
-                            tension: 0
-                        }
-                    ]
-                }
-            };
-            
-            const config = chartConfigs[graphType];
-            
-            progressChart = new Chart(ctx, {
-                type: config.type,
-                data: {
-                    labels: data.labels,
-                    datasets: config.datasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.8)',
-                            titleColor: '#ffffff',
-                            bodyColor: '#ffffff',
-                            borderColor: 'rgba(0,176,255,0.7)',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: function(context) {
-                                    if (context.parsed.y === null) return null;
-                                    if (graphType === 3) {
-                                        return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
-                                    }
-                                    return `${context.dataset.label}: ${formatAmount(context.parsed.y)}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: {
-                                color: 'rgba(255,255,255,0.2)',
-                                drawBorder: false
-                            },
-                            ticks: {
-                                color: '#E0E0E0'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255,255,255,0.2)',
-                                drawBorder: false
-                            },
-                            ticks: {
-                                color: '#E0E0E0',
-                                callback: function(value) {
-                                    if (graphType === 3) {
-                                        return value + '%';
-                                    }
-                                    return formatManYen(value, 0);
-                                }
-                            }
-                        }
-                    },
-                    animation: {
-                        duration: 1000,
-                        easing: 'easeOutQuart'
-                    }
-                }
-            });
-
-            updateGraphLegend(config.datasets);
-        }
-
-        function generateFiscalYearData(graphType) {
-            const { months, currentMonthIndex } = getFiscalYearStructure();
-            
-            const actualData = [];
-            const targetData = [];
-            const labels = months.map(m => m.label.substring(m.label.indexOf('年') + 1));
-            
-            let cumActual = 0;
-            let cumTarget = 0;
-            
-            months.forEach((monthInfo, index) => {
-                const isPastMonth = index <= currentMonthIndex;
-                const monthNum = monthInfo.month;
                 
-                switch(graphType) {
-                    case 0:
-                        const monthlyTarget = personalSettings.monthlyProfitTargets[monthNum] || 0;
-                        const monthlyActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
-                        
-                        targetData.push(monthlyTarget);
-                        actualData.push(isPastMonth ? monthlyActual : null);
-                        break;
-                        
-                    case 1:
-                        const yearlyMonthTarget = personalSettings.monthlyProfitTargets[monthNum] || 0;
-                        const yearlyMonthActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
-                        
-                        cumTarget += yearlyMonthTarget;
-                        cumActual += isPastMonth ? yearlyMonthActual : 0;
-                        
-                        targetData.push(cumTarget);
-                        actualData.push(isPastMonth ? cumActual : null);
-                        break;
-                        
-                    case 2:
-                        const salesTarget = personalSettings.yearlySalesTarget;
-                        let cumSalesProspect = 0;
-                        
-                        for (let j = 0; j <= index; j++) {
-                            const checkMonthKey = months[j].key;
-                            cardsData.forEach(card => {
-                                const monthData = card.monthlyData?.[checkMonthKey] || { salesIncreaseForecast: 0 };
-                                cumSalesProspect += monthData.salesIncreaseForecast || 0;
-                            });
-                        }
-                        
-                        targetData.push(salesTarget);
-                        actualData.push(isPastMonth ? cumSalesProspect : null);
-                        break;
-                        
-                    case 3:
-                        let cumProspectProfit = 0;
-                        for (let j = 0; j <= index; j++) {
-                            const checkMonthKey = months[j].key;
-                            cardsData.forEach(card => {
-                                const monthData = card.monthlyData?.[checkMonthKey] || { 
-                                    salesIncreaseForecast: 0, 
-                                    probability: 50 
-                                };
-                                if (monthData.probability >= 70) {
-                                    cumProspectProfit += (monthData.salesIncreaseForecast || 0) * (personalSettings.profitRate / 100);
-                                }
-                            });
-                        }
-                        
-                        const profitIncreaseTarget = personalSettings.yearlyProfitTarget;
-                        const prospectRate = profitIncreaseTarget > 0 ? (cumProspectProfit / profitIncreaseTarget) * 100 : 0;
-                        
-                        actualData.push(isPastMonth ? prospectRate : null);
-                        targetData.push(100);
-                        break;
-                }
-            });
-            
-            return { 
-                labels, 
-                actualData, 
-                targetData
-            };
-        }
-
-        function updateGraphLegend(datasets) {
-            const legendContainer = document.getElementById('graphLegend');
-            legendContainer.innerHTML = '';
-
-            datasets.forEach(dataset => {
-                const legendItem = document.createElement('div');
-                legendItem.className = 'legend-item';
-                const legendColor = Array.isArray(dataset.backgroundColor) ? 
-                                    dataset.backgroundColor[0] : 
-                                    (dataset.backgroundColor || dataset.borderColor);
+                const profitIncreaseTarget = personalSettings.yearlyProfitIncreaseTarget;
+                const prospectRate = profitIncreaseTarget > 0 ? (cumProspectProfit / profitIncreaseTarget) * 100 : 0;
                 
-                legendItem.innerHTML = `
-                    <span class="legend-color" style="background: ${legendColor};"></span>
-                    <span>${dataset.label}</span>
-                `;
-                legendContainer.appendChild(legendItem);
-            });
+                actualData.push(isPastMonth ? prospectRate : null);
+                targetData.push(100);
+                break;
         }
+    });
+    
+    return { 
+        labels, 
+        actualData, 
+        targetData
+    };
+}
 
-        function filterByProbability(probability) {
-            document.getElementById('probabilityFilter').value = probability;
-            applyFilters();
-        }
+function updateGraphLegend(datasets) {
+    const legendContainer = document.getElementById('graphLegend');
+    legendContainer.innerHTML = '';
 
-        function openNewCardModal() {
-    // 自分のデータ表示中のみ新規登録可能
+    datasets.forEach(dataset => {
+        const legendItem = document.createElement('div');
+        legendItem.className = 'legend-item';
+        const legendColor = Array.isArray(dataset.backgroundColor) ? 
+                            dataset.backgroundColor[0] : 
+                            (dataset.backgroundColor || dataset.borderColor);
+        
+        legendItem.innerHTML = `
+            <span class="legend-color" style="background: ${legendColor};"></span>
+            <span>${dataset.label}</span>
+        `;
+        legendContainer.appendChild(legendItem);
+    });
+}
+
+function filterByProbability(probability) {
+    document.getElementById('probabilityFilter').value = probability;
+    applyFilters();
+}
+
+function openNewCardModal() {
     if (!hasPermission('create_data')) {
         showToast('自分のデータ表示中のみ新規登録できます', 'error');
         return;
@@ -3238,188 +3438,187 @@ return card;
     openModal('newCardModal');
 }
 
+function closeNewCardModal() {
+    document.getElementById('newCardForm').reset();
+    closeModal('newCardModal');
+}
 
-        function closeNewCardModal() {
-            document.getElementById('newCardForm').reset();
-            closeModal('newCardModal');
-        }
+function openPersonalSettingsModal() {
+    document.getElementById('userName').value = personalSettings.userName;
+    document.getElementById('profitRate').value = personalSettings.profitRate;
+    document.getElementById('yearlyProfitTarget').value = personalSettings.yearlyProfitTarget;
+    document.getElementById('yearlyProfitIncreaseTarget').value = personalSettings.yearlyProfitIncreaseTarget;
+    document.getElementById('yearlySalesIncreaseTarget').value = personalSettings.yearlySalesIncreaseTarget;
+    
+    const monthlyContainer = document.getElementById('monthlyProfitContainer');
+    const fiscalMonths = getFiscalYearStructure().months;
+    
+    monthlyContainer.innerHTML = '';
+    
+    fiscalMonths.forEach(monthInfo => {
+        const monthDiv = document.createElement('div');
+        monthDiv.className = 'monthly-row';
+        const actualValue = personalSettings.monthlyProfitActuals[monthInfo.month] || 0;
+        const targetValue = personalSettings.monthlyProfitTargets[monthInfo.month] || 0;
+        const actualDisplay = actualValue === 0 ? '' : actualValue;
+        const targetDisplay = targetValue === 0 ? '' : targetValue;
+        
+        monthDiv.innerHTML = `
+            <div class="month-name">${monthInfo.label.substring(monthInfo.label.indexOf('年') + 1)}</div>
+            <input type="number" class="monthly-input" placeholder="実績" id="monthlyProfitActual${monthInfo.month}" value="${actualDisplay}">
+            <input type="number" class="monthly-input" placeholder="目標" id="monthlyProfitTarget${monthInfo.month}" value="${targetDisplay}">
+            <div style="font-size: 10px; color: rgba(0,0,0,0.7); text-align: center;"></div>
+        `;
+        monthlyContainer.appendChild(monthDiv);
+    });
+    
+    setTimeout(() => {
+        setupMonthlyInputHandlers('monthlyProfitContainer');
+    }, 100);
+    
+    openModal('personalSettingsModal');
+}
 
-        function openPersonalSettingsModal() {
-            document.getElementById('userName').value = personalSettings.userName;
-            document.getElementById('profitRate').value = personalSettings.profitRate;
-            document.getElementById('yearlyProfitTarget').value = personalSettings.yearlyProfitTarget;
-            document.getElementById('yearlySalesTarget').value = personalSettings.yearlySalesTarget;
-            
-            const monthlyContainer = document.getElementById('monthlyProfitContainer');
-            const fiscalMonths = getFiscalYearStructure().months;
-            
-            monthlyContainer.innerHTML = '';
-            
-            fiscalMonths.forEach(monthInfo => {
-                const monthDiv = document.createElement('div');
-                monthDiv.className = 'monthly-row';
-                const actualValue = personalSettings.monthlyProfitActuals[monthInfo.month] || 0;
-                const targetValue = personalSettings.monthlyProfitTargets[monthInfo.month] || 0;
-                const actualDisplay = actualValue === 0 ? '' : actualValue;
-                const targetDisplay = targetValue === 0 ? '' : targetValue;
-                
-                monthDiv.innerHTML = `
-                    <div class="month-name">${monthInfo.label.substring(monthInfo.label.indexOf('年') + 1)}</div>
-                    <input type="number" class="monthly-input" placeholder="実績" id="monthlyProfitActual${monthInfo.month}" value="${actualDisplay}">
-                    <input type="number" class="monthly-input" placeholder="目標" id="monthlyProfitTarget${monthInfo.month}" value="${targetDisplay}">
-                    <div style="font-size: 10px; color: rgba(0,0,0,0.7); text-align: center;"></div>
-                `;
-                monthlyContainer.appendChild(monthDiv);
-            });
-            
-            setTimeout(() => {
-                setupMonthlyInputHandlers('monthlyProfitContainer');
-            }, 100);
-            
-            openModal('personalSettingsModal');
-        }
+function closePersonalSettingsModal() {
+    closeModal('personalSettingsModal');
+}
 
-        function closePersonalSettingsModal() {
-            closeModal('personalSettingsModal');
-        }
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = 'all';
+    document.getElementById('probabilityFilter').value = 'all';
+    document.getElementById('areaFilter').value = 'all';
+    document.getElementById('sortSelect').value = 'sales-desc';
+    renderCardsOptimized();
+    showToast('フィルタをクリアしました', 'info');
+}
 
-        function clearFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('statusFilter').value = 'all';
-            document.getElementById('probabilityFilter').value = 'all';
-            document.getElementById('areaFilter').value = 'all';
-            document.getElementById('sortSelect').value = 'sales-desc';
-            renderCardsOptimized();
-            showToast('フィルタをクリアしました', 'info');
-        }
+function applySorting() {
+    renderCardsOptimized();
+}
 
-        function applySorting() {
-            renderCardsOptimized();
-        }
+function applyFilters() {
+    renderCardsOptimized();
+}
 
-        function applyFilters() {
-            renderCardsOptimized();
-        }
-
-        function changeCardDisplayMonth(cardId, newMonthKey) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!cardData) return;
-            
-            cardData.displayMonth = newMonthKey;
-            saveCardsData();
-            renderCardsOptimized();
-        }
-
-        function changeAllCardsDisplayMonth(newMonthKey) {
-            cardsData.forEach(cardData => {
-                cardData.displayMonth = newMonthKey;
-            });
-            saveCardsData();
-            
-            const fiscalStructure = getFiscalYearStructure();
-            const monthInfo = fiscalStructure.months.find(m => m.key === newMonthKey);
-            if (monthInfo) {
-                document.getElementById('currentDateDisplay').textContent = monthInfo.label;
-            }
-            
-            renderCardsOptimized();
-            showToast('全カードの表示月を変更しました', 'info');
-        }
-
-        function openMonthlyHistoryModal(cardId) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!cardData) return;
-            
-            document.getElementById('historyModalTitle').textContent = `${cardData.jukuName} - 月別履歴（表示専用）`;
-            
-            const container = document.getElementById('monthlyHistoryContainer');
-            container.innerHTML = '';
-            
-            const fiscalStructure = getFiscalYearStructure();
-
-            fiscalStructure.months.forEach(monthInfo => {
-                const monthData = cardData.monthlyData?.[monthInfo.key] || { 
-                    salesIncreaseForecast: 0, probability: 50, memo: "" 
-                };
-
-                const monthRow = document.createElement('div');
-                monthRow.className = 'history-month-row past-month';
-                
-                monthRow.innerHTML = `
-                    <div class="history-month-label">
-                        ${monthInfo.label}
-                        <span class="readonly-badge">表示のみ</span>
-                    </div>
-                    <div class="history-data-grid">
-                        <div class="history-field">
-                            <label>売上増見込</label>
-                            <input type="number" class="history-input" value="${monthData.salesIncreaseForecast}" readonly>
-                        </div>
-                        <div class="history-field">
-                            <label>確率</label>
-                            <input type="text" class="history-input" value="${getProbabilityLabel(monthData.probability)}" readonly>
-                        </div>
-                        <div class="history-field">
-                            <label>メモ</label>
-                            <textarea class="history-memo" readonly>${monthData.memo}</textarea>
-                        </div>
-                    </div>
-                `;
-                
-                container.appendChild(monthRow);
-            });
-            
-            openModal('monthlyHistoryModal');
-        }
-
-        function closeMonthlyHistoryModal() {
-            closeModal('monthlyHistoryModal');
-        }
-
-        function editCard(button) {
-            const card = button.closest('.card');
-            const cardId = parseInt(card.dataset.cardId);
-            const cardData = cardsData.find(card => card.id === cardId);
-            
-            if (!cardData) return;
-
-            document.getElementById('editCardId').value = cardData.id;
-            document.getElementById('editModalTitle').textContent = `${cardData.jukuName} - 編集`;
-            document.getElementById('editJukuName').value = cardData.jukuName;
-            document.getElementById('editJukuStatus').value = cardData.status;
-            document.getElementById('editAddressInput').value = cardData.address;
-            document.getElementById('editAreaInput').value = cardData.area || '';
-            document.getElementById('editProfitActual').value = cardData.annualProfitActual;
-            document.getElementById('editSalesActual').value = calculateSalesFromProfit(cardData.annualProfitActual || 0);
-            
-            const materials = cardData.annualMaterials || {
-                yearRound: { hasOrder: false, orderPeriod: "" },
-                seasonalExam: { hasUsage: false, usagePeriod: "" }
-            };
-            document.getElementById('editYearRoundOrder').value = String(materials.yearRound.hasOrder);
-            document.getElementById('editYearRoundPeriod').value = materials.yearRound.orderPeriod || '';
-            document.getElementById('editSeasonalUsage').value = String(materials.seasonalExam.hasUsage);
-            document.getElementById('editSeasonalPeriod').value = materials.seasonalExam.usagePeriod || '';
-            
-            openEditCardModal();
-        }
-
-        function openEditCardModal() {
-            updateActualSales('edit');
-            document.getElementById('editSalesActual').readOnly = true;
-            document.getElementById('editSalesActual').style.background = '#f8f9fa';
-            openModal('editCardModal');
-        }
-
-        function closeEditCardModal() {
-            closeModal('editCardModal');
-        }
-
-        async function deleteCard(cardId) {
+function changeCardDisplayMonth(cardId, newMonthKey) {
     const cardData = cardsData.find(card => card.id === cardId);
     if (!cardData) return;
     
-    // 削除権限チェック（Step 7-6で追加済み）
+    cardData.displayMonth = newMonthKey;
+    saveCardsData();
+    renderCardsOptimized();
+}
+
+function changeAllCardsDisplayMonth(newMonthKey) {
+    cardsData.forEach(cardData => {
+        cardData.displayMonth = newMonthKey;
+    });
+    saveCardsData();
+    
+    const fiscalStructure = getFiscalYearStructure();
+    const monthInfo = fiscalStructure.months.find(m => m.key === newMonthKey);
+    if (monthInfo) {
+        document.getElementById('currentDateDisplay').textContent = monthInfo.label;
+    }
+    
+    renderCardsOptimized();
+    showToast('全カードの表示月を変更しました', 'info');
+}
+
+function openMonthlyHistoryModal(cardId) {
+    const cardData = cardsData.find(card => card.id === cardId);
+    if (!cardData) return;
+    
+    document.getElementById('historyModalTitle').textContent = `${cardData.jukuName} - 月別履歴（表示専用）`;
+    
+    const container = document.getElementById('monthlyHistoryContainer');
+    container.innerHTML = '';
+    
+    const fiscalStructure = getFiscalYearStructure();
+
+    fiscalStructure.months.forEach(monthInfo => {
+        const monthData = cardData.monthlyData?.[monthInfo.key] || { 
+            salesIncreaseForecast: 0, probability: 50, memo: "" 
+        };
+
+        const monthRow = document.createElement('div');
+        monthRow.className = 'compact-month-row past-month';
+        
+        monthRow.innerHTML = `
+            <div class="compact-month-header">
+                ${monthInfo.label}
+                <span class="readonly-badge">表示のみ</span>
+            </div>
+            <div class="compact-data-grid">
+                <div class="compact-field">
+                    <div class="compact-field-label">売上増見込</div>
+                    <div class="compact-field-value">${formatManYen(monthData.salesIncreaseForecast)}</div>
+                </div>
+                <div class="compact-field">
+                    <div class="compact-field-label">確率</div>
+                    <div class="compact-field-value">${getProbabilityLabel(monthData.probability)}</div>
+                </div>
+                <div class="compact-field">
+                    <div class="compact-field-label">メモ</div>
+                    <div class="compact-memo">${escapeHtml(monthData.memo || '未入力')}</div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(monthRow);
+    });
+    
+    openModal('monthlyHistoryModal');
+}
+
+function closeMonthlyHistoryModal() {
+    closeModal('monthlyHistoryModal');
+}
+
+function editCard(button) {
+    const card = button.closest('.card');
+    const cardId = parseInt(card.dataset.cardId);
+    const cardData = cardsData.find(card => card.id === cardId);
+    
+    if (!cardData) return;
+
+    document.getElementById('editCardId').value = cardData.id;
+    document.getElementById('editModalTitle').textContent = `${cardData.jukuName} - 編集`;
+    document.getElementById('editJukuName').value = cardData.jukuName;
+    document.getElementById('editJukuStatus').value = cardData.status;
+    document.getElementById('editAddressInput').value = cardData.address;
+    document.getElementById('editAreaInput').value = cardData.area || '';
+    document.getElementById('editProfitActual').value = cardData.annualProfitActual;
+    document.getElementById('editSalesActual').value = calculateSalesFromProfit(cardData.annualProfitActual || 0);
+    
+    const materials = cardData.annualMaterials || {
+        yearRound: { hasOrder: false, orderPeriod: "" },
+        seasonalExam: { hasUsage: false, usagePeriod: "" }
+    };
+    document.getElementById('editYearRoundOrder').value = String(materials.yearRound.hasOrder);
+    document.getElementById('editYearRoundPeriod').value = materials.yearRound.orderPeriod || '';
+    document.getElementById('editSeasonalUsage').value = String(materials.seasonalExam.hasUsage);
+    document.getElementById('editSeasonalPeriod').value = materials.seasonalExam.usagePeriod || '';
+    
+    openEditCardModal();
+}
+
+function openEditCardModal() {
+    updateActualSales('edit');
+    document.getElementById('editSalesActual').readOnly = true;
+    document.getElementById('editSalesActual').style.background = '#f8f9fa';
+    openModal('editCardModal');
+}
+
+function closeEditCardModal() {
+    closeModal('editCardModal');
+}
+
+async function deleteCard(cardId) {
+    const cardData = cardsData.find(card => card.id === cardId);
+    if (!cardData) return;
+    
     if (!hasPermission('delete_data', cardData)) {
         showToast('削除権限がありません', 'error');
         return;
@@ -3428,10 +3627,8 @@ return card;
     const cardName = cardData ? cardData.jukuName : 'この塾';
     
     if (confirm(`『${cardName}』を削除します。この操作は元に戻せません。よろしいですか？`)) {
-        // ローカル配列から削除
         cardsData = cardsData.filter(card => card.id !== cardId);
         
-        // Firestoreからも削除（ログイン時のみ）
         if (currentUser && window.firebaseImports && window.db) {
             try {
                 const cardRef = window.firebaseImports.doc(window.db, 'juku_cards', String(cardId));
@@ -3443,7 +3640,6 @@ return card;
             }
         }
         
-        // 残りデータを同期保存
         await saveCardsData();
         progressCache = null;
         updateDashboard();
@@ -3452,357 +3648,362 @@ return card;
     }
 }
 
-        function openMemoDetailModal(cardId, monthKey) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!cardData) return;
+function openMemoDetailModal(cardId, monthKey) {
+    const cardData = cardsData.find(card => card.id === cardId);
+    if (!cardData) return;
 
-            const monthData = cardData.monthlyData?.[monthKey] || { memo: "" };
-            const fiscalStructure = getFiscalYearStructure();
-            const monthLabel = fiscalStructure.months.find(m => m.key === monthKey)?.label;
+    const monthData = cardData.monthlyData?.[monthKey] || { memo: "" };
+    const fiscalStructure = getFiscalYearStructure();
+    const monthLabel = fiscalStructure.months.find(m => m.key === monthKey)?.label;
 
-            document.getElementById('memoModalTitle').textContent = `メモ詳細 - ${monthLabel}`;
-            document.getElementById('memoCardName').textContent = `塾名: ${cardData.jukuName}`;
-            document.getElementById('memoContentInput').value = monthData.memo || '';
-            
-            currentEditingMemo = { cardId, monthKey };
-            
-            openModal('memoDetailModal');
-        }
+    document.getElementById('memoModalTitle').textContent = `メモ詳細 - ${monthLabel}`;
+    document.getElementById('memoCardName').textContent = `塾名: ${cardData.jukuName}`;
+    document.getElementById('memoContentInput').value = monthData.memo || '';
+    
+    currentEditingMemo = { cardId, monthKey };
+    
+    openModal('memoDetailModal');
+}
 
-        function closeMemoDetailModal() {
-            currentEditingMemo = null;
-            closeModal('memoDetailModal');
-        }
+function closeMemoDetailModal() {
+    currentEditingMemo = null;
+    closeModal('memoDetailModal');
+}
 
-        function saveMemoContent() {
-            if (!currentEditingMemo) return;
+function saveMemoContent() {
+    if (!currentEditingMemo) return;
 
-            const { cardId, monthKey } = currentEditingMemo;
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!cardData) return;
+    const { cardId, monthKey } = currentEditingMemo;
+    const cardData = cardsData.find(card => card.id === cardId);
+    if (!cardData) return;
 
-            const newMemoContent = document.getElementById('memoContentInput').value;
-            
-            if (!cardData.monthlyData) cardData.monthlyData = {};
-            if (!cardData.monthlyData[monthKey]) {
-                cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+    const newMemoContent = document.getElementById('memoContentInput').value;
+    
+    if (!cardData.monthlyData) cardData.monthlyData = {};
+    if (!cardData.monthlyData[monthKey]) {
+        cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+    }
+
+    cardData.monthlyData[monthKey].memo = newMemoContent;
+    cardData.lastUpdated = new Date().toISOString();
+
+    saveCardsData();
+    renderCardsOptimized();
+    showToast('メモを保存しました', 'success');
+    closeMemoDetailModal();
+}
+
+function updateActualSales(prefix) {
+    const profitActual = parseNumberSafely(document.getElementById(`${prefix}ProfitActual`).value);
+    const salesActual = calculateSalesFromProfit(profitActual);
+    document.getElementById(`${prefix}SalesActual`).value = salesActual;
+}
+
+function setupMonthlyInputHandlers(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const inputs = container.querySelectorAll('.monthly-input');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            if (this.value === '0') {
+                this.value = '';
             }
+        });
+    });
+}
 
-            cardData.monthlyData[monthKey].memo = newMemoContent;
-            cardData.lastUpdated = new Date().toISOString().split('T')[0];
+function getCardActiveMonthKey(card) {
+    const globalSel = document.getElementById('globalMonthSelector');
+    const globalKey = globalSel && globalSel.value ? globalSel.value : getFiscalYearStructure().currentMonthKey;
+    return card.displayMonth || globalKey;
+}
 
-            saveCardsData();
+function getSortedCards(cards) {
+    const sortType = document.getElementById('sortSelect').value;
+    const sortedCards = [...cards];
+    
+    switch (sortType) {
+        case 'sales-desc':
+            return sortedCards.sort((a, b) => {
+                const aKey = getCardActiveMonthKey(a);
+                const bKey = getCardActiveMonthKey(b);
+                const aForecast = a.monthlyData?.[aKey]?.salesIncreaseForecast || 0;
+                const bForecast = b.monthlyData?.[bKey]?.salesIncreaseForecast || 0;
+                return bForecast - aForecast;
+            });
+        case 'sales-asc':
+            return sortedCards.sort((a, b) => {
+                const aKey = getCardActiveMonthKey(a);
+                const bKey = getCardActiveMonthKey(b);
+                const aForecast = a.monthlyData?.[aKey]?.salesIncreaseForecast || 0;
+                const bForecast = b.monthlyData?.[bKey]?.salesIncreaseForecast || 0;
+                return aForecast - bForecast;
+            });
+        case 'updated-desc':
+            return sortedCards.sort((a, b) => new Date(b.lastUpdated || '1970-01-01') - new Date(a.lastUpdated || '1970-01-01'));
+        case 'updated-asc':
+            return sortedCards.sort((a, b) => new Date(a.lastUpdated || '1970-01-01') - new Date(b.lastUpdated || '1970-01-01'));
+        case 'probability-desc':
+            return sortedCards.sort((a, b) => {
+                const aKey = getCardActiveMonthKey(a);
+                const bKey = getCardActiveMonthKey(b);
+                const aProb = a.monthlyData?.[aKey]?.probability || 50;
+                const bProb = b.monthlyData?.[bKey]?.probability || 50;
+                return bProb - aProb;
+            });
+        case 'probability-asc':
+            return sortedCards.sort((a, b) => {
+                const aKey = getCardActiveMonthKey(a);
+                const bKey = getCardActiveMonthKey(b);
+                const aProb = a.monthlyData?.[aKey]?.probability || 50;
+                const bProb = b.monthlyData?.[bKey]?.probability || 50;
+                return aProb - bProb;
+            });
+        default:
+            return sortedCards;
+    }
+}
+
+function updateSortInfo() {
+    const sortType = document.getElementById('sortSelect').value;
+    const sortInfo = document.getElementById('sortInfo');
+    
+    const sortLabels = {
+        'sales-desc': '売上増見込順（大→小）',
+        'sales-asc': '売上増見込順（小→大）',
+        'updated-desc': '最終更新日順（新→古）',
+        'updated-asc': '最終更新日順（古→新）',
+        'probability-desc': '受注確率順（高→低）',
+        'probability-asc': '受注確率順（低→高）'
+    };
+    
+    sortInfo.textContent = sortLabels[sortType] || '売上増見込順（大→小）';
+}
+
+function renderCardsOptimized() {
+    clearTimeout(renderTimeout);
+    renderTimeout = setTimeout(() => {
+        const startTime = performance.now();
+        renderCards();
+        const endTime = performance.now();
+        if (endTime - startTime > 100) {
+            console.warn(`Slow render detected: ${endTime - startTime}ms`);
+        }
+    }, RENDER_DEBOUNCE_MS);
+}
+
+function renderCards() {
+    const tb = document.getElementById('jukuTableBody');
+    const mc = document.getElementById('cardsContainer');
+    tb.innerHTML = '';
+    mc.innerHTML = '';
+
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const probabilityFilter = document.getElementById('probabilityFilter').value;
+    const areaFilter = document.getElementById('areaFilter').value;
+
+    let filteredCards = cardsData.filter(cardData => {
+        const title = cardData.jukuName.toLowerCase();
+        const status = cardData.status;
+        const area = cardData.area || '';
+        
+        const displayMonth = cardData.displayMonth || getFiscalYearStructure().currentMonthKey;
+        const monthData = cardData.monthlyData?.[displayMonth] || { probability: 50 };
+        
+        let show = true;
+        if (searchTerm && !title.includes(searchTerm)) show = false;
+        if (statusFilter !== 'all' && status !== statusFilter) show = false;
+        if (probabilityFilter !== 'all' && !matchesProbabilityFilter(monthData.probability, probabilityFilter)) show = false;
+        if (areaFilter !== 'all' && (!area || !area.includes(areaFilter))) show = false;
+        return show;
+    });
+
+    filteredCards = getSortedCards(filteredCards);
+
+    filteredCards.forEach((cardData) => {
+        const tableRow = createTableRow(cardData);
+        tb.appendChild(tableRow);
+        
+        const cardElement = createNewCardElement(cardData);
+        mc.appendChild(cardElement);
+    });
+    
+    updateSortInfo();
+    
+    if (Date.now() - (progressCache?.timestamp || 0) > 2000) {
+        progressCache = null;
+        updateDashboard();
+    }
+}
+
+function editSalesIncreaseForecast(cardId, monthKey, element) {
+    const cardData = cardsData.find(card => card.id === cardId);
+    if (!cardData) return;
+    if (!hasPermission('edit_data', cardData)) {
+        showToast('編集権限がありません（閲覧専用）', 'error');
+        return;
+    }
+    
+    const fiscalStructure = getFiscalYearStructure();
+    if (monthKey !== fiscalStructure.currentMonthKey) {
+        showToast('当月分のみ編集可能です', 'info');
+        return;
+    }
+
+    const displaySpan = element.querySelector('.display-value');
+    const inputField = element.querySelector('.edit-input');
+
+    displaySpan.style.display = 'none';
+    inputField.style.display = 'block';
+    inputField.focus();
+    inputField.select();
+
+    const saveChanges = () => {
+        const newValue = parseNumberSafely(inputField.value);
+        if (!cardData.monthlyData) cardData.monthlyData = {};
+        if (!cardData.monthlyData[monthKey]) {
+            cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+        }
+        
+        if (cardData.monthlyData[monthKey].salesIncreaseForecast !== newValue) {
+            cardData.monthlyData[monthKey].salesIncreaseForecast = newValue;
+            cardData.lastUpdated = new Date().toISOString();
+            
+            if (confirm('将来月のデータも同じ値に更新しますか？\n（キャンセルすると当月のみ更新されます）')) {
+                propagateToFutureMonths(cardId, newValue, cardData.monthlyData[monthKey].probability);
+            } else {
+                saveCardsData();
+                showToast('当月の売上増見込を更新しました', 'success');
+            }
+            
+            progressCache = null;
+            updateDashboard();
             renderCardsOptimized();
-            showToast('メモを保存しました', 'success');
-            closeMemoDetailModal();
+        } else {
+            inputField.style.display = 'none';
+            displaySpan.style.display = 'block';
         }
+    };
 
-        function updateActualSales(prefix) {
-            const profitActual = parseNumberSafely(document.getElementById(`${prefix}ProfitActual`).value);
-            const salesActual = calculateSalesFromProfit(profitActual);
-            document.getElementById(`${prefix}SalesActual`).value = salesActual;
+    const cancelEdit = () => {
+        inputField.style.display = 'none';
+        displaySpan.style.display = 'block';
+    };
+
+    inputField.onblur = saveChanges;
+    inputField.onkeydown = (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            saveChanges();
+        } else if (event.key === 'Escape') {
+            event.preventDefault();
+            cancelEdit();
         }
+    };
+}
 
-        function setupMonthlyInputHandlers(containerId) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            
-            const inputs = container.querySelectorAll('.monthly-input');
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    if (this.value === '0') {
-                        this.value = '';
-                    }
-                });
-            });
-        }
-
-        function getCardActiveMonthKey(card) {
-            const globalSel = document.getElementById('globalMonthSelector');
-            const globalKey = globalSel && globalSel.value ? globalSel.value : getFiscalYearStructure().currentMonthKey;
-            return card.displayMonth || globalKey;
-        }
-
-        function getSortedCards(cards) {
-            const sortType = document.getElementById('sortSelect').value;
-            const sortedCards = [...cards];
-            
-            switch (sortType) {
-                case 'sales-desc':
-                    return sortedCards.sort((a, b) => {
-                        const aKey = getCardActiveMonthKey(a);
-                        const bKey = getCardActiveMonthKey(b);
-                        const aForecast = a.monthlyData?.[aKey]?.salesIncreaseForecast || 0;
-                        const bForecast = b.monthlyData?.[bKey]?.salesIncreaseForecast || 0;
-                        return bForecast - aForecast;
-                    });
-                case 'sales-asc':
-                    return sortedCards.sort((a, b) => {
-                        const aKey = getCardActiveMonthKey(a);
-                        const bKey = getCardActiveMonthKey(b);
-                        const aForecast = a.monthlyData?.[aKey]?.salesIncreaseForecast || 0;
-                        const bForecast = b.monthlyData?.[bKey]?.salesIncreaseForecast || 0;
-                        return aForecast - bForecast;
-                    });
-                case 'updated-desc':
-                    return sortedCards.sort((a, b) => new Date(b.lastUpdated || '1970-01-01') - new Date(a.lastUpdated || '1970-01-01'));
-                case 'updated-asc':
-                    return sortedCards.sort((a, b) => new Date(a.lastUpdated || '1970-01-01') - new Date(b.lastUpdated || '1970-01-01'));
-                case 'probability-desc':
-                    return sortedCards.sort((a, b) => {
-                        const aKey = getCardActiveMonthKey(a);
-                        const bKey = getCardActiveMonthKey(b);
-                        const aProb = a.monthlyData?.[aKey]?.probability || 50;
-                        const bProb = b.monthlyData?.[bKey]?.probability || 50;
-                        return bProb - aProb;
-                    });
-                case 'probability-asc':
-                    return sortedCards.sort((a, b) => {
-                        const aKey = getCardActiveMonthKey(a);
-                        const bKey = getCardActiveMonthKey(b);
-                        const aProb = a.monthlyData?.[aKey]?.probability || 50;
-                        const bProb = b.monthlyData?.[bKey]?.probability || 50;
-                        return aProb - bProb;
-                    });
-                default:
-                    return sortedCards;
-            }
-        }
-
-        function updateSortInfo() {
-            const sortType = document.getElementById('sortSelect').value;
-            const sortInfo = document.getElementById('sortInfo');
-            
-            const sortLabels = {
-                'sales-desc': '売上増見込順（大→小）',
-                'sales-asc': '売上増見込順（小→大）',
-                'updated-desc': '最終更新日順（新→古）',
-                'updated-asc': '最終更新日順（古→新）',
-                'probability-desc': '受注確率順（高→低）',
-                'probability-asc': '受注確率順（低→高）'
-            };
-            
-            sortInfo.textContent = sortLabels[sortType] || '売上増見込順（大→小）';
-        }
-
-
-        function renderCardsOptimized() {
-            clearTimeout(renderTimeout);
-            renderTimeout = setTimeout(() => {
-                const startTime = performance.now();
-                renderCards();
-                const endTime = performance.now();
-                if (endTime - startTime > 100) {
-                    console.warn(`Slow render detected: ${endTime - startTime}ms`);
-                }
-            }, RENDER_DEBOUNCE_MS);
-        }
-
-        function renderCards() {
-            const container = document.getElementById('cardsContainer');
-            container.innerHTML = '';
-
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value;
-            const probabilityFilter = document.getElementById('probabilityFilter').value;
-            const areaFilter = document.getElementById('areaFilter').value;
-
-            let filteredCards = cardsData.filter(cardData => {
-                const title = cardData.jukuName.toLowerCase();
-                const status = cardData.status;
-                const area = cardData.area || '';
-                
-                const displayMonth = cardData.displayMonth || getFiscalYearStructure().currentMonthKey;
-                const monthData = cardData.monthlyData?.[displayMonth] || { probability: 50 };
-                
-                let show = true;
-                if (searchTerm && !title.includes(searchTerm)) show = false;
-                if (statusFilter !== 'all' && status !== statusFilter) show = false;
-                if (probabilityFilter !== 'all' && !matchesProbabilityFilter(monthData.probability, probabilityFilter)) show = false;
-                if (areaFilter !== 'all' && (!area || !area.includes(areaFilter))) show = false;
-                return show;
-            });
-
-            filteredCards = getSortedCards(filteredCards);
-
-            filteredCards.forEach((cardData) => {
-                const cardElement = createNewCardElement(cardData);
-                container.appendChild(cardElement);
-            });
-            
-            updateSortInfo();
-            
-            if (Date.now() - (progressCache?.timestamp || 0) > 2000) {
-                progressCache = null;
-                updateDashboard();
-            }
-        }
-
-        function editSalesIncreaseForecast(cardId, monthKey, element) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!cardData) return;
-  if (!hasPermission('edit_data', cardData)) {
+function editProbability(cardId, monthKey, element) {
+    const cardData = cardsData.find(card => card.id === cardId);
+    if (!cardData) return;
+    if (!hasPermission('edit_data', cardData)) {
         showToast('編集権限がありません（閲覧専用）', 'error');
         return;
     }
-            const fiscalStructure = getFiscalYearStructure();
-            if (monthKey !== fiscalStructure.currentMonthKey) {
-                showToast('当月分のみ編集可能です', 'info');
-                return;
-            }
-
-            const displaySpan = element.querySelector('.display-value');
-            const inputField = element.querySelector('.edit-input');
-
-            displaySpan.style.display = 'none';
-            inputField.style.display = 'block';
-            inputField.focus();
-            inputField.select();
-
-            const saveChanges = () => {
-                const newValue = parseNumberSafely(inputField.value);
-                if (!cardData.monthlyData) cardData.monthlyData = {};
-                if (!cardData.monthlyData[monthKey]) {
-                    cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
-                }
-                
-                if (cardData.monthlyData[monthKey].salesIncreaseForecast !== newValue) {
-                    cardData.monthlyData[monthKey].salesIncreaseForecast = newValue;
-                    cardData.lastUpdated = new Date().toISOString().split('T')[0];
-                    
-                    if (confirm('将来月のデータも同じ値に更新しますか？\n（キャンセルすると当月のみ更新されます）')) {
-                        propagateToFutureMonths(cardId, newValue, cardData.monthlyData[monthKey].probability);
-                    } else {
-                        saveCardsData();
-                        showToast('当月の売上増見込を更新しました', 'success');
-                    }
-                    
-                    progressCache = null;
-                    updateDashboard();
-                    renderCardsOptimized();
-                } else {
-                    inputField.style.display = 'none';
-                    displaySpan.style.display = 'block';
-                }
-            };
-
-            const cancelEdit = () => {
-                inputField.style.display = 'none';
-                displaySpan.style.display = 'block';
-            };
-
-            inputField.onblur = saveChanges;
-            inputField.onkeydown = (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    saveChanges();
-                } else if (event.key === 'Escape') {
-                    event.preventDefault();
-                    cancelEdit();
-                }
-            };
-        }
-
-        function editProbability(cardId, monthKey, element) {
-            const cardData = cardsData.find(card => card.id === cardId);
-            if (!cardData) return;
- if (!hasPermission('edit_data', cardData)) {
-        showToast('編集権限がありません（閲覧専用）', 'error');
+    
+    const fiscalStructure = getFiscalYearStructure();
+    if (monthKey !== fiscalStructure.currentMonthKey) {
+        showToast('当月分のみ編集可能です', 'info');
         return;
     }
-            const fiscalStructure = getFiscalYearStructure();
-            if (monthKey !== fiscalStructure.currentMonthKey) {
-                showToast('当月分のみ編集可能です', 'info');
-                return;
+
+    const displaySpan = element.querySelector('.display-value');
+    const selectField = element.querySelector('.edit-select');
+
+    displaySpan.style.display = 'none';
+    selectField.style.display = 'block';
+    selectField.focus();
+
+    const saveChanges = () => {
+        const newValue = parseInt(selectField.value);
+        if (!cardData.monthlyData) cardData.monthlyData = {};
+        if (!cardData.monthlyData[monthKey]) {
+            cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+        }
+        
+        if (cardData.monthlyData[monthKey].probability !== newValue) {
+            cardData.monthlyData[monthKey].probability = newValue;
+            cardData.lastUpdated = new Date().toISOString();
+            
+            if (confirm('将来月のデータも同じ確率に更新しますか？\n（キャンセルすると当月のみ更新されます）')) {
+                propagateToFutureMonths(cardId, cardData.monthlyData[monthKey].salesIncreaseForecast, newValue);
+            } else {
+                saveCardsData();
+                showToast('当月の確率を更新しました', 'success');
             }
-
-            const displaySpan = element.querySelector('.display-value');
-            const selectField = element.querySelector('.edit-select');
-
-            displaySpan.style.display = 'none';
-            selectField.style.display = 'block';
-            selectField.focus();
-
-            const saveChanges = () => {
-                const newValue = parseInt(selectField.value);
-                if (!cardData.monthlyData) cardData.monthlyData = {};
-                if (!cardData.monthlyData[monthKey]) {
-                    cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
-                }
-                
-                if (cardData.monthlyData[monthKey].probability !== newValue) {
-                    cardData.monthlyData[monthKey].probability = newValue;
-                    cardData.lastUpdated = new Date().toISOString().split('T')[0];
-                    
-                    if (confirm('将来月のデータも同じ確率に更新しますか？\n（キャンセルすると当月のみ更新されます）')) {
-                        propagateToFutureMonths(cardId, cardData.monthlyData[monthKey].salesIncreaseForecast, newValue);
-                    } else {
-                        saveCardsData();
-                        showToast('当月の確率を更新しました', 'success');
-                    }
-                    
-                    progressCache = null;
-                    updateDashboard();
-                    renderCardsOptimized();
-                } else {
-                    selectField.style.display = 'none';
-                    displaySpan.style.display = 'block';
-                }
-            };
-
-            const cancelEdit = () => {
-                selectField.style.display = 'none';
-                displaySpan.style.display = 'block';
-            };
-
-            selectField.onchange = saveChanges;
-            selectField.onblur = saveChanges;
-            selectField.onkeydown = (event) => {
-                if (event.key === 'Escape') {
-                    event.preventDefault();
-                    cancelEdit();
-                }
-            };
+            
+            progressCache = null;
+            updateDashboard();
+            renderCardsOptimized();
+        } else {
+            selectField.style.display = 'none';
+            displaySpan.style.display = 'block';
         }
+    };
 
-        function setupSearchWithIMESupport() {
-            const searchInput = document.getElementById('searchInput');
-            
-            searchInput.addEventListener('compositionstart', () => {
-                isComposing = true;
-            });
-            
-            searchInput.addEventListener('compositionend', () => {
-                isComposing = false;
-                applySearchFilter();
-            });
-            
-            searchInput.addEventListener('input', () => {
-                if (!isComposing) {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(applySearchFilter, 300);
-                }
-            });
-            
-            function applySearchFilter() {
-                applyFilters();
-            }
-        }
+    const cancelEdit = () => {
+        selectField.style.display = 'none';
+        displaySpan.style.display = 'block';
+    };
 
-        function enhanceAccessibility() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.setAttribute('role', 'dialog');
-                modal.setAttribute('aria-modal', 'true');
-            });
-            
-            document.querySelectorAll('.action-btn').forEach((btn, index) => {
-                const actions = ['編集', '履歴', '削除'];
-                btn.setAttribute('aria-label', actions[index % 3]);
-            });
+    selectField.onchange = saveChanges;
+    selectField.onblur = saveChanges;
+    selectField.onkeydown = (event) => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            cancelEdit();
         }
+    };
+}
+
+function setupSearchWithIMESupport() {
+    const searchInput = document.getElementById('searchInput');
+    
+    searchInput.addEventListener('compositionstart', () => {
+        isComposing = true;
+    });
+    
+    searchInput.addEventListener('compositionend', () => {
+        isComposing = false;
+        applySearchFilter();
+    });
+    
+    searchInput.addEventListener('input', () => {
+        if (!isComposing) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(applySearchFilter, 300);
+        }
+    });
+    
+    function applySearchFilter() {
+        applyFilters();
+    }
+}
+
+function enhanceAccessibility() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+    });
+    
+    document.querySelectorAll('.action-btn').forEach((btn, index) => {
+        const actions = ['編集', '履歴', '削除'];
+        btn.setAttribute('aria-label', actions[index % 3]);
+    });
+}
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 初期化処理
     loadPersonalSettings();
     loadCardsData();
     initializeDisplayMonth();
@@ -3818,7 +4019,6 @@ document.addEventListener('DOMContentLoaded', function() {
     enhanceAccessibility();
     setupFirebaseAuth();
 
-    // モーダル関連イベントリスナー
     document.addEventListener('click', function(e) {
         const modals = document.querySelectorAll('.modal');
         modals.forEach(modal => {
@@ -3837,13 +4037,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // フォームイベントリスナー
     document.getElementById('personalSettingsForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
         personalSettings.userName = document.getElementById('userName').value;
         personalSettings.profitRate = parseFloat(document.getElementById('profitRate').value);
         personalSettings.yearlyProfitTarget = parseNumberSafely(document.getElementById('yearlyProfitTarget').value);
+        personalSettings.yearlyProfitIncreaseTarget = parseNumberSafely(document.getElementById('yearlyProfitIncreaseTarget').value);
         
         updatePersonalSalesTarget();
         
@@ -3929,7 +4129,7 @@ document.addEventListener('DOMContentLoaded', function() {
             annualProfitActual: annualProfitActual,
             annualMaterials: annualMaterials,
             registeredMonth: currentMonthKey,
-            lastUpdated: new Date().toISOString().split('T')[0]
+            lastUpdated: new Date().toISOString()
         };
 
         const errors = validateCardData(cardData);
@@ -3979,7 +4179,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         
-        cardData.lastUpdated = new Date().toISOString().split('T')[0];
+        cardData.lastUpdated = new Date().toISOString();
 
         const errors = validateCardData(cardData);
         if (errors.length > 0) {
@@ -3996,10 +4196,9 @@ document.addEventListener('DOMContentLoaded', function() {
         closeEditCardModal();
     });
 
-    // 最終初期化
     renderCardsOptimized();
     updateDashboard();
-}); // ★★★ 重要：この1つの閉じ括弧で全て完了 ★★★
-</script>
+});
+    </script>
 </body>
 </html>

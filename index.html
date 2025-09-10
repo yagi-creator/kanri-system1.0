@@ -1473,7 +1473,8 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-  import { getFirestore, doc, getDoc, getDocs, collection, query, where, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, getDocs, collection, query, where, setDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
 
   const firebaseConfig = {
     apiKey: "AIzaSyC_EUgAAVFfk0TonQgKVMxs8TcuvFdXKIQ",
@@ -1487,7 +1488,7 @@
   const app = initializeApp(firebaseConfig);
   window.firebaseAuth = getAuth(app);
   window.db = getFirestore(app);
-  window.firebaseImports = {
+window.firebaseImports = {
     signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
@@ -1498,8 +1499,10 @@
     query,        
     where,        
     setDoc,
-    deleteDoc
-  };
+    deleteDoc,
+    serverTimestamp
+};
+
 </script>
 </head>
 <body>
@@ -2197,13 +2200,31 @@ async function loadCardsDataForTarget(targetUserId) {
         cardsData = [];
         let maxId = 0;
         
-        cardsCollection.forEach((doc) => {
-            const cardData = { id: parseInt(doc.id), ...doc.data() };
+                cardsCollection.forEach((doc) => {
+            const raw = doc.data();
+            const docId = doc.id;
+            
+            // docIdが "uid_123" 形式の場合に数値idを抽出
+            let numericId = NaN;
+            if (docId.includes('_')) {
+                const parts = docId.split('_');
+                numericId = parseInt(parts[1], 10);
+            } else {
+                numericId = parseInt(docId, 10);
+            }
+            
+            const cardData = { 
+                id: Number.isFinite(numericId) ? numericId : (raw.id || 0),
+                docId,
+                ...raw
+            };
+            
             cardsData.push(cardData);
-            if (cardData.id > maxId) {
+            if (Number.isFinite(cardData.id) && cardData.id > maxId) {
                 maxId = cardData.id;
             }
         });
+
         
         nextCardId = maxId + 1;
         
@@ -2352,6 +2373,14 @@ function formatAmount(amount) {
 
 function formatDateForDisplay(s) {
     if (!s) return '—';
+    
+    // Firestore Timestamp対応
+    if (s && typeof s.toDate === 'function') {
+        const d = s.toDate();
+        const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), da = String(d.getDate()).padStart(2, '0'), h = String(d.getHours()).padStart(2, '0'), mi = String(d.getMinutes()).padStart(2, '0');
+        return `${y}/${m}/${da} ${h}:${mi}`;
+    }
+    
     try {
         const d = new Date(s);
         if (isNaN(d.getTime())) return '—';
@@ -2361,6 +2390,7 @@ function formatDateForDisplay(s) {
         return '—';
     }
 }
+
 
 function escapeHtml(text) {
     const div = document.createElement('div');
@@ -2596,19 +2626,27 @@ async function saveCardsData() {
     }
     
     try {
-        for (const card of cardsData) {
-            const cardRef = window.firebaseImports.doc(window.db, 'juku_cards', String(card.id));
+                for (const card of cardsData) {
+            const assignedId = card.assignedUserId || currentUser.uid;
+            
+            // docIdが未設定の場合は生成（既存データの互換性確保）
+            if (!card.docId) {
+                card.docId = `${assignedId}_${card.id}`;
+            }
+            
+            const cardRef = window.firebaseImports.doc(window.db, 'juku_cards', card.docId);
             
             const cardToSave = {
                 ...card,
-                assignedUserId: card.assignedUserId || currentUser.uid,
+                assignedUserId: assignedId,
                 assignedUserName: card.assignedUserName || (currentUserData?.name || personalSettings.userName),
-                lastUpdated: new Date().toISOString(),
+                lastUpdated: window.firebaseImports.serverTimestamp(),
                 updatedBy: currentUser.uid
             };
             
             await window.firebaseImports.setDoc(cardRef, cardToSave);
         }
+
         
         updateAreaFilterOptions();
         showToast('チームデータを保存しました', 'success');
@@ -3901,10 +3939,12 @@ async function deleteCard(cardId) {
         
         if (currentUser && window.firebaseImports && window.db) {
             try {
-                const cardRef = window.firebaseImports.doc(window.db, 'juku_cards', String(cardId));
+                const docId = cardData.docId || `${cardData.assignedUserId || currentUser.uid}_${cardData.id}`;
+                const cardRef = window.firebaseImports.doc(window.db, 'juku_cards', docId);
                 await window.firebaseImports.deleteDoc(cardRef);
-                console.log('Firestoreから削除完了:', cardId);
+                console.log('Firestoreから削除完了:', docId);
             } catch (error) {
+
                 console.error('Firestore delete error:', error);
                 showToast('クラウド削除でエラーが発生しました', 'error');
             }
@@ -4390,14 +4430,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
 
+                // docId生成（ユーザーUID_カードIDで一意性確保）
+        const newDocId = `${currentUser.uid}_${nextCardId}`;
+
         const cardData = {
             id: nextCardId++,
+            docId: newDocId,  // この行を追加
             jukuName: jukuName,
             status: status,
             address: address,
             area: area,
             assignedUserId: currentUser.uid,
             assignedUserName: currentUserData.name,
+
             displayMonth: currentMonthKey,
             monthlyData: monthlyData,
             annualProfitActual: annualProfitActual,

@@ -468,10 +468,20 @@
         }
 
         .juku-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
+    width: 100%;
+    table-layout: fixed;
+    font-size: 14px;
+    border-collapse: collapse;
+}
+
+/* 列幅の最適化 */
+.col-level { width: 8px; padding: 0 !important; }
+.col-name { width: 180px; }
+.col-prev-amount, .col-current-amount { width: 100px; text-align: center; }
+.col-prev-prob, .col-current-prob { width: 80px; text-align: center; }
+.col-change { width: 90px; text-align: center; }
+.col-detail { width: 70px; text-align: center; }
+
 
         .juku-table th {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -1289,6 +1299,67 @@
                 border: 1px solid #000;
             }
         }
+        /* カード表示改善 */
+/* 既存のcard-level背景色指定を無効化 */
+.card-level-0, .card-level-1, .card-level-2, .card-level-3, .card-level-4 {
+    background: inherit !important;
+}
+
+/* カード背景をテーブルの縞模様に統一 */
+.mobile-cards-container .card {
+    background: #fff !important;
+}
+
+.mobile-cards-container .card:nth-child(even) {
+    background: #f8f9fa !important;
+}
+
+/* カードのレベルインジケーター（左＋上ライン）を鮮やかに */
+.mobile-cards-container .card.card-level-0 { 
+    border-left: 4px solid #9E9E9E !important;
+    border-top: 4px solid #9E9E9E !important;
+}
+.mobile-cards-container .card.card-level-1 { 
+    border-left: 4px solid #2196F3 !important;
+    border-top: 4px solid #2196F3 !important;
+}
+.mobile-cards-container .card.card-level-2 { 
+    border-left: 4px solid #4CAF50 !important;
+    border-top: 4px solid #4CAF50 !important;
+}
+.mobile-cards-container .card.card-level-3 { 
+    border-left: 4px solid #FF9800 !important;
+    border-top: 4px solid #FF9800 !important;
+}
+.mobile-cards-container .card.card-level-4 { 
+    border-left: 4px solid #F44336 !important;
+    border-top: 4px solid #F44336 !important;
+}
+
+/* スマホ版奇数カードオーバーレイ */
+@media (max-width: 1024px) {
+    .mobile-cards-container .card:nth-child(odd)::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: rgba(173, 216, 230, 0.15);
+        border-radius: 12px;
+        z-index: 1;
+    }
+    
+    .mobile-cards-container .card > * {
+        position: relative;
+        z-index: 2;
+    }
+}
+
+/* 閲覧専用カードとの競合解決 */
+.read-only-card {
+    box-shadow: inset 0 0 0 2px #ffc107 !important;
+    border: none !important;
+}
+
 
         @media (prefers-reduced-motion: reduce) {
             * {
@@ -1580,16 +1651,18 @@
             <div class="desktop-table-container" id="desktopTableContainer">
                 <table class="juku-table">
                     <thead>
-                        <tr>
-                            <th class="col-level"></th>
-                            <th class="col-name">塾名</th>
-                            <th class="col-forecast">今月売上増見込</th>
-                            <th class="col-probability">確率</th>
-                            <th class="col-memo">今月備考</th>
-                            <th class="col-change">先月からの変化</th>
-                            <th class="col-detail">詳細</th>
-                        </tr>
-                    </thead>
+    <tr>
+        <th class="col-level"></th>
+        <th class="col-name">塾名</th>
+        <th class="col-prev-amount">先月見込</th>
+        <th class="col-prev-prob">先月確率</th>
+        <th class="col-current-amount">今月見込</th>
+        <th class="col-current-prob">今月確率</th>
+        <th class="col-change">変化</th>
+        <th class="col-detail">詳細</th>
+    </tr>
+</thead>
+
                     <tbody id="jukuTableBody"></tbody>
                 </table>
             </div>
@@ -1616,7 +1689,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="profitRate">個人粗利率（%）</label>
-                        <input type="number" class="form-input" value="30" step="0.1" id="profitRate" oninput="updatePersonalSalesTarget()">
+                        <input type="number" class="form-input" value="0" step="0.1" id="profitRate" oninput="updatePersonalSalesTarget()">
                     </div>
                 </div>
 
@@ -1624,16 +1697,16 @@
                     <h4>年間目標</h4>
                     <div class="form-group">
                         <label class="form-label" for="yearlyProfitTarget">年間粗利目標</label>
-                        <input type="number" class="form-input" value="13000000" id="yearlyProfitTarget">
+                        <input type="number" class="form-input" value="0" id="yearlyProfitTarget">
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="yearlyProfitIncreaseTarget">粗利増目標</label>
-                        <input type="number" class="form-input" value="3000000" id="yearlyProfitIncreaseTarget" oninput="updatePersonalSalesTarget()">
+                        <input type="number" class="form-input" value="0" id="yearlyProfitIncreaseTarget" oninput="updatePersonalSalesTarget()">
                         <small>昨年からの粗利増加目標額</small>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="yearlySalesIncreaseTarget">年間売上増目標</label>
-                        <input type="number" class="form-input" value="10000000" id="yearlySalesIncreaseTarget" readonly>
+                        <input type="number" class="form-input" value="0" id="yearlySalesIncreaseTarget" readonly>
                         <small>粗利増目標を個人粗利率で逆算した値</small>
                     </div>
                 </div>
@@ -1771,9 +1844,11 @@
                                 <div class="material-mini-field">
                                     <label class="material-mini-label" for="newSeasonalUsage">使用状況</label>
                                     <select class="material-mini-select" id="newSeasonalUsage">
-                                        <option value="false" selected>使用なし</option>
-                                        <option value="true">使用あり</option>
-                                    </select>
+    <option value="unknown" selected>不明</option>
+    <option value="false">使用なし</option>
+    <option value="true">使用あり</option>
+</select>
+
                                 </div>
                                 <div class="material-mini-field">
                                     <label class="material-mini-label" for="newSeasonalPeriod">使用時期</label>
@@ -1858,9 +1933,11 @@
                                 <div class="material-mini-field">
                                     <label class="material-mini-label" for="editSeasonalUsage">使用状況</label>
                                     <select class="material-mini-select" id="editSeasonalUsage">
-                                        <option value="false">使用なし</option>
-                                        <option value="true">使用あり</option>
-                                    </select>
+    <option value="unknown">不明</option>
+    <option value="false">使用なし</option>
+    <option value="true">使用あり</option>
+</select>
+
                                 </div>
                                 <div class="material-mini-field">
                                     <label class="material-mini-label" for="editSeasonalPeriod">使用時期</label>
@@ -2181,6 +2258,7 @@ function setupFirebaseAuth() {
                         updateViewSelector();
                         
                         await loadCardsDataForTarget(currentViewTarget);
+                        await syncPersonalSettingsOnLogin();
                         progressCache = null;
                         renderCardsOptimized();
                         updateDashboard();
@@ -2221,10 +2299,10 @@ let isComposing = false;
 
 let personalSettings = {
     userName: '担当者',
-    profitRate: 30,
-    yearlyProfitTarget: 13000000,
-    yearlyProfitIncreaseTarget: 3000000,
-    yearlySalesIncreaseTarget: 10000000,
+    profitRate: 0,
+    yearlyProfitTarget: 0,
+    yearlyProfitIncreaseTarget: 0,
+    yearlySalesIncreaseTarget: 0,
     monthlyProfitActuals: {
         10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
         4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
@@ -2288,6 +2366,71 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text || '';
     return div.innerHTML;
+}
+
+        // 数値カンマフォーマット関数
+function formatWithCommas(value) {
+    const num = parseNumberSafely(value);
+    return Number.isFinite(num) ? num.toLocaleString() : '';
+}
+
+// 数値フィールドのフォーカス・ブラー処理
+function setupNumberFormatting() {
+    const numberFields = [
+        'newSalesIncreaseForecast', 'newProfitActual', 
+        'editProfitActual', 'yearlyProfitTarget', 'yearlyProfitIncreaseTarget'
+    ];
+    
+    numberFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        
+        // スマホで数字キーボード表示、type=textでカンマ表示可能に
+        field.setAttribute('inputmode', 'numeric');
+        field.setAttribute('type', 'text');
+        
+        // 初期表示時にカンマ付与（0以外の値のみ）
+        if (field.value && field.value !== '0') {
+            field.value = formatWithCommas(field.value.replace(/[,，\s]/g, ''));
+        }
+        
+        // フォーカス時：カンマ除去＋全選択
+        field.addEventListener('focus', function() {
+            this.value = this.value.replace(/[,，\s]/g, '');
+            setTimeout(() => this.select(), 0);
+        });
+        
+        // ブラー時：カンマ付与
+        field.addEventListener('blur', function() {
+            if (this.value && this.value !== '0') {
+                this.value = formatWithCommas(this.value);
+            }
+        });
+    });
+    
+    // 月別入力フィールドの処理（個人設定内）
+    document.querySelectorAll('.monthly-input').forEach(input => {
+        input.setAttribute('inputmode', 'numeric');
+        input.setAttribute('type', 'text');
+        
+        // 初期表示時にカンマ付与
+        if (input.value && input.value !== '0') {
+            input.value = formatWithCommas(input.value.replace(/[,，\s]/g, ''));
+        }
+        
+        input.addEventListener('focus', function() {
+            if (this.value && this.value !== '0') {
+                this.value = this.value.replace(/[,，\s]/g, '');
+                setTimeout(() => this.select(), 0);
+            }
+        });
+        
+        input.addEventListener('blur', function() {
+            if (this.value && this.value !== '') {
+                this.value = formatWithCommas(this.value);
+            }
+        });
+    });
 }
 
 function parseNumberSafely(value) {
@@ -2518,6 +2661,57 @@ function savePersonalSettings() {
     } catch (e) {
         showToast('個人設定保存エラー', 'error');
         console.error('Personal settings save error:', e);
+    }
+}
+        
+// Firebase連携保存関数
+async function savePersonalSettingsComplete() {
+    // ローカル保存
+    savePersonalSettings();
+    
+    // Firebase保存
+    if (currentUser && window.db && window.firebaseImports) {
+        try {
+            await window.firebaseImports.setDoc(
+                window.firebaseImports.doc(window.db, 'users', currentUser.uid),
+                { personalSettings },
+                { merge: true }
+            );
+            showToast('個人設定をクラウドに保存しました', 'success');
+        } catch (error) {
+            console.error('Firebase個人設定保存エラー:', error);
+            showToast('クラウド保存でエラーが発生しました', 'error');
+        }
+    }
+}
+
+// ログイン時同期関数
+async function syncPersonalSettingsOnLogin() {
+    if (!currentUser || !window.db) return;
+    
+    try {
+        const userDoc = await window.firebaseImports.getDoc(
+            window.firebaseImports.doc(window.db, 'users', currentUser.uid)
+        );
+        
+        if (userDoc.exists() && userDoc.data().personalSettings) {
+            // クラウド設定で上書き
+            personalSettings = { 
+                ...personalSettings, 
+                ...userDoc.data().personalSettings 
+            };
+            savePersonalSettings();
+            updatePersonalSalesTarget();
+            updateDashboard();
+            showToast('クラウドから個人設定を同期しました', 'info');
+        } else {
+            // 初回：ローカル設定をクラウドに保存
+            await savePersonalSettingsComplete();
+            showToast('個人設定をクラウドに初期保存しました', 'success');
+        }
+    } catch (error) {
+        console.error('個人設定同期エラー:', error);
+        showToast('設定同期に失敗（ローカル設定を使用）', 'error');
     }
 }
 
@@ -2862,19 +3056,83 @@ function updateDashboard() {
 }
 
 function createTableRow(cardData) {
-    const f = getFiscalYearStructure();
-    const month = cardData.displayMonth || f.currentMonthKey;
-    const cur = cardData.monthlyData?.[month] || { salesIncreaseForecast: 0, probability: 50, memo: "" };
-    const lvl = getCardLevel(cur.salesIncreaseForecast || 0);
-    const ch = calculateMonthlyChange(cardData, month);
-    const icon = ch.direction === 'increase' ? '↗' : ch.direction === 'decrease' ? '↘' : '→';
-    const cls = `change-${ch.direction === 'increase' ? 'positive' : ch.direction === 'decrease' ? 'negative' : 'neutral'}`;
+    const fiscalStructure = getFiscalYearStructure();
+    const displayMonth = cardData.displayMonth || fiscalStructure.currentMonthKey;
+    const previousMonth = getPreviousMonth(displayMonth);
+    
+    // 2ヶ月分のデータ取得
+    const currentData = cardData.monthlyData?.[displayMonth] || { 
+        salesIncreaseForecast: 0, probability: 50, memo: "" 
+    };
+    const previousData = cardData.monthlyData?.[previousMonth.key] || { 
+        salesIncreaseForecast: 0, probability: 50, memo: "" 
+    };
+    
+    const level = getCardLevel(currentData.salesIncreaseForecast || 0);
+    const change = calculateMonthlyChange(cardData, displayMonth);
+    
+    // 編集権限の判定
+    const canEdit = hasPermission('edit_data', cardData);
+    const isCurrentMonth = displayMonth === fiscalStructure.currentMonthKey;
+    
     const row = document.createElement('tr');
     row.dataset.cardId = cardData.id;
-    row.innerHTML = `<td class="col-level"><div class="level-indicator level-${lvl}"></div></td><td class="col-name"><div class="editable-cell" onclick="editTableName(${cardData.id})">${escapeHtml(cardData.jukuName)}</div></td><td class="col-forecast"><div class="editable-cell" onclick="editTableForecast(${cardData.id},'${month}')">${formatManYen(cur.salesIncreaseForecast || 0)}</div></td><td class="col-probability"><div class="editable-cell" onclick="editTableProbability(${cardData.id},'${month}')">${getProbabilityLabel(cur.probability)}</div></td><td class="col-memo"><div class="editable-cell" onclick="openMemoDetailModal(${cardData.id},'${month}')" title="${escapeHtml(cur.memo || '')}">${escapeHtml((cur.memo || '未入力').substring(0, 20))}${(cur.memo || '').length > 20 ? '...' : ''}</div></td><td class="col-change"><span class="${cls}">${formatManYen(ch.amount)} ${icon}</span></td><td class="col-detail"><button class="detail-btn" onclick="openMonthlyHistoryModal(${cardData.id})">詳細</button></td>`;
-    if (cardData.assignedUserId !== (currentUser?.uid || '')) row.style.cssText = 'opacity:.7;background:#fff3cd';
+    
+    row.innerHTML = `
+        <td class="col-level">
+            <div class="level-indicator level-${level}"></div>
+        </td>
+        <td class="col-name">
+            ${canEdit ? `
+                <div class="editable-cell" onclick="editTableName(${cardData.id})">
+                    ${escapeHtml(cardData.jukuName)}
+                </div>
+            ` : `
+                <div>${escapeHtml(cardData.jukuName)}</div>
+            `}
+        </td>
+        <td class="col-prev-amount">
+            ${formatManYen(previousData.salesIncreaseForecast || 0)}
+        </td>
+        <td class="col-prev-prob">
+            ${getProbabilityLabel(previousData.probability || 50)}
+        </td>
+        <td class="col-current-amount">
+            ${canEdit && isCurrentMonth ? `
+                <div class="editable-cell" onclick="editTableForecast(${cardData.id},'${displayMonth}')">
+                    ${formatManYen(currentData.salesIncreaseForecast || 0)}
+                </div>
+            ` : `
+                ${formatManYen(currentData.salesIncreaseForecast || 0)}
+            `}
+        </td>
+        <td class="col-current-prob">
+            ${canEdit && isCurrentMonth ? `
+                <div class="editable-cell" onclick="editTableProbability(${cardData.id},'${displayMonth}')">
+                    ${getProbabilityLabel(currentData.probability || 50)}
+                </div>
+            ` : `
+                ${getProbabilityLabel(currentData.probability || 50)}
+            `}
+        </td>
+        <td class="col-change">
+            <span class="change-${change.direction}">
+                ${formatManYen(change.amount)} ${change.direction === 'increase' ? '↗' : change.direction === 'decrease' ? '↘' : '→'}
+            </span>
+        </td>
+        <td class="col-detail">
+            <button class="detail-btn" onclick="openMonthlyHistoryModal(${cardData.id})">詳細</button>
+        </td>
+    `;
+    
+    // 閲覧専用カードのスタイル適用
+    if (cardData.assignedUserId !== (currentUser?.uid || '')) {
+        row.style.cssText = 'opacity: 0.7; background: #fff3cd;';
+    }
+    
     return row;
 }
+
 
 function editTableName(id) {
     const c = cardsData.find(x => x.id === id);
@@ -3060,7 +3318,7 @@ function createNewCardElement(cardData) {
     
     if (cardData.assignedUserId !== currentUser.uid) {
         card.style.opacity = '0.8';
-        card.style.border = '2px solid #ffc107';
+        card.classList.add('read-only-card');
         card.style.position = 'relative';
         
         const readOnlyBadge = document.createElement('div');
@@ -3203,24 +3461,29 @@ function generateProgressChart(graphType) {
             ]
         },
         2: {
-            type: 'bar',
-            datasets: [
-                {
-                    label: '売上増見込',
-                    data: data.actualData,
-                    backgroundColor: chartColors.actual,
-                    borderColor: chartColors.actual,
-                    borderWidth: 2
-                },
-                {
-                    label: '売上増目標',
-                    data: data.targetData,
-                    backgroundColor: chartColors.target,
-                    borderColor: chartColors.target,
-                    borderWidth: 2
-                }
-            ]
+    type: 'bar',
+    datasets: [
+        {
+            label: '売上増見込（累計）',
+            data: data.actualData,
+            backgroundColor: chartColors.actual,
+            borderColor: chartColors.actual,
+            borderWidth: 2,
+            type: 'bar'
         },
+        {
+            label: '売上増目標ライン',
+            data: data.targetData,
+            borderColor: chartColors.target,
+            borderWidth: 3,
+            borderDash: [8, 8],
+            type: 'line',
+            fill: false,
+            pointRadius: 0,
+            tension: 0
+        }
+    ]
+},
         3: {
             type: 'line',
             datasets: [
@@ -3436,6 +3699,7 @@ function openNewCardModal() {
     document.getElementById('newSalesActual').readOnly = true;
     document.getElementById('newSalesActual').style.background = '#f8f9fa';
     openModal('newCardModal');
+    setTimeout(() => setupNumberFormatting(), 100);
 }
 
 function closeNewCardModal() {
@@ -3477,6 +3741,7 @@ function openPersonalSettingsModal() {
     }, 100);
     
     openModal('personalSettingsModal');
+    setTimeout(() => setupNumberFormatting(), 100);
 }
 
 function closePersonalSettingsModal() {
@@ -3594,11 +3859,15 @@ function editCard(button) {
     
     const materials = cardData.annualMaterials || {
         yearRound: { hasOrder: false, orderPeriod: "" },
-        seasonalExam: { hasUsage: false, usagePeriod: "" }
+        seasonalExam: { hasUsage: null, usagePeriod: "" }
     };
     document.getElementById('editYearRoundOrder').value = String(materials.yearRound.hasOrder);
     document.getElementById('editYearRoundPeriod').value = materials.yearRound.orderPeriod || '';
-    document.getElementById('editSeasonalUsage').value = String(materials.seasonalExam.hasUsage);
+    const seasonalValue = (materials.seasonalExam.hasUsage === null || typeof materials.seasonalExam.hasUsage === 'undefined')
+    ? 'unknown'
+    : String(materials.seasonalExam.hasUsage);
+document.getElementById('editSeasonalUsage').value = seasonalValue;
+
     document.getElementById('editSeasonalPeriod').value = materials.seasonalExam.usagePeriod || '';
     
     openEditCardModal();
@@ -3609,6 +3878,7 @@ function openEditCardModal() {
     document.getElementById('editSalesActual').readOnly = true;
     document.getElementById('editSalesActual').style.background = '#f8f9fa';
     openModal('editCardModal');
+    setTimeout(() => setupNumberFormatting(), 100);
 }
 
 function closeEditCardModal() {
@@ -4018,6 +4288,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupSearchWithIMESupport();
     enhanceAccessibility();
     setupFirebaseAuth();
+    setupNumberFormatting(); 
 
     document.addEventListener('click', function(e) {
         const modals = document.querySelectorAll('.modal');
@@ -4037,7 +4308,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.getElementById('personalSettingsForm').addEventListener('submit', function(e) {
+    document.getElementById('personalSettingsForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         personalSettings.userName = document.getElementById('userName').value;
@@ -4059,7 +4330,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        savePersonalSettings();
+        await savePersonalSettingsComplete();
         progressCache = null;
         updateDashboard();
         renderCardsOptimized();
@@ -4111,7 +4382,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 orderPeriod: document.getElementById('newYearRoundPeriod').value.trim()
             },
             seasonalExam: {
-                hasUsage: document.getElementById('newSeasonalUsage').value === 'true',
+                hasUsage: (value => {
+        if (value === 'unknown') return null;
+        return value === 'true';
+    })(document.getElementById('newSeasonalUsage').value),
                 usagePeriod: document.getElementById('newSeasonalPeriod').value.trim()
             }
         };
@@ -4174,9 +4448,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 orderPeriod: document.getElementById('editYearRoundPeriod').value.trim()
             },
             seasonalExam: {
-                hasUsage: document.getElementById('editSeasonalUsage').value === 'true',
-                usagePeriod: document.getElementById('editSeasonalPeriod').value.trim()
-            }
+    hasUsage: (value => {
+        if (value === 'unknown') return null;
+        return value === 'true';
+    })(document.getElementById('editSeasonalUsage').value),
+    usagePeriod: document.getElementById('editSeasonalPeriod').value.trim()
+}
+
         };
         
         cardData.lastUpdated = new Date().toISOString();

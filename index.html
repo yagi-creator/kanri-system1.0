@@ -1685,6 +1685,19 @@
     background: #FFE6F0 !important;
     transform: scale(1.02);
 }
+/* 自動計算フィールド（手入力不可）の背景色 */
+.auto-calculated-field {
+    background: #F8F9FA !important;
+    border: 1px solid #DEE2E6 !important;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: default;
+    color: #495057 !important;
+}
+
+.auto-calculated-field:hover {
+    background: #E9ECEF !important;
+}
 
 /* 差額のマイナス表示（赤字） */
 .metric-value.negative {
@@ -1915,9 +1928,10 @@ window.firebaseImports = {
                 <span class="metric-value" id="monthlyProfitTarget">¥0</span>
             </div>
             <div class="metric-row">
-                <span class="metric-label">実績:</span>
-                <span class="metric-value editable-profit-field" onclick="editMonthlyProfitInline(this)" id="monthlyProfitActual">¥0</span>
-            </div>
+    <span class="metric-label">実績:</span>
+    <span class="metric-value" id="cumulativeProfitActual">¥0</span>
+</div>
+
             <div class="metric-row">
                 <span class="metric-label">差額:</span>
                 <span class="metric-value" id="monthlyProfitDiff">¥0</span>
@@ -1937,10 +1951,11 @@ window.firebaseImports = {
                 <span class="metric-label">目標:</span>
                 <span class="metric-value" id="monthlySalesTarget">¥0</span>
             </div>
-            <div class="metric-row">
-                <span class="metric-label">実績:</span>
-                <span class="metric-value" id="monthlySalesActual">¥0</span>
-            </div>
+           <div class="metric-row">
+    <span class="metric-label">実績:</span>
+    <span class="metric-value auto-calculated-field" id="monthlySalesActual">¥0</span>
+</div>
+
             <div class="metric-row">
                 <span class="metric-label">差額:</span>
                 <span class="metric-value" id="monthlySalesDiff">¥0</span>
@@ -1960,10 +1975,11 @@ window.firebaseImports = {
                 <span class="metric-label">目標:</span>
                 <span class="metric-value" id="cumulativeProfitTarget">¥0</span>
             </div>
-            <div class="metric-row">
-                <span class="metric-label">実績:</span>
-                <span class="metric-value" id="cumulativeProfitActual">¥0</span>
-            </div>
+           <div class="metric-row">
+    <span class="metric-label">実績:</span>
+    <span class="metric-value editable-profit-field" onclick="editCumulativeProfitInline(this)" id="cumulativeProfitActual">¥0</span>
+</div>
+
             <div class="metric-row">
                 <span class="metric-label">差額:</span>
                 <span class="metric-value" id="cumulativeProfitDiff">¥0</span>
@@ -1984,9 +2000,10 @@ window.firebaseImports = {
                 <span class="metric-value" id="cumulativeSalesTarget">¥0</span>
             </div>
             <div class="metric-row">
-                <span class="metric-label">実績:</span>
-                <span class="metric-value" id="cumulativeSalesActual">¥0</span>
-            </div>
+    <span class="metric-label">実績:</span>
+    <span class="metric-value auto-calculated-field" id="cumulativeSalesActual">¥0</span>
+</div>
+
             <div class="metric-row">
                 <span class="metric-label">差額:</span>
                 <span class="metric-value" id="cumulativeSalesDiff">¥0</span>
@@ -2833,8 +2850,10 @@ let personalSettings = {
     monthlyProfitTargets: {
         10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
         4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
-    }
+    },
+    cumulativeProfitActual: 0
 };
+
 let userSettingsCache = {};
         
 const PROBABILITY_CONFIG = {
@@ -2878,9 +2897,11 @@ function getDefaultSettings() {
         monthlyProfitTargets: {
             10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
             4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
-        }
+        },
+        cumulativeProfitActual: 0
     };
 }
+
 
 // アクティブな個人設定を取得する関数
 function getActiveSettings() {
@@ -2967,6 +2988,36 @@ function editMonthlyProfitInline(element) {
     updateDashboard();
     showToast('月別粗利実績を更新しました', 'success');
 }
+        // 累積粗利実績のインライン編集
+function editCumulativeProfitInline(element) {
+    if (!currentUser || currentViewTarget !== currentUser.uid) {
+        showToast('自分のデータ表示中のみ編集可能です', 'error');
+        return;
+    }
+
+    const currentValue = personalSettings.cumulativeProfitActual || 0;
+    
+    const newValue = prompt('累積粗利実績を入力してください（円）\n\n例: 5000000\n※月別実績とは独立して管理されます', currentValue);
+    if (newValue === null) return;
+    
+    const parsedValue = parseNumberSafely(newValue);
+    
+    // 累積粗利実績を直接更新
+    personalSettings.cumulativeProfitActual = parsedValue;
+    
+    // 即座に表示更新
+    element.textContent = formatAmount(parsedValue);
+    
+    // 個人設定とクラウドに保存
+    savePersonalSettingsComplete();
+    
+    // キャッシュクリアして再計算
+    progressCache = null;
+    updateDashboard();
+    
+    showToast('累積粗利実績を更新しました', 'success');
+}
+
 
 function formatDateForDisplay(s) {
     if (!s) return '—';
@@ -3800,12 +3851,12 @@ function updateDashboard() {
 
     // 3. 累積粗利（会計年度開始から当月まで）
     let cumulativeProfitTarget = 0;
-    let cumulativeProfitActual = 0;
     for (let i = 0; i <= currentMonthIndex; i++) {
-        const monthNum = months[i].month;
-        cumulativeProfitTarget += settings.monthlyProfitTargets[monthNum] || 0;
-        cumulativeProfitActual += settings.monthlyProfitActuals[monthNum] || 0;
-    }
+    const monthNum = months[i].month;
+    cumulativeProfitTarget += settings.monthlyProfitTargets[monthNum] || 0;
+}
+    // 累積実績：独立した手入力値を使用
+const cumulativeProfitActual = settings.cumulativeProfitActual || 0;
     const cumulativeProfitDiff = cumulativeProfitActual - cumulativeProfitTarget;
     const cumulativeProfitRate = cumulativeProfitTarget > 0 ? (cumulativeProfitActual / cumulativeProfitTarget) * 100 : 0;
 
@@ -5311,6 +5362,10 @@ document.addEventListener('DOMContentLoaded', function() {
         personalSettings.yearlyProfitIncreaseTarget = parseNumberSafely(document.getElementById('yearlyProfitIncreaseTarget').value);
         
         updatePersonalSalesTarget();
+        // 累積粗利実績の互換性確保
+if (typeof personalSettings.cumulativeProfitActual === 'undefined') {
+    personalSettings.cumulativeProfitActual = 0;
+}
         
         const fiscalMonths = getFiscalYearStructure().months;
         fiscalMonths.forEach(monthInfo => {

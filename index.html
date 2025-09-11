@@ -2952,12 +2952,12 @@ function formatAmount(amount) {
     const sign = amount < 0 ? '-' : '';
     return `${sign}¥${absAmount.toLocaleString()}`;
 }
-        // 差額表示用ヘルパー関数
-function formatDifferenceAmount(amount) {
+        
+function formatDifferenceAmount(amount, formatter = formatAmount) {
     if (!Number.isFinite(amount)) amount = 0;
     
     const absAmount = Math.abs(amount);
-    const formattedAmount = formatAmount(absAmount);
+    const formattedAmount = formatter(absAmount);
     
     if (amount < 0) {
         return { text: `Δ${formattedAmount}`, isNegative: true };
@@ -2965,6 +2965,7 @@ function formatDifferenceAmount(amount) {
         return { text: formattedAmount, isNegative: false };
     }
 }
+
         // カード値更新のヘルパー関数（エラー解決の核心）
 function updateCardValue(elementId, value) {
     const element = document.getElementById(elementId);
@@ -2976,10 +2977,10 @@ function updateCardValue(elementId, value) {
 }
 
 // カード差額更新のヘルパー関数
-function updateCardDifference(elementId, amount) {
+function updateCardDifference(elementId, amount, formatter = formatAmount) {
     const element = document.getElementById(elementId);
     if (element) {
-        const diff = formatDifferenceAmount(amount);
+        const diff = formatDifferenceAmount(amount, formatter);
         element.textContent = diff.text;
         element.classList.remove('negative', 'positive', 'neutral');
         if (diff.isNegative) {
@@ -2993,6 +2994,7 @@ function updateCardDifference(elementId, amount) {
         console.warn(`Element with id '${elementId}' not found`);
     }
 }
+
 
 
 // 月別粗利実績のインライン編集
@@ -3874,10 +3876,10 @@ function updateDashboard() {
     const monthlySalesDiff = monthlySalesActual - monthlySalesTarget;
     const monthlySalesRate = monthlySalesTarget > 0 ? (monthlySalesActual / monthlySalesTarget) * 100 : 0;
 
-    updateCardValue('monthlySalesTarget', formatAmount(monthlySalesTarget));
-    updateCardValue('monthlySalesActual', formatAmount(monthlySalesActual));
-    updateCardDifference('monthlySalesDiff', monthlySalesDiff);
-    updateCardValue('monthlySalesRate', `${monthlySalesRate.toFixed(1)}%`);
+updateCardValue('monthlySalesTarget', formatManYen(monthlySalesTarget));
+updateCardValue('monthlySalesActual', formatManYen(monthlySalesActual));
+updateCardDifference('monthlySalesDiff', monthlySalesDiff, formatManYen);
+updateCardValue('monthlySalesRate', `${monthlySalesRate.toFixed(1)}%`);
 
     // 3. 累積粗利（会計年度開始から当月まで）
     let cumulativeProfitTarget = 0;
@@ -3901,10 +3903,10 @@ const cumulativeProfitActual = settings.cumulativeProfitActual || 0;
     const cumulativeSalesDiff = cumulativeSalesActual - cumulativeSalesTarget;
     const cumulativeSalesRate = cumulativeSalesTarget > 0 ? (cumulativeSalesActual / cumulativeSalesTarget) * 100 : 0;
 
-    updateCardValue('cumulativeSalesTarget', formatAmount(cumulativeSalesTarget));
-    updateCardValue('cumulativeSalesActual', formatAmount(cumulativeSalesActual));
-    updateCardDifference('cumulativeSalesDiff', cumulativeSalesDiff);
-    updateCardValue('cumulativeSalesRate', `${cumulativeSalesRate.toFixed(1)}%`);
+updateCardValue('cumulativeSalesTarget', formatManYen(cumulativeSalesTarget));
+updateCardValue('cumulativeSalesActual', formatManYen(cumulativeSalesActual));
+updateCardDifference('cumulativeSalesDiff', cumulativeSalesDiff, formatManYen);
+updateCardValue('cumulativeSalesRate', `${cumulativeSalesRate.toFixed(1)}%`);
 
     // === 既存のファネル更新（そのまま維持） ===
     const progress = calculateAllProgress();

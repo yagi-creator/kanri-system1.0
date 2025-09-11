@@ -1927,10 +1927,11 @@ window.firebaseImports = {
                 <span class="metric-label">目標:</span>
                 <span class="metric-value" id="monthlyProfitTarget">¥0</span>
             </div>
-            <div class="metric-row">
+           <div class="metric-row">
     <span class="metric-label">実績:</span>
-    <span class="metric-value" id="cumulativeProfitActual">¥0</span>
+    <span class="metric-value editable-profit-field" onclick="editMonthlyProfitInline(this)" id="monthlyProfitActual">¥0</span>
 </div>
+
 
             <div class="metric-row">
                 <span class="metric-label">差額:</span>
@@ -2964,6 +2965,35 @@ function formatDifferenceAmount(amount) {
         return { text: formattedAmount, isNegative: false };
     }
 }
+        // カード値更新のヘルパー関数（エラー解決の核心）
+function updateCardValue(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = value;
+    } else {
+        console.warn(`Element with id '${elementId}' not found`);
+    }
+}
+
+// カード差額更新のヘルパー関数
+function updateCardDifference(elementId, amount) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        const diff = formatDifferenceAmount(amount);
+        element.textContent = diff.text;
+        element.classList.remove('negative', 'positive', 'neutral');
+        if (diff.isNegative) {
+            element.classList.add('negative');
+        } else if (amount > 0) {
+            element.classList.add('positive');
+        } else {
+            element.classList.add('neutral');
+        }
+    } else {
+        console.warn(`Element with id '${elementId}' not found`);
+    }
+}
+
 
 // 月別粗利実績のインライン編集
 function editMonthlyProfitInline(element) {

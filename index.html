@@ -3012,11 +3012,13 @@ function migrateToV9Structure() {
         }
 
         if (!cardData.registeredMonth) {
-            cardData.registeredMonth = cardData.lastUpdated ? 
-                cardData.lastUpdated.substring(0, 7) : 
-                fiscalStructure.currentMonthKey;
-            needsMigration = true;
-        }
+    cardData.registeredMonth = getMonthKeyFromTimestamp(
+        cardData.lastUpdated, 
+        fiscalStructure.currentMonthKey
+    );
+    needsMigration = true;
+}
+
 
         if (!cardData.hasOwnProperty('area')) {
             cardData.area = "";

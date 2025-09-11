@@ -2371,15 +2371,14 @@ function setupFirebaseAuth() {
                         await loadCardsDataForTarget(currentViewTarget);
                         await syncPersonalSettingsOnLogin();
 
-// 🆕 自分の設定をキャッシュに保存（必須）
-if (user && user.uid) {
-    userSettingsCache[user.uid] = { ...personalSettings };
-}
+                        // 自分の設定をキャッシュに保存（必須）
+                        if (user && user.uid) {
+                            userSettingsCache[user.uid] = { ...personalSettings };
+                        }
 
-progressCache = null;
-renderCardsOptimized();
-updateDashboard();
-
+                        progressCache = null;
+                        renderCardsOptimized();
+                        updateDashboard();
                         
                         showToast(`${currentUserData.name}さん（${currentUserRole}）として認識されました`, 'success');
                     } else {
@@ -2390,25 +2389,24 @@ updateDashboard();
                     showToast('ユーザーデータの取得に失敗しました', 'error');
                 }
             } else {
-    console.log('未ログイン状態');
-    currentUserData = null;
-    currentUserRole = null;
-    currentViewTarget = null;
-    availableViewTargets = [];
-    userSettingsCache = {}; // 🆕 キャッシュクリア
-    progressCache = null;   // 🆕 進捗キャッシュクリア
-    updateAuthUI();
-    cardsData = [];
-    renderCardsOptimized();
-    updateDashboard();      // 🆕 表示リセット
-}
-
+                console.log('未ログイン状態');
+                currentUserData = null;
+                currentUserRole = null;
+                currentViewTarget = null;
+                availableViewTargets = [];
+                userSettingsCache = {}; // キャッシュクリア
+                progressCache = null;   // 進捗キャッシュクリア
+                updateAuthUI();
+                cardsData = [];
+                renderCardsOptimized();
+                updateDashboard();      // 表示リセット
             }
         });
     } else {
         setTimeout(setupFirebaseAuth, 100);
     }
 }
+
 
 let cardsData = [];
 let nextCardId = 1;

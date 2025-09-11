@@ -1613,6 +1613,93 @@
     color: #0D47A1 !important;
 }
 
+/* 新4枚カードの基本レイアウト */
+.card-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.metric-label {
+    font-weight: 600;
+    color: inherit;
+    min-width: 60px;
+}
+
+.metric-value {
+    font-weight: bold;
+    text-align: right;
+    flex: 1;
+}
+
+/* カードタイトルを少し大きく */
+.progress-card h3 {
+    font-size: 19px !important;
+    font-weight: 700 !important;
+    margin-bottom: 8px;
+    text-align: center;
+    color: inherit;
+}
+
+/* 視認性重視の色分け（淡色背景＋黒文字） */
+.new-monthly-profit-card {
+    background: #E8F5E8 !important; /* 緑系・濃い */
+    color: #1B5E20 !important;
+}
+
+.new-monthly-sales-card {
+    background: #F1F8E9 !important; /* 緑系・薄い */
+    color: #2E7D32 !important;
+}
+
+.new-cumulative-profit-card {
+    background: #E3F2FD !important; /* 水色系・濃い */
+    color: #0D47A1 !important;
+}
+
+.new-cumulative-sales-card {
+    background: #E8F4FD !important; /* 水色系・薄い */
+    color: #1565C0 !important;
+}
+
+/* 手入力可能な粗利実績の薄いピンク背景 */
+.editable-profit-field {
+    background: #FFF0F5 !important;
+    border: 1px solid #F8BBD9 !important;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.editable-profit-field:hover {
+    background: #FFE6F0 !important;
+    transform: scale(1.02);
+}
+
+/* 差額のマイナス表示（赤字） */
+.metric-value.negative {
+    color: #D32F2F !important;
+    font-weight: bold;
+}
+
+.metric-value.positive {
+    color: inherit;
+}
+
+.metric-value.neutral {
+    color: inherit;
+}
+        
 /* 中段カード */
 .progress-middle-card {
     background: #FFF3CD;
@@ -1818,57 +1905,99 @@ window.firebaseImports = {
     </div>
 </div> <div class="progress-section">
     <!-- PC版: 最上段4枚 / スマホ版: 最下段2×2 -->
-    <div class="progress-main-cards">
-        <div class="progress-card progress-card-monthly-profit" onclick="openProgressGraphModal(0)" aria-label="月別目標（粗利）の進捗グラフを開く">
-            <h3>月別目標（粗利）</h3>
-            <div class="progress-value" id="monthlyTargetDisplay">¥0万</div>
-            <div class="progress-detail">
-    実績: <span class="editable-profit-field" onclick="editMonthlyProfitActual(this)" id="monthlyProfitActualDisplay">¥0</span> / 
-    目標: <span id="monthlyProfitTargetDisplay">¥0</span> 
-    （<span id="monthlyProfitRateDisplay">0.0%</span>）
-</div>
-
-            <div class="progress-rate" id="monthlyRate">差分: ¥0</div>
-            <div class="progress-chart">
-                <div class="progress-bar" id="monthlyProgressBar" style="width: 0%; background: #4ade80;"></div>
+<div class="progress-main-cards">
+    <!-- 月別粗利カード -->
+    <div class="progress-card new-monthly-profit-card">
+        <h3>月別粗利</h3>
+        <div class="card-metrics">
+            <div class="metric-row">
+                <span class="metric-label">目標:</span>
+                <span class="metric-value" id="monthlyProfitTarget">¥0</span>
             </div>
-        </div>
-        
-        <div class="progress-card progress-card-yearly-profit" onclick="openProgressGraphModal(1)" aria-label="年間目標（粗利）の進捗グラフを開く">
-            <h3>年間目標（粗利）</h3>
-            <div class="progress-value" id="yearlyTargetDisplay">¥0万</div>
-            <div class="progress-detail">
-    目標: <span class="editable-profit-field" onclick="editYearlyProfitTarget(this)" id="yearlyProfitTargetDisplay">¥0</span> / 
-    実績: <span id="yearlyProfitActualDisplay">¥0</span> 
-    （<span id="yearlyProfitRateDisplay">0.0%</span>）
-</div>
-
-            <div class="progress-rate" id="yearlyRate">0.0%達成</div>
-            <div class="progress-chart">
-                <div class="progress-bar" id="yearlyProgressBar" style="width: 0%; background: #4ade80;"></div>
+            <div class="metric-row">
+                <span class="metric-label">実績:</span>
+                <span class="metric-value editable-profit-field" onclick="editMonthlyProfitInline(this)" id="monthlyProfitActual">¥0</span>
             </div>
-        </div>
-        
-        <div class="progress-card progress-card-yearly-sales" onclick="openProgressGraphModal(2)" aria-label="年間売上増目標の進捗グラフを開く">
-            <h3>年間売上増目標</h3>
-            <div class="progress-value" id="salesTargetDisplay">¥0万</div>
-            <div class="progress-detail" id="salesTargetDetail">自動計算</div>
-            <div class="progress-rate" id="salesTargetRate">粗利増目標から逆算</div>
-            <div class="progress-chart">
-                <div class="progress-bar" id="salesTargetBar" style="width: 0%; background: #60a5fa;"></div>
+            <div class="metric-row">
+                <span class="metric-label">差額:</span>
+                <span class="metric-value" id="monthlyProfitDiff">¥0</span>
             </div>
-        </div>
-        
-        <div class="progress-card progress-card-prospect" onclick="openProgressGraphModal(3)" aria-label="営業見込（粗利増）の進捗グラフを開く">
-            <h3>営業見込（粗利増）</h3>
-            <div class="progress-value" id="prospectTotalDisplay">¥0万</div>
-            <div class="progress-detail" id="prospectDetail">対目標0.0%</div>
-            <div class="progress-rate" id="prospectRate">確度80%以上のみ集計</div>
-            <div class="progress-chart">
-                <div class="progress-bar" id="prospectBar" style="width: 0%; background: #4ade80;"></div>
+            <div class="metric-row">
+                <span class="metric-label">達成率:</span>
+                <span class="metric-value" id="monthlyProfitRate">0.0%</span>
             </div>
         </div>
     </div>
+
+    <!-- 月別売上カード -->
+    <div class="progress-card new-monthly-sales-card">
+        <h3>月別売上</h3>
+        <div class="card-metrics">
+            <div class="metric-row">
+                <span class="metric-label">目標:</span>
+                <span class="metric-value" id="monthlySalesTarget">¥0</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">実績:</span>
+                <span class="metric-value" id="monthlySalesActual">¥0</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">差額:</span>
+                <span class="metric-value" id="monthlySalesDiff">¥0</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">達成率:</span>
+                <span class="metric-value" id="monthlySalesRate">0.0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 累積粗利カード -->
+    <div class="progress-card new-cumulative-profit-card">
+        <h3>累積粗利</h3>
+        <div class="card-metrics">
+            <div class="metric-row">
+                <span class="metric-label">目標:</span>
+                <span class="metric-value" id="cumulativeProfitTarget">¥0</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">実績:</span>
+                <span class="metric-value" id="cumulativeProfitActual">¥0</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">差額:</span>
+                <span class="metric-value" id="cumulativeProfitDiff">¥0</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">達成率:</span>
+                <span class="metric-value" id="cumulativeProfitRate">0.0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 累積売上カード -->
+    <div class="progress-card new-cumulative-sales-card">
+        <h3>累積売上</h3>
+        <div class="card-metrics">
+            <div class="metric-row">
+                <span class="metric-label">目標:</span>
+                <span class="metric-value" id="cumulativeSalesTarget">¥0</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">実績:</span>
+                <span class="metric-value" id="cumulativeSalesActual">¥0</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">差額:</span>
+                <span class="metric-value" id="cumulativeSalesDiff">¥0</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">達成率:</span>
+                <span class="metric-value" id="cumulativeSalesRate">0.0%</span>
+            </div>
+        </div>
+    </div>
+</div>
 
     <!-- PC版: 中段2枚 / スマホ版: 最上段縦2枚 -->
     <div class="progress-middle-section">
@@ -2801,6 +2930,43 @@ function formatAmount(amount) {
     const sign = amount < 0 ? '-' : '';
     return `${sign}¥${absAmount.toLocaleString()}`;
 }
+        // 差額表示用ヘルパー関数
+function formatDifferenceAmount(amount) {
+    if (!Number.isFinite(amount)) amount = 0;
+    
+    const absAmount = Math.abs(amount);
+    const formattedAmount = formatAmount(absAmount);
+    
+    if (amount < 0) {
+        return { text: `Δ${formattedAmount}`, isNegative: true };
+    } else {
+        return { text: formattedAmount, isNegative: false };
+    }
+}
+
+// 月別粗利実績のインライン編集
+function editMonthlyProfitInline(element) {
+    if (!currentUser || currentViewTarget !== currentUser.uid) {
+        showToast('自分のデータ表示中のみ編集可能です', 'error');
+        return;
+    }
+
+    const currentMonth = getCurrentMonth();
+    const currentValue = personalSettings.monthlyProfitActuals[currentMonth] || 0;
+    
+    const newValue = prompt('月別粗利実績を入力してください（円）\n\n例: 500000', currentValue);
+    if (newValue === null) return;
+    
+    const parsedValue = parseNumberSafely(newValue);
+    personalSettings.monthlyProfitActuals[currentMonth] = parsedValue;
+    
+    element.textContent = formatAmount(parsedValue);
+    
+    savePersonalSettingsComplete();
+    progressCache = null;
+    updateDashboard();
+    showToast('月別粗利実績を更新しました', 'success');
+}
 
 function formatDateForDisplay(s) {
     if (!s) return '—';
@@ -3603,120 +3769,86 @@ function updateMiddleCards() {
 
 
 function updateDashboard() {
-    const progress = calculateAllProgress();
-    
-    // HTML要素の読み込み確認（早期リターン機能）
-    const monthlyTargetEl = document.getElementById('monthlyTargetDisplay');
-    if (!monthlyTargetEl) {
-        console.log('Dashboard elements not ready yet, skipping update');
-        return;
-    }
-    
-    // 安全な要素取得関数
-    const safeGetElement = (id) => {
-        const element = document.getElementById(id);
-        if (!element) console.warn(`Element with id '${id}' not found`);
-        return element;
-    };
-    
-    // 1. 月別目標（粗利）カードの更新
-    const monthlyTarget = safeGetElement('monthlyTargetDisplay');
-    if (monthlyTarget) monthlyTarget.textContent = formatManYen(progress.monthly.target);
-    
-    const monthlyRate = safeGetElement('monthlyRate');
-    if (monthlyRate) {
-        monthlyRate.textContent = `差分: ${formatAmount(progress.monthly.difference)}`;
-        monthlyRate.className = progress.monthly.difference >= 0 ? 'progress-rate rate-positive' : 'progress-rate rate-negative';
-    }
-    
-    const monthlyProgressBar = safeGetElement('monthlyProgressBar');
-    if (monthlyProgressBar) monthlyProgressBar.style.width = `${Math.min(progress.monthly.rate, 100)}%`;
+    const settings = getActiveSettings();
+    const { months, currentMonthIndex } = getFiscalYearStructure();
+    const currentMonth = months[currentMonthIndex].month;
+    const profitRate = (settings.profitRate || 0) / 100;
 
-    // 2. 年間目標（粗利）カードの更新
-    const yearlyTarget = safeGetElement('yearlyTargetDisplay');
-    if (yearlyTarget) yearlyTarget.textContent = formatManYen(progress.yearly.target);
+    // === 新4枚カードの計算と表示更新 ===
     
-    const yearlyRate = safeGetElement('yearlyRate');
-    if (yearlyRate) yearlyRate.textContent = `${progress.yearly.rate.toFixed(1)}%達成`;
-    
-    const yearlyProgressBar = safeGetElement('yearlyProgressBar');
-    if (yearlyProgressBar) yearlyProgressBar.style.width = `${Math.min(progress.yearly.rate, 100)}%`;
-
-    // 3. 年間売上増目標カードの更新
-    const salesTarget = safeGetElement('salesTargetDisplay');
-    if (salesTarget) salesTarget.textContent = formatManYen(progress.salesTarget.target);
-    
-    const salesTargetDetail = safeGetElement('salesTargetDetail');
-    if (salesTargetDetail) salesTargetDetail.textContent = '自動計算';
-    
-    const salesTargetRate = safeGetElement('salesTargetRate');
-    if (salesTargetRate) salesTargetRate.textContent = '粗利増目標から逆算';
-    
-    const salesTargetBar = safeGetElement('salesTargetBar');
-    if (salesTargetBar) salesTargetBar.style.width = `${Math.min(progress.salesTarget.rate, 100)}%`;
-
-    // 4. 営業見込（粗利増）カードの更新
-    const prospectTotal = safeGetElement('prospectTotalDisplay');
-    if (prospectTotal) prospectTotal.textContent = formatManYen(progress.prospect.total);
-    
-    const prospectDetail = safeGetElement('prospectDetail');
-    if (prospectDetail) prospectDetail.textContent = `対目標${progress.prospect.rate.toFixed(1)}%`;
-    
-    const prospectRate = safeGetElement('prospectRate');
-    if (prospectRate) prospectRate.textContent = '確度80%以上のみ集計';
-    
-    const prospectBar = safeGetElement('prospectBar');
-    if (prospectBar) prospectBar.style.width = `${Math.min(progress.prospect.rate, 100)}%`;
-
-    // 5. 6段階ファネルの表示更新
-    const probUnder50 = safeGetElement('probUnder50');
-    if (probUnder50) probUnder50.textContent = formatManYen(progress.funnel.probUnder50);
-    
-    const prob5060 = safeGetElement('prob5060');
-    if (prob5060) prob5060.textContent = formatManYen(progress.funnel.prob5060);
-    
-    const prob70 = safeGetElement('prob70');
-    if (prob70) prob70.textContent = formatManYen(progress.funnel.prob70);
-    
-    const prob80 = safeGetElement('prob80');
-    if (prob80) prob80.textContent = formatManYen(progress.funnel.prob80);
-    
-    const prob90 = safeGetElement('prob90');
-    if (prob90) prob90.textContent = formatManYen(progress.funnel.prob90);
-    
-    const prob100 = safeGetElement('prob100');
-    if (prob100) prob100.textContent = formatManYen(progress.funnel.prob100);
-
-    // 6. 直接編集UI（新レイアウト対応）
-    const currentMonth = getCurrentMonth();
-    const monthlyProfitTarget = personalSettings.monthlyProfitTargets[currentMonth] || 0;
-    const monthlyProfitActual = personalSettings.monthlyProfitActuals[currentMonth] || 0;
+    // 1. 月別粗利
+    const monthlyProfitTarget = settings.monthlyProfitTargets[currentMonth] || 0;
+    const monthlyProfitActual = settings.monthlyProfitActuals[currentMonth] || 0;
+    const monthlyProfitDiff = monthlyProfitActual - monthlyProfitTarget;
     const monthlyProfitRate = monthlyProfitTarget > 0 ? (monthlyProfitActual / monthlyProfitTarget) * 100 : 0;
 
-    // 月別粗利実績（直接編集可能部分）
-    const monthlyActualDisplay = safeGetElement('monthlyProfitActualDisplay');
-    if (monthlyActualDisplay) monthlyActualDisplay.textContent = formatAmount(monthlyProfitActual);
-    
-    const monthlyTargetDisplay = safeGetElement('monthlyProfitTargetDisplay');
-    if (monthlyTargetDisplay) monthlyTargetDisplay.textContent = formatAmount(monthlyProfitTarget);
-    
-    const monthlyRateDisplay = safeGetElement('monthlyProfitRateDisplay');
-    if (monthlyRateDisplay) monthlyRateDisplay.textContent = `${monthlyProfitRate.toFixed(1)}%`;
+    updateCardValue('monthlyProfitTarget', formatAmount(monthlyProfitTarget));
+    updateCardValue('monthlyProfitActual', formatAmount(monthlyProfitActual));
+    updateCardDifference('monthlyProfitDiff', monthlyProfitDiff);
+    updateCardValue('monthlyProfitRate', `${monthlyProfitRate.toFixed(1)}%`);
 
-    // 年間粗利実績（直接編集可能部分）
-    const yearlyTargetDisplay = safeGetElement('yearlyProfitTargetDisplay');
-    if (yearlyTargetDisplay) yearlyTargetDisplay.textContent = formatAmount(personalSettings.yearlyProfitTarget || 0);
-    
-    const yearlyActualDisplay = safeGetElement('yearlyProfitActualDisplay');
-    if (yearlyActualDisplay) yearlyActualDisplay.textContent = formatAmount(progress.yearly.actual || 0);
-    
-    const yearlyRateDisplay = safeGetElement('yearlyProfitRateDisplay');
-    if (yearlyRateDisplay) yearlyRateDisplay.textContent = `${(progress.yearly.rate || 0).toFixed(1)}%`;
+    // 2. 月別売上（粗利 ÷ 粗利率で逆算）
+    const monthlySalesTarget = profitRate > 0 ? monthlyProfitTarget / profitRate : 0;
+    const monthlySalesActual = profitRate > 0 ? monthlyProfitActual / profitRate : 0;
+    const monthlySalesDiff = monthlySalesActual - monthlySalesTarget;
+    const monthlySalesRate = monthlySalesTarget > 0 ? (monthlySalesActual / monthlySalesTarget) * 100 : 0;
 
-    // 7. 中段カードの更新
+    updateCardValue('monthlySalesTarget', formatAmount(monthlySalesTarget));
+    updateCardValue('monthlySalesActual', formatAmount(monthlySalesActual));
+    updateCardDifference('monthlySalesDiff', monthlySalesDiff);
+    updateCardValue('monthlySalesRate', `${monthlySalesRate.toFixed(1)}%`);
+
+    // 3. 累積粗利（会計年度開始から当月まで）
+    let cumulativeProfitTarget = 0;
+    let cumulativeProfitActual = 0;
+    for (let i = 0; i <= currentMonthIndex; i++) {
+        const monthNum = months[i].month;
+        cumulativeProfitTarget += settings.monthlyProfitTargets[monthNum] || 0;
+        cumulativeProfitActual += settings.monthlyProfitActuals[monthNum] || 0;
+    }
+    const cumulativeProfitDiff = cumulativeProfitActual - cumulativeProfitTarget;
+    const cumulativeProfitRate = cumulativeProfitTarget > 0 ? (cumulativeProfitActual / cumulativeProfitTarget) * 100 : 0;
+
+    updateCardValue('cumulativeProfitTarget', formatAmount(cumulativeProfitTarget));
+    updateCardValue('cumulativeProfitActual', formatAmount(cumulativeProfitActual));
+    updateCardDifference('cumulativeProfitDiff', cumulativeProfitDiff);
+    updateCardValue('cumulativeProfitRate', `${cumulativeProfitRate.toFixed(1)}%`);
+
+    // 4. 累積売上（粗利 ÷ 粗利率で逆算）
+    const cumulativeSalesTarget = profitRate > 0 ? cumulativeProfitTarget / profitRate : 0;
+    const cumulativeSalesActual = profitRate > 0 ? cumulativeProfitActual / profitRate : 0;
+    const cumulativeSalesDiff = cumulativeSalesActual - cumulativeSalesTarget;
+    const cumulativeSalesRate = cumulativeSalesTarget > 0 ? (cumulativeSalesActual / cumulativeSalesTarget) * 100 : 0;
+
+    updateCardValue('cumulativeSalesTarget', formatAmount(cumulativeSalesTarget));
+    updateCardValue('cumulativeSalesActual', formatAmount(cumulativeSalesActual));
+    updateCardDifference('cumulativeSalesDiff', cumulativeSalesDiff);
+    updateCardValue('cumulativeSalesRate', `${cumulativeSalesRate.toFixed(1)}%`);
+
+    // === 既存のファネル更新（そのまま維持） ===
+    const progress = calculateAllProgress();
+    
+    const probUnder50 = document.getElementById('probUnder50');
+    if (probUnder50) probUnder50.textContent = formatManYen(progress.funnel.probUnder50);
+    
+    const prob5060 = document.getElementById('prob5060');
+    if (prob5060) prob5060.textContent = formatManYen(progress.funnel.prob5060);
+    
+    const prob70 = document.getElementById('prob70');
+    if (prob70) prob70.textContent = formatManYen(progress.funnel.prob70);
+    
+    const prob80 = document.getElementById('prob80');
+    if (prob80) prob80.textContent = formatManYen(progress.funnel.prob80);
+    
+    const prob90 = document.getElementById('prob90');
+    if (prob90) prob90.textContent = formatManYen(progress.funnel.prob90);
+    
+    const prob100 = document.getElementById('prob100');
+    if (prob100) prob100.textContent = formatManYen(progress.funnel.prob100);
+
+    // 中段カードの更新
     updateMiddleCards();
 }
-
 
 async function displayMasterView() {
     if (window.innerWidth < 1025) {

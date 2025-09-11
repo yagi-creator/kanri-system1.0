@@ -3605,67 +3605,118 @@ function updateMiddleCards() {
 function updateDashboard() {
     const progress = calculateAllProgress();
     
-    document.getElementById('monthlyTargetDisplay').textContent = formatManYen(progress.monthly.target);
-    document.getElementById('monthlyDetail').textContent = 
-        `${formatAmount(progress.monthly.actual)}/${formatAmount(progress.monthly.target)}（${progress.monthly.rate.toFixed(1)}%）`;
+    // HTML要素の読み込み確認（早期リターン機能）
+    const monthlyTargetEl = document.getElementById('monthlyTargetDisplay');
+    if (!monthlyTargetEl) {
+        console.log('Dashboard elements not ready yet, skipping update');
+        return;
+    }
     
-    const monthlyDiffText = formatAmount(progress.monthly.difference);
-    document.getElementById('monthlyRate').textContent = `差分: ${monthlyDiffText}`;
-    document.getElementById('monthlyRate').className = 
-        progress.monthly.difference >= 0 ? 'progress-rate rate-positive' : 'progress-rate rate-negative';
+    // 安全な要素取得関数
+    const safeGetElement = (id) => {
+        const element = document.getElementById(id);
+        if (!element) console.warn(`Element with id '${id}' not found`);
+        return element;
+    };
     
-    document.getElementById('monthlyProgressBar').style.width = `${Math.min(progress.monthly.rate, 100)}%`;
+    // 1. 月別目標（粗利）カードの更新
+    const monthlyTarget = safeGetElement('monthlyTargetDisplay');
+    if (monthlyTarget) monthlyTarget.textContent = formatManYen(progress.monthly.target);
     
-    document.getElementById('yearlyTargetDisplay').textContent = formatManYen(progress.yearly.target);
-    document.getElementById('yearlyDetail').textContent = 
-        `${formatAmount(progress.yearly.actual)}/${formatAmount(progress.yearly.target)}（${progress.yearly.rate.toFixed(1)}%）`;
-    document.getElementById('yearlyRate').textContent = `${progress.yearly.rate.toFixed(1)}%達成`;
-    document.getElementById('yearlyProgressBar').style.width = `${Math.min(progress.yearly.rate, 100)}%`;
+    const monthlyRate = safeGetElement('monthlyRate');
+    if (monthlyRate) {
+        monthlyRate.textContent = `差分: ${formatAmount(progress.monthly.difference)}`;
+        monthlyRate.className = progress.monthly.difference >= 0 ? 'progress-rate rate-positive' : 'progress-rate rate-negative';
+    }
     
-    document.getElementById('salesTargetDisplay').textContent = formatManYen(progress.salesTarget.target);
-    document.getElementById('salesTargetDetail').textContent = '自動計算';
-    document.getElementById('salesTargetRate').textContent = '粗利増目標から逆算';
-    document.getElementById('salesTargetBar').style.width = `${Math.min(progress.salesTarget.rate, 100)}%`;
+    const monthlyProgressBar = safeGetElement('monthlyProgressBar');
+    if (monthlyProgressBar) monthlyProgressBar.style.width = `${Math.min(progress.monthly.rate, 100)}%`;
+
+    // 2. 年間目標（粗利）カードの更新
+    const yearlyTarget = safeGetElement('yearlyTargetDisplay');
+    if (yearlyTarget) yearlyTarget.textContent = formatManYen(progress.yearly.target);
     
-    document.getElementById('prospectTotalDisplay').textContent = formatManYen(progress.prospect.total);
-    document.getElementById('prospectDetail').textContent = `対目標${progress.prospect.rate.toFixed(1)}%`;
-    document.getElementById('prospectRate').textContent = '確度80%以上のみ集計';    
-    document.getElementById('prospectBar').style.width = `${Math.min(progress.prospect.rate, 100)}%`;
+    const yearlyRate = safeGetElement('yearlyRate');
+    if (yearlyRate) yearlyRate.textContent = `${progress.yearly.rate.toFixed(1)}%達成`;
     
-    // 6段階ファネルの表示更新
-    document.getElementById('probUnder50').textContent = formatManYen(progress.funnel.probUnder50);
-    document.getElementById('prob5060').textContent = formatManYen(progress.funnel.prob5060);
-    document.getElementById('prob70').textContent = formatManYen(progress.funnel.prob70);
-    document.getElementById('prob80').textContent = formatManYen(progress.funnel.prob80);
-    document.getElementById('prob90').textContent = formatManYen(progress.funnel.prob90);
-    document.getElementById('prob100').textContent = formatManYen(progress.funnel.prob100);
+    const yearlyProgressBar = safeGetElement('yearlyProgressBar');
+    if (yearlyProgressBar) yearlyProgressBar.style.width = `${Math.min(progress.yearly.rate, 100)}%`;
+
+    // 3. 年間売上増目標カードの更新
+    const salesTarget = safeGetElement('salesTargetDisplay');
+    if (salesTarget) salesTarget.textContent = formatManYen(progress.salesTarget.target);
     
-    // 直接編集UI用の表示更新（月別粗利）
+    const salesTargetDetail = safeGetElement('salesTargetDetail');
+    if (salesTargetDetail) salesTargetDetail.textContent = '自動計算';
+    
+    const salesTargetRate = safeGetElement('salesTargetRate');
+    if (salesTargetRate) salesTargetRate.textContent = '粗利増目標から逆算';
+    
+    const salesTargetBar = safeGetElement('salesTargetBar');
+    if (salesTargetBar) salesTargetBar.style.width = `${Math.min(progress.salesTarget.rate, 100)}%`;
+
+    // 4. 営業見込（粗利増）カードの更新
+    const prospectTotal = safeGetElement('prospectTotalDisplay');
+    if (prospectTotal) prospectTotal.textContent = formatManYen(progress.prospect.total);
+    
+    const prospectDetail = safeGetElement('prospectDetail');
+    if (prospectDetail) prospectDetail.textContent = `対目標${progress.prospect.rate.toFixed(1)}%`;
+    
+    const prospectRate = safeGetElement('prospectRate');
+    if (prospectRate) prospectRate.textContent = '確度80%以上のみ集計';
+    
+    const prospectBar = safeGetElement('prospectBar');
+    if (prospectBar) prospectBar.style.width = `${Math.min(progress.prospect.rate, 100)}%`;
+
+    // 5. 6段階ファネルの表示更新
+    const probUnder50 = safeGetElement('probUnder50');
+    if (probUnder50) probUnder50.textContent = formatManYen(progress.funnel.probUnder50);
+    
+    const prob5060 = safeGetElement('prob5060');
+    if (prob5060) prob5060.textContent = formatManYen(progress.funnel.prob5060);
+    
+    const prob70 = safeGetElement('prob70');
+    if (prob70) prob70.textContent = formatManYen(progress.funnel.prob70);
+    
+    const prob80 = safeGetElement('prob80');
+    if (prob80) prob80.textContent = formatManYen(progress.funnel.prob80);
+    
+    const prob90 = safeGetElement('prob90');
+    if (prob90) prob90.textContent = formatManYen(progress.funnel.prob90);
+    
+    const prob100 = safeGetElement('prob100');
+    if (prob100) prob100.textContent = formatManYen(progress.funnel.prob100);
+
+    // 6. 直接編集UI（新レイアウト対応）
     const currentMonth = getCurrentMonth();
     const monthlyProfitTarget = personalSettings.monthlyProfitTargets[currentMonth] || 0;
     const monthlyProfitActual = personalSettings.monthlyProfitActuals[currentMonth] || 0;
     const monthlyProfitRate = monthlyProfitTarget > 0 ? (monthlyProfitActual / monthlyProfitTarget) * 100 : 0;
 
-    const actualDisplayEl = document.getElementById('monthlyProfitActualDisplay');
-    const targetDisplayEl = document.getElementById('monthlyProfitTargetDisplay');
-    const rateDisplayEl = document.getElementById('monthlyProfitRateDisplay');
+    // 月別粗利実績（直接編集可能部分）
+    const monthlyActualDisplay = safeGetElement('monthlyProfitActualDisplay');
+    if (monthlyActualDisplay) monthlyActualDisplay.textContent = formatAmount(monthlyProfitActual);
+    
+    const monthlyTargetDisplay = safeGetElement('monthlyProfitTargetDisplay');
+    if (monthlyTargetDisplay) monthlyTargetDisplay.textContent = formatAmount(monthlyProfitTarget);
+    
+    const monthlyRateDisplay = safeGetElement('monthlyProfitRateDisplay');
+    if (monthlyRateDisplay) monthlyRateDisplay.textContent = `${monthlyProfitRate.toFixed(1)}%`;
 
-    if (actualDisplayEl) actualDisplayEl.textContent = formatAmount(monthlyProfitActual);
-    if (targetDisplayEl) targetDisplayEl.textContent = formatAmount(monthlyProfitTarget);
-    if (rateDisplayEl) rateDisplayEl.textContent = `${monthlyProfitRate.toFixed(1)}%`;
+    // 年間粗利実績（直接編集可能部分）
+    const yearlyTargetDisplay = safeGetElement('yearlyProfitTargetDisplay');
+    if (yearlyTargetDisplay) yearlyTargetDisplay.textContent = formatAmount(personalSettings.yearlyProfitTarget || 0);
+    
+    const yearlyActualDisplay = safeGetElement('yearlyProfitActualDisplay');
+    if (yearlyActualDisplay) yearlyActualDisplay.textContent = formatAmount(progress.yearly.actual || 0);
+    
+    const yearlyRateDisplay = safeGetElement('yearlyProfitRateDisplay');
+    if (yearlyRateDisplay) yearlyRateDisplay.textContent = `${(progress.yearly.rate || 0).toFixed(1)}%`;
 
-    // 直接編集UI用の表示更新（年間粗利）
-    const yearlyTargetEl = document.getElementById('yearlyProfitTargetDisplay');
-    const yearlyActualEl = document.getElementById('yearlyProfitActualDisplay');
-    const yearlyRateEl = document.getElementById('yearlyProfitRateDisplay');
-
-    if (yearlyTargetEl) yearlyTargetEl.textContent = formatAmount(personalSettings.yearlyProfitTarget || 0);
-    if (yearlyActualEl) yearlyActualEl.textContent = formatAmount(progress.yearly.actual || 0);
-    if (yearlyRateEl) yearlyRateEl.textContent = `${(progress.yearly.rate || 0).toFixed(1)}%`;
-
-    // 中段カードの更新
+    // 7. 中段カードの更新
     updateMiddleCards();
 }
+
 
 async function displayMasterView() {
     if (window.innerWidth < 1025) {

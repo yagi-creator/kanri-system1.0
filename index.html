@@ -1468,6 +1468,82 @@
                 margin-right: 0;
             }
         }
+        /* 1. スマホ表示のみ：編集可能箇所を薄い緑色で強調 */
+@media (max-width: 1024px) {
+    .monthly-comparison-section .month-data-column:nth-child(2) .editable-field {
+        background: rgba(76, 175, 80, 0.12) !important;
+        border: 1px solid rgba(76, 175, 80, 0.25);
+        border-radius: 6px;
+        padding: 6px 8px;
+    }
+    
+    .memo-comparison-section .memo-column:nth-child(2) .memo-content {
+        background: rgba(76, 175, 80, 0.08) !important;
+        border: 1px solid rgba(76, 175, 80, 0.2);
+        border-radius: 6px;
+        padding: 8px;
+    }
+}
+
+/* 2. 縞模様を濃いめに調整 */
+.juku-table tbody tr:nth-child(even) {
+    background: #f0f0f0 !important; /* #f8f9fa → #f0f0f0 */
+}
+
+.mobile-cards-container .card:nth-child(even) {
+    background: #f0f0f0 !important;
+}
+
+@media (max-width: 1024px) {
+    .mobile-cards-container .card:nth-child(odd)::after {
+        background: rgba(173, 216, 230, 0.22); /* 0.15 → 0.22 */
+    }
+}
+
+/* 3. ファネル80/90/100の青色強調 */
+.funnel-section .funnel-item:nth-child(4), /* 80 */
+.funnel-section .funnel-item:nth-child(5), /* 90 */
+.funnel-section .funnel-item:nth-child(6)  /* 100 */ {
+    background: rgba(33, 150, 243, 0.1) !important;
+    border: 1px solid rgba(33, 150, 243, 0.25);
+}
+
+.funnel-section .funnel-item:nth-child(4):hover,
+.funnel-section .funnel-item:nth-child(5):hover,
+.funnel-section .funnel-item:nth-child(6):hover {
+    background: rgba(33, 150, 243, 0.15) !important;
+    border-color: rgba(33, 150, 243, 0.35);
+}
+
+/* 4. 6項目ファネルのレスポンシブ対応 */
+@media (max-width: 768px) {
+    .funnel-section {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        gap: 6px;
+    }
+    
+    .funnel-label {
+        font-size: 11px;
+        margin-bottom: 3px;
+        color: #333;
+    }
+    
+    .funnel-value {
+        font-size: 13px;
+        font-weight: bold;
+        color: #333;
+    }
+}
+
+@media (max-width: 480px) {
+    .funnel-section {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+    }
+}
+
     </style>
    <!-- Firebase SDK -->
 <script type="module">
@@ -1574,31 +1650,41 @@ window.firebaseImports = {
                     <h3>営業見込（粗利増）</h3>
                     <div class="progress-value" id="prospectTotalDisplay">¥0万</div>
                     <div class="progress-detail" id="prospectDetail">対目標0.0%</div>
-                    <div class="progress-rate" id="prospectRate">確度70%以上のみ集計</div>
+                    <div class="progress-rate" id="prospectRate">確度80%以上のみ集計</div>
                     <div class="progress-chart">
                         <div class="progress-bar" id="prospectBar" style="width: 0%; background: #4ade80;"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="funnel-section">
-                <div class="funnel-item" onclick="filterByProbability('under50')" aria-label="確率50%未満で絞り込み">
-                    <div class="funnel-label">50未満</div>
-                    <div class="funnel-value" id="probUnder50">¥0万</div>
-                </div>
-                <div class="funnel-item" onclick="filterByProbability('50-70')" aria-label="確率50-70%で絞り込み">
-                    <div class="funnel-label">50-70%</div>
-                    <div class="funnel-value" id="prob5070">¥0万</div>
-                </div>
-                <div class="funnel-item" onclick="filterByProbability('70-90')" aria-label="確率70-90%で絞り込み">
-                    <div class="funnel-label">70-90%</div>
-                    <div class="funnel-value" id="prob7090">¥0万</div>
-                </div>
-                <div class="funnel-item" onclick="filterByProbability('90-100')" aria-label="確率90-100%で絞り込み">
-                    <div class="funnel-label">90-100%</div>
-                    <div class="funnel-value" id="prob90100">¥0万</div>
-                </div>
-            </div>
+           <!-- 既存のfunnel-section全体を以下に置き換えてください -->
+<div class="funnel-section">
+    <div class="funnel-item" onclick="filterByProbability('under50')" aria-label="確率50%未満で絞り込み">
+        <div class="funnel-label">50未満</div>
+        <div class="funnel-value" id="probUnder50">¥0万</div>
+    </div>
+    <div class="funnel-item" onclick="filterByProbability('50-60')" aria-label="確率50-70%で絞り込み">
+        <div class="funnel-label">50-70</div>
+        <div class="funnel-value" id="prob5060">¥0万</div>
+    </div>
+    <div class="funnel-item" onclick="filterByProbability('70')" aria-label="確率70%で絞り込み">
+        <div class="funnel-label">70</div>
+        <div class="funnel-value" id="prob70">¥0万</div>
+    </div>
+    <div class="funnel-item" onclick="filterByProbability('80')" aria-label="確率80%で絞り込み">
+        <div class="funnel-label">80</div>
+        <div class="funnel-value" id="prob80">¥0万</div>
+    </div>
+    <div class="funnel-item" onclick="filterByProbability('90')" aria-label="確率90%で絞り込み">
+        <div class="funnel-label">90</div>
+        <div class="funnel-value" id="prob90">¥0万</div>
+    </div>
+    <div class="funnel-item" onclick="filterByProbability('100')" aria-label="確率100%で絞り込み">
+        <div class="funnel-label">100</div>
+        <div class="funnel-value" id="prob100">¥0万</div>
+    </div>
+</div>
+
         </div>
 
         <div class="control-section">
@@ -2171,6 +2257,9 @@ async function changeViewTarget() {
         currentViewTarget = newTargetId;
         updateViewSelector();
         
+        // 🆕 追加：表示対象の個人設定を読み込み
+        await loadSettingsForTarget(newTargetId);
+        
         await loadCardsDataForTarget(newTargetId);
         progressCache = null;
         renderCardsOptimized();
@@ -2182,6 +2271,7 @@ async function changeViewTarget() {
         }
     }
 }
+
 
 async function loadCardsDataForTarget(targetUserId) {
     if (!currentUser || !targetUserId) {
@@ -2280,9 +2370,16 @@ function setupFirebaseAuth() {
                         
                         await loadCardsDataForTarget(currentViewTarget);
                         await syncPersonalSettingsOnLogin();
-                        progressCache = null;
-                        renderCardsOptimized();
-                        updateDashboard();
+
+// 🆕 自分の設定をキャッシュに保存（必須）
+if (user && user.uid) {
+    userSettingsCache[user.uid] = { ...personalSettings };
+}
+
+progressCache = null;
+renderCardsOptimized();
+updateDashboard();
+
                         
                         showToast(`${currentUserData.name}さん（${currentUserRole}）として認識されました`, 'success');
                     } else {
@@ -2293,14 +2390,19 @@ function setupFirebaseAuth() {
                     showToast('ユーザーデータの取得に失敗しました', 'error');
                 }
             } else {
-                console.log('未ログイン状態');
-                currentUserData = null;
-                currentUserRole = null;
-                currentViewTarget = null;
-                availableViewTargets = [];
-                updateAuthUI();
-                cardsData = [];
-                renderCardsOptimized();
+    console.log('未ログイン状態');
+    currentUserData = null;
+    currentUserRole = null;
+    currentViewTarget = null;
+    availableViewTargets = [];
+    userSettingsCache = {}; // 🆕 キャッシュクリア
+    progressCache = null;   // 🆕 進捗キャッシュクリア
+    updateAuthUI();
+    cardsData = [];
+    renderCardsOptimized();
+    updateDashboard();      // 🆕 表示リセット
+}
+
             }
         });
     } else {
@@ -2333,7 +2435,8 @@ let personalSettings = {
         4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
     }
 };
-
+let userSettingsCache = {};
+        
 const PROBABILITY_CONFIG = {
     options: [
         { value: 40, label: '50未満' },
@@ -2346,17 +2449,74 @@ const PROBABILITY_CONFIG = {
     ],
     
     filters: [
-        { value: 'all', label: '全確率' },
-        { value: 'under50', label: '50未満' },
-        { value: '50-70', label: '50-70%' },
-        { value: '70-90', label: '70-90%' },
-        { value: '90-100', label: '90-100%' }
-    ]
+    { value: 'all', label: '全確率' },
+    { value: 'under50', label: '50未満' },
+    { value: '50-60', label: '50-70' },  // 表示名を50-70に変更
+    { value: '70', label: '70%' },
+    { value: '80', label: '80%' },
+    { value: '90', label: '90%' },
+    { value: '100', label: '100%' }
+]
+
 };
 
 function getCurrentMonth() { 
     return new Date().getMonth() + 1; 
 }
+        // デフォルト設定を取得する関数
+function getDefaultSettings() {
+    return {
+        userName: '担当者',
+        profitRate: 0,
+        yearlyProfitTarget: 0,
+        yearlyProfitIncreaseTarget: 0,
+        yearlySalesIncreaseTarget: 0,
+        monthlyProfitActuals: {
+            10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+            4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+        },
+        monthlyProfitTargets: {
+            10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+            4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+        }
+    };
+}
+
+// アクティブな個人設定を取得する関数
+function getActiveSettings() {
+    const targetId = currentViewTarget || (currentUser?.uid || null);
+    return (targetId && userSettingsCache[targetId]) ? 
+           userSettingsCache[targetId] : 
+           personalSettings;
+}
+
+// 指定ユーザーの個人設定を読み込む関数
+async function loadSettingsForTarget(uid) {
+    if (!uid || !window.firebaseImports || !window.db) return;
+    if (userSettingsCache[uid]) return; // 既にキャッシュ済み
+    
+    try {
+        const userDoc = await window.firebaseImports.getDoc(
+            window.firebaseImports.doc(window.db, 'users', uid)
+        );
+        
+        if (userDoc.exists() && userDoc.data().personalSettings) {
+            userSettingsCache[uid] = { 
+                ...getDefaultSettings(), 
+                ...userDoc.data().personalSettings 
+            };
+            console.log(`${uid}の個人設定を読み込みました`);
+        } else {
+            userSettingsCache[uid] = getDefaultSettings();
+            console.warn(`${uid}の個人設定が未設定のためデフォルト値を使用`);
+        }
+    } catch (error) {
+        console.error('個人設定読み込みエラー:', error);
+        userSettingsCache[uid] = getDefaultSettings();
+        showToast('個人設定の読み込みに失敗しました', 'error');
+    }
+}
+
 
 function formatManYen(amount, decimals = 1) {
     const absAmount = Math.abs(amount || 0);
@@ -2489,8 +2649,18 @@ function getProbabilityFilterGroup(value) {
 
 function matchesProbabilityFilter(probability, filterValue) {
     if (filterValue === 'all') return true;
-    return getProbabilityFilterGroup(probability) === filterValue;
+    
+    switch (filterValue) {
+        case 'under50': return probability < 50;
+        case '50-60': return probability >= 50 && probability <= 60;  // 50,60のみ
+        case '70': return probability === 70;
+        case '80': return probability === 80;
+        case '90': return probability === 90;
+        case '100': return probability === 100;
+        default: return true;
+    }
 }
+
 
 function getFiscalYearStructure() {
     const now = new Date();
@@ -2537,10 +2707,12 @@ function calculateMonthlyChange(cardData, monthKey) {
 }
 
 function calculateSalesFromProfit(profitActual) {
-    const profitRate = personalSettings.profitRate / 100;
+    const settings = getActiveSettings();
+    const profitRate = (settings.profitRate || 0) / 100;
     if (profitRate <= 0) return 0;
-    return Math.round(profitActual / profitRate);
+    return Math.round((profitActual || 0) / profitRate);
 }
+
 
 function getCardLevel(v) {
     if (v < 100000) return 0;
@@ -2962,6 +3134,7 @@ function showToast(message, type = 'success') {
 }
 
 function calculateQualifiedProspects() {
+    const settings = getActiveSettings();
     const currentMonthKey = getFiscalYearStructure().currentMonthKey;
     
     const qualifiedProfit = cardsData.reduce((total, card) => {
@@ -2970,12 +3143,10 @@ function calculateQualifiedProspects() {
             probability: 50 
         };
         
-        if (monthData.probability < 70) {
-            return total;
-        }
+        if (monthData.probability < 80) return total;
         
         const profit = (monthData.salesIncreaseForecast || 0) 
-                     * (personalSettings.profitRate / 100);
+                     * ((settings.profitRate || 0) / 100);
         
         return total + profit;
     }, 0);
@@ -2983,9 +3154,11 @@ function calculateQualifiedProspects() {
     return qualifiedProfit;
 }
 
+
 function calculateAllProgress() {
+    const settings = getActiveSettings();
     const now = Date.now();
-    const cacheKey = `${cardsData.length}-${personalSettings.yearlyProfitIncreaseTarget}-${getCurrentMonth()}`;
+    const cacheKey = `${cardsData.length}-${settings.yearlyProfitIncreaseTarget}-${getCurrentMonth()}-${currentViewTarget || ''}`;
     
     if (progressCache && 
         progressCache.cacheKey === cacheKey && 
@@ -2995,19 +3168,17 @@ function calculateAllProgress() {
 
     const currentMonth = getCurrentMonth();
     
-    const monthlyTarget = personalSettings.monthlyProfitTargets[currentMonth] || 0;
-    const monthlyActual = personalSettings.monthlyProfitActuals[currentMonth] || 0;
+    const monthlyTarget = settings.monthlyProfitTargets[currentMonth] || 0;
+    const monthlyActual = settings.monthlyProfitActuals[currentMonth] || 0;
     const monthlyDifference = monthlyActual - monthlyTarget;
     const monthlyRate = monthlyTarget > 0 ? (monthlyActual / monthlyTarget) * 100 : 0;
     
-    const yearlyTarget = personalSettings.yearlyProfitTarget;
-    let yearlyActualCalculated = Object.values(personalSettings.monthlyProfitActuals)
-                                        .reduce((sum, monthlyProfit) => sum + (monthlyProfit || 0), 0);
-    
-    const yearlyActual = yearlyActualCalculated;
+    const yearlyTarget = settings.yearlyProfitTarget || 0;
+    const yearlyActual = Object.values(settings.monthlyProfitActuals)
+                                .reduce((sum, monthlyProfit) => sum + (monthlyProfit || 0), 0);
     const yearlyRate = yearlyTarget > 0 ? (yearlyActual / yearlyTarget) * 100 : 0;
     
-    const salesIncreaseTarget = personalSettings.yearlySalesIncreaseTarget;
+    const salesIncreaseTarget = settings.yearlySalesIncreaseTarget || 0;
     const currentMonthKey = getFiscalYearStructure().currentMonthKey;
     const totalSalesProspect = cardsData.reduce((sum, card) => {
         const monthData = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0 };
@@ -3016,10 +3187,12 @@ function calculateAllProgress() {
     const salesTargetRate = salesIncreaseTarget > 0 ? (totalSalesProspect / salesIncreaseTarget) * 100 : 0;
     
     const prospectTotal = calculateQualifiedProspects();
-    const prospectRate = personalSettings.yearlyProfitIncreaseTarget > 0 ? 
-        (prospectTotal / personalSettings.yearlyProfitIncreaseTarget) * 100 : 0;
+    const prospectRate = (settings.yearlyProfitIncreaseTarget || 0) > 0 ? 
+        (prospectTotal / settings.yearlyProfitIncreaseTarget) * 100 : 0;
     
-    let probUnder50 = 0, prob5070 = 0, prob7090 = 0, prob90100 = 0;
+    // 6段階ファネル
+    let probUnder50 = 0, prob5060 = 0, prob70 = 0, prob80 = 0, prob90 = 0, prob100 = 0;
+
     cardsData.forEach(card => {
         const monthData = card.monthlyData?.[currentMonthKey] || { 
             salesIncreaseForecast: 0, 
@@ -3027,25 +3200,29 @@ function calculateAllProgress() {
         };
         
         const profit = (monthData.salesIncreaseForecast || 0) 
-                     * (personalSettings.profitRate / 100);
+                     * ((settings.profitRate || 0) / 100);
         
         if (monthData.probability < 50) {
             probUnder50 += profit;
-        } else if (monthData.probability < 70) {
-            prob5070 += profit;
-        } else if (monthData.probability < 90) {
-            prob7090 += profit;
-        } else {
-            prob90100 += profit;
+        } else if (monthData.probability <= 60) {
+            prob5060 += profit;
+        } else if (monthData.probability === 70) {
+            prob70 += profit;
+        } else if (monthData.probability === 80) {
+            prob80 += profit;
+        } else if (monthData.probability === 90) {
+            prob90 += profit;
+        } else if (monthData.probability === 100) {
+            prob100 += profit;
         }
     });
-    
+   
     const result = {
         monthly: { target: monthlyTarget, actual: monthlyActual, difference: monthlyDifference, rate: monthlyRate },
         yearly: { target: yearlyTarget, actual: yearlyActual, rate: yearlyRate },
         salesTarget: { target: salesIncreaseTarget, prospect: totalSalesProspect, rate: salesTargetRate },
         prospect: { total: prospectTotal, rate: prospectRate },
-        funnel: { probUnder50, prob5070, prob7090, prob90100 }
+        funnel: { probUnder50, prob5060, prob70, prob80, prob90, prob100 }
     };
     
     progressCache = {
@@ -3056,6 +3233,7 @@ function calculateAllProgress() {
     
     return result;
 }
+
 
 function updateDashboard() {
     const progress = calculateAllProgress();
@@ -3084,13 +3262,16 @@ function updateDashboard() {
     
     document.getElementById('prospectTotalDisplay').textContent = formatManYen(progress.prospect.total);
     document.getElementById('prospectDetail').textContent = `対目標${progress.prospect.rate.toFixed(1)}%`;
-    document.getElementById('prospectRate').textContent = '確度70%以上のみ集計';
+    document.getElementById('prospectRate').textContent = '確度80%以上のみ集計';    
     document.getElementById('prospectBar').style.width = `${Math.min(progress.prospect.rate, 100)}%`;
     
-    document.getElementById('probUnder50').textContent = formatManYen(progress.funnel.probUnder50);
-    document.getElementById('prob5070').textContent = formatManYen(progress.funnel.prob5070);
-    document.getElementById('prob7090').textContent = formatManYen(progress.funnel.prob7090);
-    document.getElementById('prob90100').textContent = formatManYen(progress.funnel.prob90100);
+    // 6段階ファネルの表示更新
+document.getElementById('probUnder50').textContent = formatManYen(progress.funnel.probUnder50);
+document.getElementById('prob5060').textContent = formatManYen(progress.funnel.prob5060);
+document.getElementById('prob70').textContent = formatManYen(progress.funnel.prob70);
+document.getElementById('prob80').textContent = formatManYen(progress.funnel.prob80);
+document.getElementById('prob90').textContent = formatManYen(progress.funnel.prob90);
+document.getElementById('prob100').textContent = formatManYen(progress.funnel.prob100);
 }
 
 function createTableRow(cardData) {
@@ -3354,7 +3535,7 @@ function createNewCardElement(cardData) {
         </div>
     `;
     
-    if (cardData.assignedUserId !== currentUser.uid) {
+    if (cardData.assignedUserId !== (currentUser?.uid || '')) {
         card.style.opacity = '0.8';
         card.classList.add('read-only-card');
         card.style.position = 'relative';
@@ -3622,6 +3803,7 @@ function generateProgressChart(graphType) {
 }
 
 function generateFiscalYearData(graphType) {
+    const settings = getActiveSettings();
     const { months, currentMonthIndex } = getFiscalYearStructure();
     
     const actualData = [];
@@ -3636,71 +3818,64 @@ function generateFiscalYearData(graphType) {
         const monthNum = monthInfo.month;
         
         switch(graphType) {
-            case 0:
-                const monthlyTarget = personalSettings.monthlyProfitTargets[monthNum] || 0;
-                const monthlyActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
-                
+            case 0: {
+                const monthlyTarget = settings.monthlyProfitTargets[monthNum] || 0;
+                const monthlyActual = isPastMonth ? (settings.monthlyProfitActuals[monthNum] || 0) : 0;
                 targetData.push(monthlyTarget);
                 actualData.push(isPastMonth ? monthlyActual : null);
                 break;
-                
-            case 1:
-                const yearlyMonthTarget = personalSettings.monthlyProfitTargets[monthNum] || 0;
-                const yearlyMonthActual = isPastMonth ? (personalSettings.monthlyProfitActuals[monthNum] || 0) : 0;
-                
-                cumTarget += yearlyMonthTarget;
-                cumActual += isPastMonth ? yearlyMonthActual : 0;
-                
+            }
+            case 1: {
+                const t = settings.monthlyProfitTargets[monthNum] || 0;
+                const a = isPastMonth ? (settings.monthlyProfitActuals[monthNum] || 0) : 0;
+                cumTarget += t;
+                cumActual += isPastMonth ? a : 0;
                 targetData.push(cumTarget);
                 actualData.push(isPastMonth ? cumActual : null);
                 break;
-                
-            case 2:
-                const salesIncreaseTarget = personalSettings.yearlySalesIncreaseTarget;
+            }
+            case 2: {
+                const salesIncreaseTarget = settings.yearlySalesIncreaseTarget || 0;
                 let cumSalesProspect = 0;
-                
                 for (let j = 0; j <= index; j++) {
-                    const checkMonthKey = months[j].key;
+                    const key = months[j].key;
                     cardsData.forEach(card => {
-                        const monthData = card.monthlyData?.[checkMonthKey] || { salesIncreaseForecast: 0 };
-                        cumSalesProspect += monthData.salesIncreaseForecast || 0;
+                        const md = card.monthlyData?.[key] || { salesIncreaseForecast: 0 };
+                        cumSalesProspect += md.salesIncreaseForecast || 0;
                     });
                 }
-                
                 targetData.push(salesIncreaseTarget);
                 actualData.push(isPastMonth ? cumSalesProspect : null);
                 break;
-                
-            case 3:
+            }
+            case 3: {
                 let cumProspectProfit = 0;
                 for (let j = 0; j <= index; j++) {
-                    const checkMonthKey = months[j].key;
+                    const key = months[j].key;
                     cardsData.forEach(card => {
-                        const monthData = card.monthlyData?.[checkMonthKey] || { 
+                        const md = card.monthlyData?.[key] || { 
                             salesIncreaseForecast: 0, 
                             probability: 50 
                         };
-                        if (monthData.probability >= 70) {
-                            cumProspectProfit += (monthData.salesIncreaseForecast || 0) * (personalSettings.profitRate / 100);
+                        if (md.probability >= 80) {
+                            cumProspectProfit += (md.salesIncreaseForecast || 0) 
+                                               * ((settings.profitRate || 0) / 100);
                         }
                     });
                 }
-                
-                const profitIncreaseTarget = personalSettings.yearlyProfitIncreaseTarget;
-                const prospectRate = profitIncreaseTarget > 0 ? (cumProspectProfit / profitIncreaseTarget) * 100 : 0;
-                
-                actualData.push(isPastMonth ? prospectRate : null);
+                const profitIncreaseTarget = settings.yearlyProfitIncreaseTarget || 0;
+                const rate = profitIncreaseTarget > 0 ? 
+                    (cumProspectProfit / profitIncreaseTarget) * 100 : 0;
+                actualData.push(isPastMonth ? rate : null);
                 targetData.push(100);
                 break;
+            }
         }
     });
     
-    return { 
-        labels, 
-        actualData, 
-        targetData
-    };
+    return { labels, actualData, targetData };
 }
+
 
 function updateGraphLegend(datasets) {
     const legendContainer = document.getElementById('graphLegend');

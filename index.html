@@ -3633,14 +3633,40 @@ function updateDashboard() {
     document.getElementById('prospectBar').style.width = `${Math.min(progress.prospect.rate, 100)}%`;
     
     // 6段階ファネルの表示更新
-document.getElementById('probUnder50').textContent = formatManYen(progress.funnel.probUnder50);
-document.getElementById('prob5060').textContent = formatManYen(progress.funnel.prob5060);
-document.getElementById('prob70').textContent = formatManYen(progress.funnel.prob70);
-document.getElementById('prob80').textContent = formatManYen(progress.funnel.prob80);
-document.getElementById('prob90').textContent = formatManYen(progress.funnel.prob90);
-document.getElementById('prob100').textContent = formatManYen(progress.funnel.prob100);
-updateMiddleCards();
+    document.getElementById('probUnder50').textContent = formatManYen(progress.funnel.probUnder50);
+    document.getElementById('prob5060').textContent = formatManYen(progress.funnel.prob5060);
+    document.getElementById('prob70').textContent = formatManYen(progress.funnel.prob70);
+    document.getElementById('prob80').textContent = formatManYen(progress.funnel.prob80);
+    document.getElementById('prob90').textContent = formatManYen(progress.funnel.prob90);
+    document.getElementById('prob100').textContent = formatManYen(progress.funnel.prob100);
+    
+    // 直接編集UI用の表示更新（月別粗利）
+    const currentMonth = getCurrentMonth();
+    const monthlyProfitTarget = personalSettings.monthlyProfitTargets[currentMonth] || 0;
+    const monthlyProfitActual = personalSettings.monthlyProfitActuals[currentMonth] || 0;
+    const monthlyProfitRate = monthlyProfitTarget > 0 ? (monthlyProfitActual / monthlyProfitTarget) * 100 : 0;
+
+    const actualDisplayEl = document.getElementById('monthlyProfitActualDisplay');
+    const targetDisplayEl = document.getElementById('monthlyProfitTargetDisplay');
+    const rateDisplayEl = document.getElementById('monthlyProfitRateDisplay');
+
+    if (actualDisplayEl) actualDisplayEl.textContent = formatAmount(monthlyProfitActual);
+    if (targetDisplayEl) targetDisplayEl.textContent = formatAmount(monthlyProfitTarget);
+    if (rateDisplayEl) rateDisplayEl.textContent = `${monthlyProfitRate.toFixed(1)}%`;
+
+    // 直接編集UI用の表示更新（年間粗利）
+    const yearlyTargetEl = document.getElementById('yearlyProfitTargetDisplay');
+    const yearlyActualEl = document.getElementById('yearlyProfitActualDisplay');
+    const yearlyRateEl = document.getElementById('yearlyProfitRateDisplay');
+
+    if (yearlyTargetEl) yearlyTargetEl.textContent = formatAmount(personalSettings.yearlyProfitTarget || 0);
+    if (yearlyActualEl) yearlyActualEl.textContent = formatAmount(progress.yearly.actual || 0);
+    if (yearlyRateEl) yearlyRateEl.textContent = `${(progress.yearly.rate || 0).toFixed(1)}%`;
+
+    // 中段カードの更新
+    updateMiddleCards();
 }
+
 async function displayMasterView() {
     if (window.innerWidth < 1025) {
         showToast('マスタービューはPC版でのみ利用可能です', 'info');
@@ -3811,22 +3837,7 @@ function generateMasterFunnel(staff, cardsData) {
         </div>
     `;
 }
-
-        // 月別粗利実績の表示更新
-const currentMonth = getCurrentMonth();
-const monthlyProfitTarget = personalSettings.monthlyProfitTargets[currentMonth] || 0;
-const monthlyProfitActual = personalSettings.monthlyProfitActuals[currentMonth] || 0;
-const monthlyProfitRate = monthlyProfitTarget > 0 ? (monthlyProfitActual / monthlyProfitTarget) * 100 : 0;
-
-const actualDisplayEl = document.getElementById('monthlyProfitActualDisplay');
-const targetDisplayEl = document.getElementById('monthlyProfitTargetDisplay');
-const rateDisplayEl = document.getElementById('monthlyProfitRateDisplay');
-
-if (actualDisplayEl) actualDisplayEl.textContent = formatAmount(monthlyProfitActual);
-if (targetDisplayEl) targetDisplayEl.textContent = formatAmount(monthlyProfitTarget);
-if (rateDisplayEl) rateDisplayEl.textContent = `${monthlyProfitRate.toFixed(1)}%`;
-
-        
+       
 function createTableRow(cardData) {
     const fiscalStructure = getFiscalYearStructure();
     const displayMonth = cardData.displayMonth || fiscalStructure.currentMonthKey;
@@ -3948,16 +3959,6 @@ function editTableForecast(id, key) {
         showToast('売上増見込を更新', 'success');
     }
 }
-        // 年間粗利の表示更新（目標は編集可能、実績は自動計算）
-const progress = calculateAllProgress();
-const yearlyTargetEl = document.getElementById('yearlyProfitTargetDisplay');
-const yearlyActualEl = document.getElementById('yearlyProfitActualDisplay');
-const yearlyRateEl = document.getElementById('yearlyProfitRateDisplay');
-
-if (yearlyTargetEl) yearlyTargetEl.textContent = formatAmount(personalSettings.yearlyProfitTarget || 0);
-if (yearlyActualEl) yearlyActualEl.textContent = formatAmount(progress.yearly.actual || 0);
-if (yearlyRateEl) yearlyRateEl.textContent = `${(progress.yearly.rate || 0).toFixed(1)}%`;
-
 
 function editTableProbability(id, key) {
     const c = cardsData.find(x => x.id === id);

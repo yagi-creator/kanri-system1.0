@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="上半期営業支援ダッシュボード">
     <meta name="theme-color" content="#007bff">
-    <title>上半期営業支援ダッシュボード v9.5</title>
+    <title>上半期営業支援ダッシュボード v10.0</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -1543,6 +1543,209 @@
         grid-template-rows: repeat(3, 1fr);
     }
 }
+/* PC版レイアウト（1025px以上）- 3段構成 */
+@media (min-width: 1025px) {
+    .progress-main-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+        order: 1;
+    }
+    .progress-middle-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 16px;
+        order: 2;
+    }
+    .funnel-section {
+        display: flex;
+        gap: 8px;
+        order: 3;
+    }
+}
+
+/* スマホ版レイアウト（1024px以下）- 4段構成 */
+@media (max-width: 1024px) {
+    .progress-middle-section { 
+        order: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .funnel-section { 
+        order: 2;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .progress-main-cards { 
+        order: 4;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .control-buttons {
+        display: none;
+    }
+}
+
+/* カード色分け */
+.progress-card-monthly-profit {
+    background: #2E7D32 !important;
+    color: #FFFFFF !important;
+}
+.progress-card-yearly-profit {
+    background: #0D47A1 !important;
+    color: #FFFFFF !important;
+}
+.progress-card-yearly-sales {
+    background: #BBDEFB !important;
+    color: #0D47A1 !important;
+}
+.progress-card-prospect {
+    background: #E3F2FD !important;
+    color: #0D47A1 !important;
+}
+
+/* 中段カード */
+.progress-middle-card {
+    background: #FFF3CD;
+    border: 1px solid #FFE082;
+    border-radius: 12px;
+    padding: 12px 20px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+.progress-middle-content {
+    font-size: 13px;
+    font-weight: 600;
+    color: #856404;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+@media (max-width: 1024px) {
+    .progress-middle-content {
+        font-size: 12px;
+    }
+}
+
+/* FABボタン */
+.fab-settings {
+    position: fixed;
+    bottom: 100px;
+    left: 20px;
+    width: 56px;
+    height: 56px;
+    background: #CD853F;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(205, 133, 63, 0.4);
+    z-index: 100;
+    transition: all 0.2s ease;
+}
+.fab-add {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 56px;
+    height: 56px;
+    background: #007bff;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+    z-index: 100;
+    transition: all 0.2s ease;
+}
+.fab-settings:hover, .fab-add:hover {
+    transform: scale(1.05);
+}
+@media (min-width: 1025px) {
+    .fab-settings, .fab-add {
+        display: none;
+    }
+}
+        .editable-profit-field {
+    background: #FCE4EC !important;
+    border: 1px solid #E91E63 !important;
+    color: #880E4F !important;
+    border-radius: 4px;
+    padding: 2px 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-block;
+    min-width: 60px;
+    text-align: center;
+    font-weight: bold;
+}
+.editable-profit-field:hover {
+    background: #F8BBD9 !important;
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+        .master-view-container { padding: 20px; }
+.master-staff-section {
+    margin-bottom: 32px;
+    padding: 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: #fafafa;
+}
+.master-staff-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 8px;
+}
+.master-main-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.master-middle-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.master-middle-card {
+    background: #FFF3CD;
+    border: 1px solid #FFE082;
+    border-radius: 8px;
+    padding: 12px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #856404;
+    text-align: center;
+}
+@media (max-width: 1024px) {
+    .master-view-container { display: none !important; }
+    .master-view-option { display: none !important; }
+}
 
     </style>
    <!-- Firebase SDK -->
@@ -1585,7 +1788,7 @@ window.firebaseImports = {
     <div class="container">
         <div class="header-section">
     <div class="header-left">
-        <div class="header-title">上半期営業支援ダッシュボード v9.5</div>
+        <div class="header-title">上半期営業支援ダッシュボード</div>
         <div class="current-date-header" id="currentDateHeader">
             <span id="currentDateDisplay">2025年8月</span>
             <select class="global-month-selector" id="globalMonthSelector" onchange="changeAllCardsDisplayMonth(this.value)">
@@ -1613,79 +1816,102 @@ window.firebaseImports = {
             <button class="btn btn-auth" onclick="quickLogout()" id="logoutBtn" style="display: none;">🚪 ログアウト</button>
         </div>
     </div>
-</div> 
-        <div class="progress-section">
-            <div class="progress-cards">
-                <div class="progress-card" onclick="openProgressGraphModal(0)" aria-label="月別目標（粗利）の進捗グラフを開く">
-                    <h3>月別目標（粗利）</h3>
-                    <div class="progress-value" id="monthlyTargetDisplay">¥0万</div>
-                    <div class="progress-detail" id="monthlyDetail">¥0/¥0（0.0%）</div>
-                    <div class="progress-rate" id="monthlyRate">差分: ¥0</div>
-                    <div class="progress-chart">
-                        <div class="progress-bar" id="monthlyProgressBar" style="width: 0%; background: #4ade80;"></div>
-                    </div>
-                </div>
-                
-                <div class="progress-card" onclick="openProgressGraphModal(1)" aria-label="年間目標（粗利）の進捗グラフを開く">
-                    <h3>年間目標（粗利）</h3>
-                    <div class="progress-value" id="yearlyTargetDisplay">¥0万</div>
-                    <div class="progress-detail" id="yearlyDetail">¥0/¥0（0.0%）</div>
-                    <div class="progress-rate" id="yearlyRate">0.0%達成</div>
-                    <div class="progress-chart">
-                        <div class="progress-bar" id="yearlyProgressBar" style="width: 0%; background: #4ade80;"></div>
-                    </div>
-                </div>
-                
-                <div class="progress-card" onclick="openProgressGraphModal(2)" aria-label="年間売上増目標の進捗グラフを開く">
-                    <h3>年間売上増目標</h3>
-                    <div class="progress-value" id="salesTargetDisplay">¥0万</div>
-                    <div class="progress-detail" id="salesTargetDetail">自動計算</div>
-                    <div class="progress-rate" id="salesTargetRate">粗利増目標から逆算</div>
-                    <div class="progress-chart">
-                        <div class="progress-bar" id="salesTargetBar" style="width: 0%; background: #60a5fa;"></div>
-                    </div>
-                </div>
-                
-                <div class="progress-card" onclick="openProgressGraphModal(3)" aria-label="営業見込（粗利増）の進捗グラフを開く">
-                    <h3>営業見込（粗利増）</h3>
-                    <div class="progress-value" id="prospectTotalDisplay">¥0万</div>
-                    <div class="progress-detail" id="prospectDetail">対目標0.0%</div>
-                    <div class="progress-rate" id="prospectRate">確度80%以上のみ集計</div>
-                    <div class="progress-chart">
-                        <div class="progress-bar" id="prospectBar" style="width: 0%; background: #4ade80;"></div>
-                    </div>
-                </div>
-            </div>
-
-           <!-- 既存のfunnel-section全体を以下に置き換えてください -->
-<div class="funnel-section">
-    <div class="funnel-item" onclick="filterByProbability('under50')" aria-label="確率50%未満で絞り込み">
-        <div class="funnel-label">50%未満</div>
-        <div class="funnel-value" id="probUnder50">¥0万</div>
-    </div>
-    <div class="funnel-item" onclick="filterByProbability('50-60')" aria-label="確率50-70%で絞り込み">
-        <div class="funnel-label">50%-70%未満</div>
-        <div class="funnel-value" id="prob5060">¥0万</div>
-    </div>
-    <div class="funnel-item" onclick="filterByProbability('70')" aria-label="確率70%で絞り込み">
-        <div class="funnel-label">70%以上</div>
-        <div class="funnel-value" id="prob70">¥0万</div>
-    </div>
-    <div class="funnel-item" onclick="filterByProbability('80')" aria-label="確率80%で絞り込み">
-        <div class="funnel-label">80%以上</div>
-        <div class="funnel-value" id="prob80">¥0万</div>
-    </div>
-    <div class="funnel-item" onclick="filterByProbability('90')" aria-label="確率90%で絞り込み">
-        <div class="funnel-label">90%以上</div>
-        <div class="funnel-value" id="prob90">¥0万</div>
-    </div>
-    <div class="funnel-item" onclick="filterByProbability('100')" aria-label="確率100%で絞り込み">
-        <div class="funnel-label">100%</div>
-        <div class="funnel-value" id="prob100">¥0万</div>
-    </div>
+</div> <div class="progress-section">
+    <!-- PC版: 最上段4枚 / スマホ版: 最下段2×2 -->
+    <div class="progress-main-cards">
+        <div class="progress-card progress-card-monthly-profit" onclick="openProgressGraphModal(0)" aria-label="月別目標（粗利）の進捗グラフを開く">
+            <h3>月別目標（粗利）</h3>
+            <div class="progress-value" id="monthlyTargetDisplay">¥0万</div>
+            <div class="progress-detail">
+    実績: <span class="editable-profit-field" onclick="editMonthlyProfitActual(this)" id="monthlyProfitActualDisplay">¥0</span> / 
+    目標: <span id="monthlyProfitTargetDisplay">¥0</span> 
+    （<span id="monthlyProfitRateDisplay">0.0%</span>）
 </div>
 
+            <div class="progress-rate" id="monthlyRate">差分: ¥0</div>
+            <div class="progress-chart">
+                <div class="progress-bar" id="monthlyProgressBar" style="width: 0%; background: #4ade80;"></div>
+            </div>
         </div>
+        
+        <div class="progress-card progress-card-yearly-profit" onclick="openProgressGraphModal(1)" aria-label="年間目標（粗利）の進捗グラフを開く">
+            <h3>年間目標（粗利）</h3>
+            <div class="progress-value" id="yearlyTargetDisplay">¥0万</div>
+            <div class="progress-detail">
+    目標: <span class="editable-profit-field" onclick="editYearlyProfitTarget(this)" id="yearlyProfitTargetDisplay">¥0</span> / 
+    実績: <span id="yearlyProfitActualDisplay">¥0</span> 
+    （<span id="yearlyProfitRateDisplay">0.0%</span>）
+</div>
+
+            <div class="progress-rate" id="yearlyRate">0.0%達成</div>
+            <div class="progress-chart">
+                <div class="progress-bar" id="yearlyProgressBar" style="width: 0%; background: #4ade80;"></div>
+            </div>
+        </div>
+        
+        <div class="progress-card progress-card-yearly-sales" onclick="openProgressGraphModal(2)" aria-label="年間売上増目標の進捗グラフを開く">
+            <h3>年間売上増目標</h3>
+            <div class="progress-value" id="salesTargetDisplay">¥0万</div>
+            <div class="progress-detail" id="salesTargetDetail">自動計算</div>
+            <div class="progress-rate" id="salesTargetRate">粗利増目標から逆算</div>
+            <div class="progress-chart">
+                <div class="progress-bar" id="salesTargetBar" style="width: 0%; background: #60a5fa;"></div>
+            </div>
+        </div>
+        
+        <div class="progress-card progress-card-prospect" onclick="openProgressGraphModal(3)" aria-label="営業見込（粗利増）の進捗グラフを開く">
+            <h3>営業見込（粗利増）</h3>
+            <div class="progress-value" id="prospectTotalDisplay">¥0万</div>
+            <div class="progress-detail" id="prospectDetail">対目標0.0%</div>
+            <div class="progress-rate" id="prospectRate">確度80%以上のみ集計</div>
+            <div class="progress-chart">
+                <div class="progress-bar" id="prospectBar" style="width: 0%; background: #4ade80;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PC版: 中段2枚 / スマホ版: 最上段縦2枚 -->
+    <div class="progress-middle-section">
+        <div class="progress-middle-card">
+            <div class="progress-middle-content" id="salesProspectDisplay">
+                売上増見込 ¥0/¥0 (0.0%)
+            </div>
+        </div>
+        <div class="progress-middle-card">
+            <div class="progress-middle-content" id="profitProspectDisplay">
+                粗利増見込 ¥0/¥0 (0.0%)
+            </div>
+        </div>
+    </div>
+
+    <!-- 既存のファネル6枚（位置調整のみ） -->
+    <div class="funnel-section">
+        <div class="funnel-item" onclick="filterByProbability('under50')" aria-label="確率50%未満で絞り込み">
+            <div class="funnel-label">50%未満</div>
+            <div class="funnel-value" id="probUnder50">¥0万</div>
+        </div>
+        <div class="funnel-item" onclick="filterByProbability('50-60')" aria-label="確率50-70%で絞り込み">
+            <div class="funnel-label">50%-70%未満</div>
+            <div class="funnel-value" id="prob5060">¥0万</div>
+        </div>
+        <div class="funnel-item" onclick="filterByProbability('70')" aria-label="確率70%で絞り込み">
+            <div class="funnel-label">70%以上</div>
+            <div class="funnel-value" id="prob70">¥0万</div>
+        </div>
+        <div class="funnel-item" onclick="filterByProbability('80')" aria-label="確率80%で絞り込み">
+            <div class="funnel-label">80%以上</div>
+            <div class="funnel-value" id="prob80">¥0万</div>
+        </div>
+        <div class="funnel-item" onclick="filterByProbability('90')" aria-label="確率90%で絞り込み">
+            <div class="funnel-label">90%以上</div>
+            <div class="funnel-value" id="prob90">¥0万</div>
+        </div>
+        <div class="funnel-item" onclick="filterByProbability('100')" aria-label="確率100%で絞り込み">
+            <div class="funnel-label">100%</div>
+            <div class="funnel-value" id="prob100">¥0万</div>
+        </div>
+    </div>
+</div>
 
         <div class="control-section">
             <div class="search-container">
@@ -2223,7 +2449,7 @@ function updateViewSelector() {
     
     if (!availableViewTargets.length) {
         viewSelector.innerHTML = '<option value="">データなし</option>';
-        viewPermissionInfo.textContent = '';
+        if (viewPermissionInfo) viewPermissionInfo.textContent = '';
         return;
     }
     
@@ -2244,37 +2470,61 @@ function updateViewSelector() {
             option.textContent = `${target.name}さん (${roleLabel})`;
         }
         
-        if (target.id === currentViewTarget) {
-            option.selected = true;
-        }
-        
+        if (target.id === currentViewTarget) option.selected = true;
         viewSelector.appendChild(option);
     });
     
+    // AdminかつPC幅のみ「マスター」を追加
+    if (currentUserRole === 'admin' && window.innerWidth >= 1025) {
+        const masterOption = document.createElement('option');
+        masterOption.value = 'master';
+        masterOption.textContent = 'マスター';
+        masterOption.className = 'master-view-option';
+        if (currentViewTarget === 'master') masterOption.selected = true;
+        viewSelector.appendChild(masterOption);
+    }
+    
     const currentTarget = availableViewTargets.find(t => t.id === currentViewTarget);
-    if (currentTarget) {
-        if (currentTarget.canEdit) {
-            viewPermissionInfo.textContent = '✏️ 編集可能';
+    if (viewPermissionInfo) {
+        if (currentTarget) {
+            if (currentTarget.canEdit) {
+                viewPermissionInfo.textContent = '✏️ 編集可能';
+                viewPermissionInfo.className = 'view-permission-info permission-edit';
+            } else {
+                viewPermissionInfo.textContent = '👁️ 閲覧専用';
+                viewPermissionInfo.className = 'view-permission-info permission-view';
+            }
+        } else if (currentViewTarget === 'master') {
+            viewPermissionInfo.textContent = '👑 管理者ビュー';
             viewPermissionInfo.className = 'view-permission-info permission-edit';
         } else {
-            viewPermissionInfo.textContent = '👁️ 閲覧専用';
-            viewPermissionInfo.className = 'view-permission-info permission-view';
+            viewPermissionInfo.textContent = '';
         }
     }
 }
+
 
 async function changeViewTarget() {
     const viewSelector = document.getElementById('viewSelector');
     const newTargetId = viewSelector.value;
     
+    if (newTargetId === 'master') {
+        currentViewTarget = 'master';
+        updateViewSelector();
+        await displayMasterView();
+        showToast('マスター管理画面を表示中', 'info');
+        return;
+    }
+    
     if (newTargetId && newTargetId !== currentViewTarget) {
         currentViewTarget = newTargetId;
         updateViewSelector();
         
-        // 🆕 追加：表示対象の個人設定を読み込み
         await loadSettingsForTarget(newTargetId);
-        
         await loadCardsDataForTarget(newTargetId);
+        
+        restoreNormalDashboard();
+        
         progressCache = null;
         renderCardsOptimized();
         updateDashboard();
@@ -2285,6 +2535,15 @@ async function changeViewTarget() {
         }
     }
 }
+
+function restoreNormalDashboard() {
+    // マスタービュー表示後に通常画面へ戻す最短手段：リロード
+    const mainContainer = document.querySelector('.container');
+    if (mainContainer && mainContainer.querySelector('.master-view-container')) {
+        location.reload();
+    }
+}
+
 
 
 async function loadCardsDataForTarget(targetUserId) {
@@ -2646,7 +2905,60 @@ function parseNumberSafely(value) {
     const parsed = Number(normalized);
     return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
 }
+        function editMonthlyProfitActual(element) {
+    const currentMonth = getCurrentMonth();
+    const currentValue = personalSettings.monthlyProfitActuals[currentMonth] || 0;
+    
+    const newValue = prompt('月別粗利実績を入力してください（円）\n\n例: 500000', currentValue);
+    if (newValue === null) return; // キャンセル時は何もしない
+    
+    const parsedValue = parseNumberSafely(newValue);
+    personalSettings.monthlyProfitActuals[currentMonth] = parsedValue;
+    
+    // 即座に表示を更新
+    element.textContent = formatAmount(parsedValue);
+    
+    // データ保存と全体更新
+    savePersonalSettingsComplete();
+    progressCache = null;
+    updateDashboard();
+    showToast('月別粗利実績を更新しました', 'success');
+}
 
+        function editYearlyProfitTarget(element) {
+    const currentValue = personalSettings.yearlyProfitTarget || 0;
+    
+    const newValue = prompt('年間粗利目標を入力してください（円）\n\n例: 12000000', currentValue);
+    if (newValue === null) return; // キャンセル時は何もしない
+    
+    const parsedValue = parseNumberSafely(newValue);
+    personalSettings.yearlyProfitTarget = parsedValue;
+    
+    // 即座に表示を更新
+    element.textContent = formatAmount(parsedValue);
+    
+    // データ保存と全体更新
+    savePersonalSettingsComplete();
+    progressCache = null;
+    updateDashboard();
+    showToast('年間粗利目標を更新しました', 'success');
+}
+        
+function getMonthKeyFromTimestamp(ts, fallbackKey) {
+    try {
+        let d;
+        if (ts && typeof ts.toDate === 'function') d = ts.toDate();
+        else if (ts) d = new Date(ts);
+        else return fallbackKey;
+        if (isNaN(d.getTime())) return fallbackKey;
+        const y = d.getFullYear();
+        const m = d.getMonth() + 1;
+        return `${y}-${String(m).padStart(2, '0')}`;
+    } catch {
+        return fallbackKey;
+    }
+}
+        
 function getProbabilityLabel(value) {
     if (value === 40) return '50未満';
     return `${value}%`;
@@ -3069,7 +3381,7 @@ function migrateToV9Structure() {
     
     if (migrationCount > 0) {
         saveCardsData();
-        showToast(`${migrationCount}件のデータをv9.5形式に移行しました`, 'info');
+        showToast(`${migrationCount}件のデータをv10.0形式に移行しました`, 'info');
     }
 }
 
@@ -3267,6 +3579,27 @@ function calculateAllProgress() {
     
     return result;
 }
+function updateMiddleCards() {
+    const elSales = document.getElementById('salesProspectDisplay');
+    const elProfit = document.getElementById('profitProspectDisplay');
+    if (!elSales || !elProfit) return;
+
+    const progress = calculateAllProgress();
+    const settings = getActiveSettings();
+    
+    // 売上増見込の表示
+    const salesTarget = settings.yearlySalesIncreaseTarget || 0;
+    const salesProspect = progress.salesTarget?.prospect || 0;
+    const salesRate = salesTarget > 0 ? (salesProspect / salesTarget) * 100 : 0;
+    
+    // 粗利増見込の表示  
+    const profitTarget = settings.yearlyProfitIncreaseTarget || 0;
+    const profitProspect = progress.prospect?.total || 0;
+    const profitRate = profitTarget > 0 ? (profitProspect / profitTarget) * 100 : 0;
+    
+    elSales.textContent = `売上増見込 ${formatAmount(salesProspect)}/${formatAmount(salesTarget)} (${salesRate.toFixed(1)}%)`;
+    elProfit.textContent = `粗利増見込 ${formatAmount(profitProspect)}/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)`;
+}
 
 
 function updateDashboard() {
@@ -3306,8 +3639,194 @@ document.getElementById('prob70').textContent = formatManYen(progress.funnel.pro
 document.getElementById('prob80').textContent = formatManYen(progress.funnel.prob80);
 document.getElementById('prob90').textContent = formatManYen(progress.funnel.prob90);
 document.getElementById('prob100').textContent = formatManYen(progress.funnel.prob100);
+updateMiddleCards();
+}
+async function displayMasterView() {
+    if (window.innerWidth < 1025) {
+        showToast('マスタービューはPC版でのみ利用可能です', 'info');
+        return;
+    }
+    if (currentUserRole !== 'admin') {
+        showToast('管理者権限が必要です', 'error');
+        return;
+    }
+    
+    const usersCollection = await window.firebaseImports.getDocs(
+        window.firebaseImports.collection(window.db, 'users')
+    );
+    
+    const staffList = [];
+    usersCollection.forEach((doc) => {
+        const userData = doc.data();
+        const userId = doc.id;
+        staffList.push({
+            id: userId,
+            name: userData.name,
+            role: userData.role,
+            settings: userData.personalSettings || getDefaultSettings()
+        });
+    });
+    
+    const masterContainer = document.createElement('div');
+    masterContainer.className = 'master-view-container';
+    masterContainer.innerHTML = '<h2>👑 マスター管理画面（全スタッフ一覧）</h2>';
+    
+    for (const staff of staffList) {
+        const staffSection = document.createElement('div');
+        staffSection.className = 'master-staff-section';
+        
+        const staffCardsQuery = window.firebaseImports.query(
+            window.firebaseImports.collection(window.db, 'juku_cards'),
+            window.firebaseImports.where('assignedUserId', '==', staff.id)
+        );
+        const staffCards = await window.firebaseImports.getDocs(staffCardsQuery);
+        
+        const staffCardsData = [];
+        staffCards.forEach((doc) => staffCardsData.push(doc.data()));
+        
+        staffSection.innerHTML = `
+            <div class="master-staff-name">担当: ${staff.name}（${staff.role === 'admin' ? '管理者' : staff.role === 'manager' ? 'マネージャー' : '営業担当'}）</div>
+            <div class="master-main-cards">
+                ${generateMasterMainCards(staff, staffCardsData)}
+            </div>
+            <div class="master-middle-cards">
+                ${generateMasterMiddleCards(staff, staffCardsData)}
+            </div>
+            <div class="master-funnel">
+                ${generateMasterFunnel(staff, staffCardsData)}
+            </div>
+        `;
+        
+        masterContainer.appendChild(staffSection);
+    }
+    
+    const mainContainer = document.querySelector('.container');
+    mainContainer.innerHTML = '';
+    mainContainer.appendChild(masterContainer);
 }
 
+function generateMasterMainCards(staff, cardsData) {
+    const s = staff.settings;
+    const currentMonth = getCurrentMonth();
+    const monthlyTarget = s.monthlyProfitTargets?.[currentMonth] || 0;
+    const monthlyActual = s.monthlyProfitActuals?.[currentMonth] || 0;
+    const monthlyDiff = monthlyActual - monthlyTarget;
+    const monthlyRate = monthlyTarget > 0 ? (monthlyActual / monthlyTarget) * 100 : 0;
+    
+    const yearlyTarget = s.yearlyProfitTarget || 0;
+    const yearlyActual = (s.yearlyProfitActual != null) ? s.yearlyProfitActual : Object.values(s.monthlyProfitActuals || {}).reduce((a,b)=>a+(b||0),0);
+    const yearlyDiff = yearlyActual - yearlyTarget;
+    const yearlyRate = yearlyTarget > 0 ? (yearlyActual / yearlyTarget) * 100 : 0;
+    
+    return `
+        <div class="progress-card progress-card-monthly-profit">
+            <h3>月別目標（粗利）</h3>
+            <div class="card-content">
+                <div>目標：${formatAmount(monthlyTarget)}</div>
+                <div>進捗：${formatAmount(monthlyActual)}</div>
+                <div>差額：${formatAmount(monthlyDiff)}</div>
+                <div>達成率：${monthlyRate.toFixed(1)}%</div>
+            </div>
+        </div>
+        <div class="progress-card progress-card-yearly-profit">
+            <h3>年間目標（粗利）</h3>
+            <div class="card-content">
+                <div>目標：${formatAmount(yearlyTarget)}</div>
+                <div>実績：${formatAmount(yearlyActual)}</div>
+                <div>差額：${formatAmount(yearlyDiff)}</div>
+                <div>達成率：${yearlyRate.toFixed(1)}%</div>
+            </div>
+        </div>
+    `;
+}
+
+function generateMasterMiddleCards(staff, cardsData) {
+    const s = staff.settings;
+    const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+    
+    let totalSalesProspect = 0;
+    let totalProfitProspect = 0;
+    cardsData.forEach(card => {
+        const md = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0, probability: 50 };
+        if (md.probability >= 80) {
+            const salesAmount = md.salesIncreaseForecast || 0;
+            const profitAmount = salesAmount * ((s.profitRate || 0) / 100);
+            totalSalesProspect += salesAmount;
+            totalProfitProspect += profitAmount;
+        }
+    });
+    const salesTarget = s.yearlySalesIncreaseTarget || 0;
+    const profitTarget = s.yearlyProfitIncreaseTarget || 0;
+    const salesRate = salesTarget > 0 ? (totalSalesProspect / salesTarget) * 100 : 0;
+    const profitRate = profitTarget > 0 ? (totalProfitProspect / profitTarget) * 100 : 0;
+    
+    return `
+        <div class="master-middle-card">売上増見込 ${formatAmount(totalSalesProspect)}/${formatAmount(salesTarget)} (${salesRate.toFixed(1)}%)</div>
+        <div class="master-middle-card">粗利増見込 ${formatAmount(totalProfitProspect)}/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)</div>
+    `;
+}
+
+function generateMasterFunnel(staff, cardsData) {
+    const s = staff.settings;
+    const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+    let probUnder50 = 0, prob5060 = 0, prob70 = 0, prob80 = 0, prob90 = 0, prob100 = 0;
+    
+    cardsData.forEach(card => {
+        const md = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0, probability: 50 };
+        const profit = (md.salesIncreaseForecast || 0) * ((s.profitRate || 0) / 100);
+        if (md.probability < 50) probUnder50 += profit;
+        else if (md.probability < 70) prob5060 += profit;
+        else if (md.probability < 80) prob70 += profit;
+        else if (md.probability < 90) prob80 += profit;
+        else if (md.probability < 100) prob90 += profit;
+        else prob100 += profit;
+    });
+    
+    return `
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <div class="funnel-item" style="flex:1;min-width:120px;background:#fff;border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:11px;margin-bottom:2px;color:#333;">50%未満</div>
+                <div style="font-size:12px;font-weight:bold;color:#333;">${formatManYen(probUnder50)}</div>
+            </div>
+            <div class="funnel-item" style="flex:1;min-width:120px;background:#fff;border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:11px;margin-bottom:2px;color:#333;">50%-70%未満</div>
+                <div style="font-size:12px;font-weight:bold;color:#333;">${formatManYen(prob5060)}</div>
+            </div>
+            <div class="funnel-item" style="flex:1;min-width:120px;background:#fff;border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:11px;margin-bottom:2px;color:#333;">70%以上</div>
+                <div style="font-size:12px;font-weight:bold;color:#333;">${formatManYen(prob70)}</div>
+            </div>
+            <div class="funnel-item" style="flex:1;min-width:120px;background:rgba(33,150,243,0.1);border:1px solid rgba(33,150,243,0.25);border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:11px;margin-bottom:2px;color:#333;">80%以上</div>
+                <div style="font-size:12px;font-weight:bold;color:#333;">${formatManYen(prob80)}</div>
+            </div>
+            <div class="funnel-item" style="flex:1;min-width:120px;background:rgba(33,150,243,0.1);border:1px solid rgba(33,150,243,0.25);border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:11px;margin-bottom:2px;color:#333;">90%以上</div>
+                <div style="font-size:12px;font-weight:bold;color:#333;">${formatManYen(prob90)}</div>
+            </div>
+            <div class="funnel-item" style="flex:1;min-width:120px;background:rgba(33,150,243,0.1);border:1px solid rgba(33,150,243,0.25);border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:11px;margin-bottom:2px;color:#333;">100%</div>
+                <div style="font-size:12px;font-weight:bold;color:#333;">${formatManYen(prob100)}</div>
+            </div>
+        </div>
+    `;
+}
+
+        // 月別粗利実績の表示更新
+const currentMonth = getCurrentMonth();
+const monthlyProfitTarget = personalSettings.monthlyProfitTargets[currentMonth] || 0;
+const monthlyProfitActual = personalSettings.monthlyProfitActuals[currentMonth] || 0;
+const monthlyProfitRate = monthlyProfitTarget > 0 ? (monthlyProfitActual / monthlyProfitTarget) * 100 : 0;
+
+const actualDisplayEl = document.getElementById('monthlyProfitActualDisplay');
+const targetDisplayEl = document.getElementById('monthlyProfitTargetDisplay');
+const rateDisplayEl = document.getElementById('monthlyProfitRateDisplay');
+
+if (actualDisplayEl) actualDisplayEl.textContent = formatAmount(monthlyProfitActual);
+if (targetDisplayEl) targetDisplayEl.textContent = formatAmount(monthlyProfitTarget);
+if (rateDisplayEl) rateDisplayEl.textContent = `${monthlyProfitRate.toFixed(1)}%`;
+
+        
 function createTableRow(cardData) {
     const fiscalStructure = getFiscalYearStructure();
     const displayMonth = cardData.displayMonth || fiscalStructure.currentMonthKey;
@@ -3429,6 +3948,16 @@ function editTableForecast(id, key) {
         showToast('売上増見込を更新', 'success');
     }
 }
+        // 年間粗利の表示更新（目標は編集可能、実績は自動計算）
+const progress = calculateAllProgress();
+const yearlyTargetEl = document.getElementById('yearlyProfitTargetDisplay');
+const yearlyActualEl = document.getElementById('yearlyProfitActualDisplay');
+const yearlyRateEl = document.getElementById('yearlyProfitRateDisplay');
+
+if (yearlyTargetEl) yearlyTargetEl.textContent = formatAmount(personalSettings.yearlyProfitTarget || 0);
+if (yearlyActualEl) yearlyActualEl.textContent = formatAmount(progress.yearly.actual || 0);
+if (yearlyRateEl) yearlyRateEl.textContent = `${(progress.yearly.rate || 0).toFixed(1)}%`;
+
 
 function editTableProbability(id, key) {
     const c = cardsData.find(x => x.id === id);
@@ -4785,5 +5314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
     </script>
+    <button class="fab-settings" onclick="openPersonalSettingsModal()" title="個人設定" aria-label="個人設定">⚙️</button>
+<button class="fab-add" onclick="openNewCardModal()" title="塾登録" aria-label="塾登録">➕</button>
 </body>
 </html>

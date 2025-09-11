@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="営業支援ダッシュボード">
     <meta name="theme-color" content="#007bff">
-    <title>営業支援ダッシュボード v9.1</title>
+    <title>営業支援ダッシュボード v9.5</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -1585,7 +1585,7 @@ window.firebaseImports = {
     <div class="container">
         <div class="header-section">
     <div class="header-left">
-        <div class="header-title">営業支援ダッシュボード v9.1</div>
+        <div class="header-title">営業支援ダッシュボード v9.5</div>
         <div class="current-date-header" id="currentDateHeader">
             <span id="currentDateDisplay">2025年8月</span>
             <select class="global-month-selector" id="globalMonthSelector" onchange="changeAllCardsDisplayMonth(this.value)">
@@ -1660,27 +1660,27 @@ window.firebaseImports = {
            <!-- 既存のfunnel-section全体を以下に置き換えてください -->
 <div class="funnel-section">
     <div class="funnel-item" onclick="filterByProbability('under50')" aria-label="確率50%未満で絞り込み">
-        <div class="funnel-label">50未満</div>
+        <div class="funnel-label">50%未満</div>
         <div class="funnel-value" id="probUnder50">¥0万</div>
     </div>
     <div class="funnel-item" onclick="filterByProbability('50-60')" aria-label="確率50-70%で絞り込み">
-        <div class="funnel-label">50-70</div>
+        <div class="funnel-label">50%-70%未満</div>
         <div class="funnel-value" id="prob5060">¥0万</div>
     </div>
     <div class="funnel-item" onclick="filterByProbability('70')" aria-label="確率70%で絞り込み">
-        <div class="funnel-label">70</div>
+        <div class="funnel-label">70%以上</div>
         <div class="funnel-value" id="prob70">¥0万</div>
     </div>
     <div class="funnel-item" onclick="filterByProbability('80')" aria-label="確率80%で絞り込み">
-        <div class="funnel-label">80</div>
+        <div class="funnel-label">80%以上</div>
         <div class="funnel-value" id="prob80">¥0万</div>
     </div>
     <div class="funnel-item" onclick="filterByProbability('90')" aria-label="確率90%で絞り込み">
-        <div class="funnel-label">90</div>
+        <div class="funnel-label">90%以上</div>
         <div class="funnel-value" id="prob90">¥0万</div>
     </div>
     <div class="funnel-item" onclick="filterByProbability('100')" aria-label="確率100%で絞り込み">
-        <div class="funnel-label">100</div>
+        <div class="funnel-label">100%</div>
         <div class="funnel-value" id="prob100">¥0万</div>
     </div>
 </div>
@@ -2081,18 +2081,32 @@ async function quickLogin() {
         const password = prompt('パスワードを入力してください');
         
         if (!email || !password) return;
+          // 🆕 メールアドレス形式チェック
+        if (!email.includes('@') || email.trim().length === 0) {
+            showToast('正しいメールアドレスを入力してください', 'error');
+            return;
+        }
+        
+        // 🆕 パスワード長チェック（Firebase認証の最小要件）
+        if (password.trim().length < 6) {
+            showToast('パスワードは6文字以上で入力してください', 'error');
+            return;
+        }
         
         await window.firebaseImports.signInWithEmailAndPassword(window.firebaseAuth, email, password);
         showToast('ログインしました', 'success');
-    } catch (error) {
+       } catch (error) {
         console.error('ログインエラー:', error);
         
+        // 🆕 Firebase認証エラーの詳細マッピング
         const errorMessages = {
             'auth/invalid-credential': 'メールアドレスまたはパスワードが違います',
             'auth/user-not-found': 'ユーザーが見つかりません',
             'auth/wrong-password': 'パスワードが違います',
-            'auth/too-many-requests': '試行回数が多すぎます。少し待って再実行してください',
-            'auth/network-request-failed': 'ネットワークエラーです。接続を確認してください'
+            'auth/too-many-requests': '試行回数が多すぎます。しばらく待ってから再度お試しください',
+            'auth/network-request-failed': 'ネットワークエラーです。インターネット接続を確認してください',
+            'auth/invalid-email': 'メールアドレスの形式が正しくありません',
+            'auth/user-disabled': 'このアカウントは無効化されています。管理者にお問い合わせください'
         };
         
         const message = errorMessages[error.code] || (error.code || error.message);
@@ -2788,18 +2802,18 @@ async function saveCardsData() {
                 cardsData: cardsData,
                 nextCardId: nextCardId
             }));
-            console.log('LocalStorageに保存しました');
+            console.log('LocalStorageに保存しました（未ログイン/オフライン）');
         } catch (e) {
             console.error('LocalStorage save error:', e);
+            showToast('ローカル保存に失敗しました', 'error');
         }
         return;
     }
     
     try {
-                for (const card of cardsData) {
+        for (const card of cardsData) {
             const assignedId = card.assignedUserId || currentUser.uid;
             
-            // docIdが未設定の場合は生成（既存データの互換性確保）
             if (!card.docId) {
                 card.docId = `${assignedId}_${card.id}`;
             }
@@ -2817,26 +2831,46 @@ async function saveCardsData() {
             await window.firebaseImports.setDoc(cardRef, cardToSave);
         }
 
-        
         updateAreaFilterOptions();
         showToast('チームデータを保存しました', 'success');
         console.log('Firestoreに保存完了:', cardsData.length, '件');
         
     } catch (error) {
         console.error('Firestore save error:', error);
-        showToast('保存エラー: ' + error.message, 'error');
         
+        // 🆕 詳細なエラーメッセージマッピング
+        const errorMessages = {
+            'permission-denied': '保存権限がありません。管理者にお問い合わせください',
+            'quota-exceeded': 'ストレージ容量が上限に達しています',
+            'unavailable': 'サービスが一時的に利用できません。時間をおいて再試行してください',
+            'deadline-exceeded': 'ネットワークが不安定です。接続を確認してください',
+            'cancelled': '保存操作がキャンセルされました',
+            'internal': '予期せぬエラーが発生しました',
+            'unauthenticated': '認証が必要です。再ログインしてください'
+        };
+        
+        const message = errorMessages[error.code] || `保存エラー: ${error.message || 'データ保存に失敗しました'}`;
+        showToast(message, 'error');
+        
+        // 🆕 自動バックアップ機能
         try {
-            localStorage.setItem('salesDashboard_cardsData_v9', JSON.stringify({
+            const backupKey = `salesDashboard_backup_${Date.now()}`;
+            localStorage.setItem(backupKey, JSON.stringify({
                 cardsData: cardsData,
-                nextCardId: nextCardId
+                nextCardId: nextCardId,
+                timestamp: new Date().toISOString(),
+                userInfo: currentUser?.uid || 'unknown',
+                errorCode: error.code || 'unknown_error'
             }));
-            showToast('ローカルに保存しました', 'info');
-        } catch (e) {
-            console.error('LocalStorage fallback error:', e);
+            showToast('ローカルにバックアップを保存しました（復旧可能）', 'info');
+            console.log('バックアップ保存完了:', backupKey);
+        } catch (backupError) {
+            console.error('Backup failed:', backupError);
+            showToast('バックアップ保存も失敗しました。重要なデータは手動で控えてください', 'error');
         }
     }
 }
+
 
 function loadCardsData() {
     try {
@@ -3035,7 +3069,7 @@ function migrateToV9Structure() {
     
     if (migrationCount > 0) {
         saveCardsData();
-        showToast(`${migrationCount}件のデータをv9.1形式に移行しました`, 'info');
+        showToast(`${migrationCount}件のデータをv9.5形式に移行しました`, 'info');
     }
 }
 
@@ -4145,10 +4179,30 @@ function openMemoDetailModal(cardId, monthKey) {
     document.getElementById('memoCardName').textContent = `塾名: ${cardData.jukuName}`;
     document.getElementById('memoContentInput').value = monthData.memo || '';
     
-    currentEditingMemo = { cardId, monthKey };
+    // 🆕 権限チェック追加
+    const canEdit = hasPermission('edit_data', cardData) &&
+                    monthKey === getFiscalYearStructure().currentMonthKey;
     
+    const textarea = document.getElementById('memoContentInput');
+    const saveBtn = document.querySelector('#memoDetailModal .btn-primary');
+    
+    textarea.readOnly = !canEdit;
+    saveBtn.style.display = canEdit ? 'inline-block' : 'none';
+    
+    if (!canEdit) {
+        textarea.style.backgroundColor = '#f8f9fa';
+        textarea.style.cursor = 'not-allowed';
+        textarea.title = '編集権限がないか、過去月のため編集できません';
+    } else {
+        textarea.style.backgroundColor = '';
+        textarea.style.cursor = '';
+        textarea.title = '';
+    }
+    
+    currentEditingMemo = { cardId, monthKey };
     openModal('memoDetailModal');
 }
+
 
 function closeMemoDetailModal() {
     currentEditingMemo = null;
@@ -4162,6 +4216,18 @@ function saveMemoContent() {
     const cardData = cardsData.find(card => card.id === cardId);
     if (!cardData) return;
 
+    // 🆕 権限チェック追加（この4行を追加）
+    if (!hasPermission('edit_data', cardData)) {
+        showToast('編集権限がありません', 'error');
+        return;
+    }
+    
+    if (monthKey !== getFiscalYearStructure().currentMonthKey) {
+        showToast('当月分のみ編集可能です', 'info');
+        return;
+    }
+
+    // 既存のコードはそのまま
     const newMemoContent = document.getElementById('memoContentInput').value;
     
     if (!cardData.monthlyData) cardData.monthlyData = {};
@@ -4697,6 +4763,27 @@ document.addEventListener('DOMContentLoaded', function() {
     renderCardsOptimized();
     updateDashboard();
 });
+        // 🆕 ネットワーク状態の監視機能
+window.addEventListener('offline', () => {
+    showToast('オフラインになりました（ローカル保存に切替）', 'info');
+    console.log('Network status: OFFLINE - Switching to local storage mode');
+});
+
+window.addEventListener('online', () => {
+    showToast('オンラインに復帰しました', 'success');
+    console.log('Network status: ONLINE - Firebase sync available');
+});
+
+// 🆕 初期読み込み時のネットワーク状態確認
+document.addEventListener('DOMContentLoaded', () => {
+    if (!navigator.onLine) {
+        console.log('Initial network status: OFFLINE');
+        setTimeout(() => {
+            showToast('オフラインモードで起動しました', 'info');
+        }, 1000); // 他の初期化処理後に表示
+    }
+});
+
     </script>
 </body>
 </html>

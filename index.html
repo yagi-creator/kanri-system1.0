@@ -5296,37 +5296,6 @@ function renderCardsOptimized() {
         }
     }, RENDER_DEBOUNCE_MS);
 }
-
-function renderCards() {
-    const tb = document.getElementById('jukuTableBody');
-    const mc = document.getElementById('cardsContainer');
-    tb.innerHTML = '';
-    mc.innerHTML = '';
-
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
-    const probabilityFilter = activeProbabilityFilter || 'all';
-    const areaFilter = document.getElementById('areaFilter').value;
-
-    let filteredCards = cardsData.filter(cardData => {
-        const title = cardData.jukuName.toLowerCase();
-        const status = cardData.status;
-        const cardAddress = cardData.address || '';
-        const cardMunicipality = extractMunicipality(cardAddress);
-        
-        // カードの現在表示月の確率を取得
-        const activeKey = getCardActiveMonthKey(cardData);
-        const cardProbability = cardData.monthlyData?.[activeKey]?.probability || 50;
-        
-        let show = true;
-        if (searchTerm && !title.includes(searchTerm)) show = false;
-        if (statusFilter !== 'all' && status !== statusFilter) show = false;
-        if (areaFilter !== 'all' && cardMunicipality !== areaFilter) show = false;
-        if (probabilityFilter !== 'all' && !matchesProbabilityFilter(cardProbability, probabilityFilter)) show = false;
-        return show;
-    });
-
-
 function editSalesIncreaseForecast(cardId, monthKey, element) {
     const cardData = cardsData.find(card => card.id === cardId);
     if (!cardData) return;
@@ -5454,6 +5423,56 @@ function editProbability(cardId, monthKey, element) {
             cancelEdit();
         }
     };
+}
+function renderCards() {
+    const tb = document.getElementById('jukuTableBody');
+    const mc = document.getElementById('cardsContainer');
+    tb.innerHTML = '';
+    mc.innerHTML = '';
+
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const probabilityFilter = activeProbabilityFilter || 'all';
+    const areaFilter = document.getElementById('areaFilter').value;
+
+        let filteredCards = cardsData.filter(cardData => {
+        const title = cardData.jukuName.toLowerCase();
+        const status = cardData.status;
+        const cardAddress = cardData.address || '';
+        const cardMunicipality = extractMunicipality(cardAddress);
+        
+        // カードの現在表示月の確率を取得
+        const activeKey = getCardActiveMonthKey(cardData);
+        const cardProbability = cardData.monthlyData?.[activeKey]?.probability || 50;
+        
+        let show = true;
+        if (searchTerm && !title.includes(searchTerm)) show = false;
+        if (statusFilter !== 'all' && status !== statusFilter) show = false;
+        if (areaFilter !== 'all' && cardMunicipality !== areaFilter) show = false;
+        if (probabilityFilter !== 'all' && !matchesProbabilityFilter(cardProbability, probabilityFilter)) show = false;
+        return show;
+    });
+
+    // 並び替え処理
+    filteredCards = getSortedCards(filteredCards);
+
+    // DOM要素への反映
+    filteredCards.forEach((cardData) => {
+        const tableRow = createTableRow(cardData);
+        tb.appendChild(tableRow);
+        
+        const cardElement = createNewCardElement(cardData);
+        mc.appendChild(cardElement);
+    });
+    
+    // 並び替え情報の更新
+    updateSortInfo();
+    
+    // 進捗キャッシュの更新判定
+    if (Date.now() - (progressCache?.timestamp || 0) > 2000) {
+        progressCache = null;
+        updateDashboard();
+    }
 }
 
 function setupSearchWithIMESupport() {

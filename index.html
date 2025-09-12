@@ -1543,59 +1543,77 @@
         grid-template-rows: repeat(3, 1fr);
     }
 }
-/* PC版レイアウト（1025px以上）- 3段構成 */
+/* PC版レイアウト（1025px以上） */
 @media (min-width: 1025px) {
+    .container {
+        display: flex;
+        flex-direction: column;
+    }
+    .header-section { order: 1; }
+    .progress-main-cards { order: 2; }
+    .progress-middle-section { order: 3; }
+    .funnel-section { order: 4; }
+    .control-section { order: 5; }
+    .cards-section { order: 6; }
+
     .progress-main-cards {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 12px;
         margin-bottom: 16px;
-        order: 1;
     }
     .progress-middle-section {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 12px;
         margin-bottom: 16px;
-        order: 2;
     }
     .funnel-section {
         display: flex;
         gap: 8px;
-        order: 3;
+        margin-bottom: 16px;
     }
 }
 
+/* スマホ版レイアウト（1024px以下） */
 @media (max-width: 1024px) {
+    .container {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .header-section { order: 1; }
     .progress-middle-section { 
-        order: 1;
+        order: 2;
         display: flex;
         flex-direction: column;
         gap: 12px;
         margin-bottom: 16px;
     }
     .funnel-section { 
-        order: 2;
+        order: 3;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         grid-template-rows: repeat(2, 1fr);
         gap: 8px;
         margin-bottom: 16px;
     }
-    .cards-section {
-        order: 3;
-    }
+    .control-section { order: 4; }
+    .cards-section { order: 5; }
     .progress-main-cards { 
-        order: 4;
+        order: 6; /* 塾カードの下に配置 */
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr; /* 2列×2行で見やすく */
         gap: 12px;
         margin-bottom: 16px;
+        margin-top: 16px;
     }
     .control-section .control-buttons {
         display: none;
     }
 }
+
 
 
 /* カード色分け */
@@ -1970,8 +1988,9 @@ window.firebaseImports = {
             <button class="btn btn-auth" onclick="quickLogout()" id="logoutBtn" style="display: none;">🚪 ログアウト</button>
         </div>
     </div>
-</div> <div class="progress-section">
-    <!-- PC版: 最上段4枚 / スマホ版: 最下段2×2 -->
+</div>
+        
+        <!-- progress-sectionラッパーを削除し、各セクションをcontainerの直接の子に -->
 <div class="progress-main-cards">
     <!-- 月別粗利カード -->
     <div class="progress-card monthly-profit-card">
@@ -2066,49 +2085,46 @@ window.firebaseImports = {
     </div>
 </div>
 
-
-    <!-- PC版: 中段2枚 / スマホ版: 最上段縦2枚 -->
-    <div class="progress-middle-section">
-        <div class="progress-middle-card">
-            <div class="progress-middle-content" id="salesProspectDisplay">
-                売上増見込 ¥0/¥0 (0.0%)
-            </div>
-        </div>
-        <div class="progress-middle-card">
-            <div class="progress-middle-content" id="profitProspectDisplay">
-                粗利増見込 ¥0/¥0 (0.0%)
-            </div>
+<div class="progress-middle-section">
+    <div class="progress-middle-card">
+        <div class="progress-middle-content" id="salesProspectDisplay">
+            売上増見込 ¥0/¥0 (0.0%)
         </div>
     </div>
-
-    <!-- 既存のファネル6枚（位置調整のみ） -->
-    <div class="funnel-section">
-        <div class="funnel-item" onclick="filterByProbability('under50')" aria-label="確率50%未満で絞り込み">
-            <div class="funnel-label">50%未満</div>
-            <div class="funnel-value" id="probUnder50">¥0万</div>
-        </div>
-        <div class="funnel-item" onclick="filterByProbability('50-60')" aria-label="確率50-70%で絞り込み">
-            <div class="funnel-label">50%-70%未満</div>
-            <div class="funnel-value" id="prob5060">¥0万</div>
-        </div>
-        <div class="funnel-item" onclick="filterByProbability('70')" aria-label="確率70%で絞り込み">
-            <div class="funnel-label">70%以上</div>
-            <div class="funnel-value" id="prob70">¥0万</div>
-        </div>
-        <div class="funnel-item" onclick="filterByProbability('80')" aria-label="確率80%で絞り込み">
-            <div class="funnel-label">80%以上</div>
-            <div class="funnel-value" id="prob80">¥0万</div>
-        </div>
-        <div class="funnel-item" onclick="filterByProbability('90')" aria-label="確率90%で絞り込み">
-            <div class="funnel-label">90%以上</div>
-            <div class="funnel-value" id="prob90">¥0万</div>
-        </div>
-        <div class="funnel-item" onclick="filterByProbability('100')" aria-label="確率100%で絞り込み">
-            <div class="funnel-label">100%</div>
-            <div class="funnel-value" id="prob100">¥0万</div>
+    <div class="progress-middle-card">
+        <div class="progress-middle-content" id="profitProspectDisplay">
+            粗利増見込 ¥0/¥0 (0.0%)
         </div>
     </div>
 </div>
+
+<div class="funnel-section">
+    <div class="funnel-item" onclick="filterByProbability('under50')" aria-label="確率50%未満で絞り込み">
+        <div class="funnel-label">50%未満</div>
+        <div class="funnel-value" id="probUnder50">¥0万</div>
+    </div>
+    <div class="funnel-item" onclick="filterByProbability('50-60')" aria-label="確率50-70%で絞り込み">
+        <div class="funnel-label">50%-70%未満</div>
+        <div class="funnel-value" id="prob5060">¥0万</div>
+    </div>
+    <div class="funnel-item" onclick="filterByProbability('70')" aria-label="確率70%で絞り込み">
+        <div class="funnel-label">70%以上</div>
+        <div class="funnel-value" id="prob70">¥0万</div>
+    </div>
+    <div class="funnel-item" onclick="filterByProbability('80')" aria-label="確率80%で絞り込み">
+        <div class="funnel-label">80%以上</div>
+        <div class="funnel-value" id="prob80">¥0万</div>
+    </div>
+    <div class="funnel-item" onclick="filterByProbability('90')" aria-label="確率90%で絞り込み">
+        <div class="funnel-label">90%以上</div>
+        <div class="funnel-value" id="prob90">¥0万</div>
+    </div>
+    <div class="funnel-item" onclick="filterByProbability('100')" aria-label="確率100%で絞り込み">
+        <div class="funnel-label">100%</div>
+        <div class="funnel-value" id="prob100">¥0万</div>
+    </div>
+</div>
+
 
         <div class="control-section">
             <div class="search-container">
@@ -2903,7 +2919,7 @@ let personalSettings = {
     },
     cumulativeProfitActual: 0
 };
-
+let activeProbabilityFilter = 'all';
 let userSettingsCache = {};
         
 const PROBABILITY_CONFIG = {
@@ -4866,9 +4882,11 @@ function updateGraphLegend(datasets) {
 }
 
 function filterByProbability(probability) {
-    document.getElementById('probabilityFilter').value = probability;
+    activeProbabilityFilter = probability || 'all';
     applyFilters();
+    showToast(`確率${probability === 'all' ? '全体' : probability}で絞り込みました`, 'info');
 }
+
 
 function openNewCardModal() {
     if (!hasPermission('create_data')) {
@@ -4933,7 +4951,7 @@ function closePersonalSettingsModal() {
 function clearFilters() {
     document.getElementById('searchInput').value = '';
     document.getElementById('statusFilter').value = 'all';
-    document.getElementById('probabilityFilter').value = 'all';
+    activeProbabilityFilter = 'all';
     document.getElementById('areaFilter').value = 'all';
     document.getElementById('sortSelect').value = 'sales-desc';
     renderCardsOptimized();
@@ -5287,40 +5305,27 @@ function renderCards() {
 
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const statusFilter = document.getElementById('statusFilter').value;
-    const probabilityFilter = document.getElementById('probabilityFilter').value;
+    const probabilityFilter = activeProbabilityFilter || 'all';
     const areaFilter = document.getElementById('areaFilter').value;
 
     let filteredCards = cardsData.filter(cardData => {
-    const title = cardData.jukuName.toLowerCase();
-    const status = cardData.status;
-    const cardAddress = cardData.address || '';
-    const cardMunicipality = extractMunicipality(cardAddress);
-    
-    let show = true;
-    if (searchTerm && !title.includes(searchTerm)) show = false;
-    if (statusFilter !== 'all' && status !== statusFilter) show = false;
-    if (areaFilter !== 'all' && cardMunicipality !== areaFilter) show = false;
-    return show;
-});
-
-
-    filteredCards = getSortedCards(filteredCards);
-
-    filteredCards.forEach((cardData) => {
-        const tableRow = createTableRow(cardData);
-        tb.appendChild(tableRow);
+        const title = cardData.jukuName.toLowerCase();
+        const status = cardData.status;
+        const cardAddress = cardData.address || '';
+        const cardMunicipality = extractMunicipality(cardAddress);
         
-        const cardElement = createNewCardElement(cardData);
-        mc.appendChild(cardElement);
+        // カードの現在表示月の確率を取得
+        const activeKey = getCardActiveMonthKey(cardData);
+        const cardProbability = cardData.monthlyData?.[activeKey]?.probability || 50;
+        
+        let show = true;
+        if (searchTerm && !title.includes(searchTerm)) show = false;
+        if (statusFilter !== 'all' && status !== statusFilter) show = false;
+        if (areaFilter !== 'all' && cardMunicipality !== areaFilter) show = false;
+        if (probabilityFilter !== 'all' && !matchesProbabilityFilter(cardProbability, probabilityFilter)) show = false;
+        return show;
     });
-    
-    updateSortInfo();
-    
-    if (Date.now() - (progressCache?.timestamp || 0) > 2000) {
-        progressCache = null;
-        updateDashboard();
-    }
-}
+
 
 function editSalesIncreaseForecast(cardId, monthKey, element) {
     const cardData = cardsData.find(card => card.id === cardId);

@@ -2971,11 +2971,18 @@ function getDefaultSettings() {
 
 // アクティブな個人設定を取得する関数
 function getActiveSettings() {
-    const targetId = currentViewTarget || (currentUser?.uid || null);
-    return (targetId && userSettingsCache[targetId]) ? 
-           userSettingsCache[targetId] : 
-           personalSettings;
+    const selfId = currentUser?.uid || null;
+    const targetId = currentViewTarget || selfId;
+    // 自分のデータを表示しているときは常に最新の personalSettings を使う
+    if (selfId && targetId === selfId) {
+        return personalSettings;
+    }
+    // 他人表示時のみキャッシュを参照（なければデフォルト）
+    return (targetId && userSettingsCache[targetId]) 
+        ? userSettingsCache[targetId] 
+        : getDefaultSettings();
 }
+
 
 // 指定ユーザーの個人設定を読み込む関数
 async function loadSettingsForTarget(uid) {
@@ -3135,7 +3142,6 @@ function updateCardDifference(elementId, amount, formatter = formatAmount) {
 
 
 
-// 月別粗利実績のインライン編集
 function editMonthlyProfitInline(element) {
     if (!currentUser || currentViewTarget !== currentUser.uid) {
         showToast('自分のデータ表示中のみ編集可能です', 'error');
@@ -3149,16 +3155,24 @@ function editMonthlyProfitInline(element) {
     if (newValue === null) return;
     
     const parsedValue = parseNumberSafely(newValue);
+
+    // 1) モデル更新
     personalSettings.monthlyProfitActuals[currentMonth] = parsedValue;
-    
+
+    // 2) UIを即時更新（リペイントを優先）
     element.textContent = formatAmount(parsedValue);
-    
-    savePersonalSettingsComplete();
+
+    // 3) 進捗キャッシュを無効化してダッシュボード再計算を即時実行
     progressCache = null;
     updateDashboard();
+
+    // 4) 保存はブラウザのアイドル時間に遅延実行（最高の最適化）
+    scheduleSavePersonalSettings();
+
     showToast('月別粗利実績を更新しました', 'success');
 }
-        // 累積粗利実績のインライン編集
+
+
 function editCumulativeProfitInline(element) {
     if (!currentUser || currentViewTarget !== currentUser.uid) {
         showToast('自分のデータ表示中のみ編集可能です', 'error');
@@ -3172,21 +3186,23 @@ function editCumulativeProfitInline(element) {
     
     const parsedValue = parseNumberSafely(newValue);
     
-    // 累積粗利実績を直接更新
+    // 1) モデル更新
     personalSettings.cumulativeProfitActual = parsedValue;
     
-    // 即座に表示更新
+    // 2) UIを即時更新（体感遅延を無くす）
     element.textContent = formatAmount(parsedValue);
     
-    // 個人設定とクラウドに保存
-    savePersonalSettingsComplete();
-    
-    // キャッシュクリアして再計算
+    // 3) 再計算キャッシュを先に無効化してダッシュボードを更新
     progressCache = null;
     updateDashboard();
     
+    // 4) 保存はブラウザのアイドル時間に遅延実行（最高の最適化）
+    scheduleSavePersonalSettings();
+    
     showToast('累積粗利実績を更新しました', 'success');
 }
+
+
 
 
 function formatDateForDisplay(s) {
@@ -3605,10 +3621,14 @@ function savePersonalSettings() {
     }
 }
         
-// Firebase連携保存関数
 async function savePersonalSettingsComplete() {
     // ローカル保存
     savePersonalSettings();
+
+    // キャッシュ即時更新（自分表示中の反映遅延を解消）
+    if (currentUser?.uid) {
+        userSettingsCache[currentUser.uid] = { ...personalSettings };
+    }
     
     // Firebase保存
     if (currentUser && window.db && window.firebaseImports) {
@@ -3625,6 +3645,16 @@ async function savePersonalSettingsComplete() {
         }
     }
 }
+
+        // 保存処理をブラウザのアイドル時間に遅延実行するヘルパー関数
+function scheduleSavePersonalSettings() {
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => savePersonalSettingsComplete());
+    } else {
+        setTimeout(() => savePersonalSettingsComplete(), 0);
+    }
+}
+
 
 // ログイン時同期関数
 async function syncPersonalSettingsOnLogin() {

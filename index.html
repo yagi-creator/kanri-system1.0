@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="上半期営業支援ダッシュボード">
     <meta name="theme-color" content="#007bff">
-    <title>上半期営業支援ダッシュボード v10.0</title>
+    <title>上半期営業支援ダッシュボード v10.1</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -1566,7 +1566,6 @@
     }
 }
 
-/* スマホ版レイアウト（1024px以下）- 4段構成 */
 @media (max-width: 1024px) {
     .progress-middle-section { 
         order: 1;
@@ -1583,17 +1582,21 @@
         gap: 8px;
         margin-bottom: 16px;
     }
+    .cards-section {
+        order: 3;
+    }
     .progress-main-cards { 
         order: 4;
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 12px;
         margin-bottom: 16px;
     }
-    .control-buttons {
+    .control-section .control-buttons {
         display: none;
     }
 }
+
 
 /* カード色分け */
 .progress-card-monthly-profit {
@@ -1846,6 +1849,57 @@
     .master-view-container { display: none !important; }
     .master-view-option { display: none !important; }
 }
+/* 中段黄色カードの見込み値強調 */
+.value-emphasis {
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    color: #B8860B !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 1024px) {
+    .value-emphasis {
+        font-size: 16px !important;
+    }
+}
+
+/* 売上カードの編集機能を完全無効化 */
+.monthly-sales-card .editable-profit-field,
+.cumulative-sales-card .editable-profit-field {
+    background: transparent !important;
+    border: none !important;
+    color: inherit !important;
+    cursor: default !important;
+    pointer-events: none !important;
+}
+
+/* モーダル内のボタン表示確保 */
+.modal .control-buttons {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+}
+
+/* 4枚カードの色分け */
+.monthly-profit-card {
+    background: #E8F5E8 !important;
+    color: #1B5E20 !important;
+}
+
+.monthly-sales-card {
+    background: #F1F8E9 !important;
+    color: #2E7D32 !important;
+}
+
+.cumulative-profit-card {
+    background: #E3F2FD !important;
+    color: #0D47A1 !important;
+}
+
+.cumulative-sales-card {
+    background: #E8F4FD !important;
+    color: #1565C0 !important;
+}
 
     </style>
    <!-- Firebase SDK -->
@@ -1920,19 +1974,17 @@ window.firebaseImports = {
     <!-- PC版: 最上段4枚 / スマホ版: 最下段2×2 -->
 <div class="progress-main-cards">
     <!-- 月別粗利カード -->
-    <div class="progress-card new-monthly-profit-card">
+    <div class="progress-card monthly-profit-card">
         <h3>月別粗利</h3>
         <div class="card-metrics">
             <div class="metric-row">
                 <span class="metric-label">目標:</span>
                 <span class="metric-value" id="monthlyProfitTarget">¥0</span>
             </div>
-           <div class="metric-row">
-    <span class="metric-label">実績:</span>
-    <span class="metric-value editable-profit-field" onclick="editMonthlyProfitInline(this)" id="monthlyProfitActual">¥0</span>
-</div>
-
-
+            <div class="metric-row">
+                <span class="metric-label">実績:</span>
+                <span class="metric-value editable-profit-field" onclick="editMonthlyProfitInline(this)" id="monthlyProfitActual">¥0</span>
+            </div>
             <div class="metric-row">
                 <span class="metric-label">差額:</span>
                 <span class="metric-value" id="monthlyProfitDiff">¥0</span>
@@ -1945,20 +1997,17 @@ window.firebaseImports = {
     </div>
 
     <!-- 月別売上カード -->
-    <div class="progress-card new-monthly-sales-card">
+    <div class="progress-card monthly-sales-card">
         <h3>月別売上</h3>
         <div class="card-metrics">
             <div class="metric-row">
                 <span class="metric-label">目標:</span>
                 <span class="metric-value" id="monthlySalesTarget">¥0</span>
             </div>
-           <div class="metric-row">
-    <span class="metric-label">実績:</span>
-    <span class="metric-value editable-profit-field" onclick="editMonthlyProfitInline(this)" id="monthlyProfitActual">¥0</span>
-</div>
-
-
-
+            <div class="metric-row">
+                <span class="metric-label">実績:</span>
+                <span class="metric-value" id="monthlySalesActual">¥0</span>
+            </div>
             <div class="metric-row">
                 <span class="metric-label">差額:</span>
                 <span class="metric-value" id="monthlySalesDiff">¥0</span>
@@ -1971,18 +2020,17 @@ window.firebaseImports = {
     </div>
 
     <!-- 累積粗利カード -->
-    <div class="progress-card new-cumulative-profit-card">
+    <div class="progress-card cumulative-profit-card">
         <h3>累積粗利</h3>
         <div class="card-metrics">
             <div class="metric-row">
                 <span class="metric-label">目標:</span>
                 <span class="metric-value" id="cumulativeProfitTarget">¥0</span>
             </div>
-           <div class="metric-row">
-    <span class="metric-label">実績:</span>
-    <span class="metric-value editable-profit-field" onclick="editCumulativeProfitInline(this)" id="cumulativeProfitActual">¥0</span>
-</div>
-
+            <div class="metric-row">
+                <span class="metric-label">実績:</span>
+                <span class="metric-value editable-profit-field" onclick="editCumulativeProfitInline(this)" id="cumulativeProfitActual">¥0</span>
+            </div>
             <div class="metric-row">
                 <span class="metric-label">差額:</span>
                 <span class="metric-value" id="cumulativeProfitDiff">¥0</span>
@@ -1995,7 +2043,7 @@ window.firebaseImports = {
     </div>
 
     <!-- 累積売上カード -->
-    <div class="progress-card new-cumulative-sales-card">
+    <div class="progress-card cumulative-sales-card">
         <h3>累積売上</h3>
         <div class="card-metrics">
             <div class="metric-row">
@@ -2003,10 +2051,9 @@ window.firebaseImports = {
                 <span class="metric-value" id="cumulativeSalesTarget">¥0</span>
             </div>
             <div class="metric-row">
-    <span class="metric-label">実績:</span>
-    <span class="metric-value" id="cumulativeSalesActual">¥0</span>
-</div>
-
+                <span class="metric-label">実績:</span>
+                <span class="metric-value" id="cumulativeSalesActual">¥0</span>
+            </div>
             <div class="metric-row">
                 <span class="metric-label">差額:</span>
                 <span class="metric-value" id="cumulativeSalesDiff">¥0</span>
@@ -2018,6 +2065,7 @@ window.firebaseImports = {
         </div>
     </div>
 </div>
+
 
     <!-- PC版: 中段2枚 / スマホ版: 最上段縦2枚 -->
     <div class="progress-middle-section">
@@ -2099,8 +2147,7 @@ window.firebaseImports = {
                     <option value="existing">既存</option>
                     <option value="former">元既存</option>
                 </select>
-                <select class="filter-select" id="probabilityFilter" onchange="applyFilters()" aria-label="確率で絞り込み">
-                </select>
+               
                 <select class="filter-select" id="areaFilter" onchange="applyFilters()" aria-label="エリアで絞り込み">
                 </select>
             </div>
@@ -2954,6 +3001,79 @@ function formatAmount(amount) {
     const sign = amount < 0 ? '-' : '';
     return `${sign}¥${absAmount.toLocaleString()}`;
 }
+        // === 4枚カード用ヘルパー関数群（エラー解消） ===
+
+// カード値更新のヘルパー関数
+function updateCardValue(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = value;
+    } else {
+        console.warn(`Element with id '${elementId}' not found`);
+    }
+}
+
+// カード差額更新のヘルパー関数
+function updateCardDifference(elementId, amount) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        const absAmount = Math.abs(amount);
+        const formattedAmount = formatAmount(absAmount);
+        const diffText = amount < 0 ? `Δ${formattedAmount}` : formattedAmount;
+        
+        element.textContent = diffText;
+        element.classList.remove('negative', 'positive', 'neutral');
+        element.classList.add(amount < 0 ? 'negative' : amount > 0 ? 'positive' : 'neutral');
+    }
+}
+
+// 売上フィールドを強制的に編集不可にする防御機能
+function lockAutoCalculatedFields() {
+    ['monthlySalesActual', 'cumulativeSalesActual'].forEach(id => {
+        const element = document.getElementById(id);
+        if (!element) return;
+        
+        element.classList.remove('editable-profit-field');
+        element.removeAttribute('onclick');
+        element.style.cursor = 'default';
+    });
+}
+
+// 住所から市区町村を抽出する関数
+function extractMunicipality(address) {
+    if (!address || typeof address !== 'string') return '';
+    
+    const cleanAddress = address.trim();
+    if (!cleanAddress) return '';
+
+    // 政令指定都市の区（例：大阪市中央区）
+    const cityWardMatch = cleanAddress.match(/(.+?市.+?区)/);
+    if (cityWardMatch) return cityWardMatch[1];
+
+    // 東京23区（例：新宿区）
+    const tokyoWardMatch = cleanAddress.match(/([^都道府県]+区)(?![市町村])/);
+    if (tokyoWardMatch) return tokyoWardMatch[1];
+
+    // 一般市（例：豊中市）
+    const cityMatch = cleanAddress.match(/(.+?市)/);
+    if (cityMatch) return cityMatch[1];
+
+    // 町村（例：○○町）
+    const townVillageMatch = cleanAddress.match(/(.+?[町村])/);
+    if (townVillageMatch) return townVillageMatch[1];
+
+    // フォールバック処理
+    let fallbackAddress = cleanAddress;
+    ['都', '道', '府', '県'].forEach(suffix => {
+        const index = fallbackAddress.indexOf(suffix);
+        if (index !== -1) {
+            fallbackAddress = fallbackAddress.substring(index + 1);
+        }
+    });
+
+    return fallbackAddress.split(/[\s　,、]/)[0] || cleanAddress;
+}
+
         
 function formatDifferenceAmount(amount, formatter = formatAmount) {
     if (!Number.isFinite(amount)) amount = 0;
@@ -3660,34 +3780,40 @@ function updateAreaFilterOptions() {
     const currentValue = areaFilter.value || 'all';
     areaFilter.innerHTML = '<option value="all">全地域</option>';
     
-    const uniqueAreas = [...new Set(cardsData.map(card => card.area).filter(area => area && area.trim()))];
-    uniqueAreas.sort().forEach(area => {
+    const municipalitySet = new Set();
+    
+    cardsData.forEach(card => {
+        const address = card.address || '';
+        if (address.trim()) {
+            const municipality = extractMunicipality(address);
+            if (municipality) {
+                municipalitySet.add(municipality);
+            }
+        }
+    });
+    
+    const sortedMunicipalities = Array.from(municipalitySet).sort((a, b) => 
+        a.localeCompare(b, 'ja', { numeric: true })
+    );
+    
+    sortedMunicipalities.forEach(municipality => {
         const option = document.createElement('option');
-        option.value = area;
-        option.textContent = area;
+        option.value = municipality;
+        option.textContent = municipality;
         areaFilter.appendChild(option);
     });
     
-    if (uniqueAreas.includes(currentValue) || currentValue === 'all') {
+    if (sortedMunicipalities.includes(currentValue) || currentValue === 'all') {
         areaFilter.value = currentValue;
-    } else {
-        areaFilter.value = 'all';
     }
 }
 
+
 function updateProbabilityFilterOptions() {
-    const probabilityFilter = document.getElementById('probabilityFilter');
-    if (!probabilityFilter) return;
-    
-    probabilityFilter.innerHTML = '';
-    
-    PROBABILITY_CONFIG.filters.forEach(filter => {
-        const option = document.createElement('option');
-        option.value = filter.value;
-        option.textContent = filter.label;
-        probabilityFilter.appendChild(option);
-    });
+    // 確率プルダウン削除により無効化
+    console.log('Probability filter removed - function disabled');
 }
+
 
 function updateGlobalMonthSelector() {
     const selector = document.getElementById('globalMonthSelector');
@@ -3835,33 +3961,52 @@ function updateMiddleCards() {
     const elProfit = document.getElementById('profitProspectDisplay');
     if (!elSales || !elProfit) return;
 
-    const progress = calculateAllProgress();
     const settings = getActiveSettings();
+    const currentMonthKey = getFiscalYearStructure().currentMonthKey;
     
-    // 売上増見込の表示
+    // 80%以上の確度のみで売上・粗利見込を集計
+    let totalSalesProspect = 0;
+    let totalProfitProspect = 0;
+    
+    cardsData.forEach(card => {
+        const monthData = card.monthlyData?.[currentMonthKey] || { 
+            salesIncreaseForecast: 0, 
+            probability: 50 
+        };
+        
+        if (monthData.probability >= 80) {
+            const salesAmount = monthData.salesIncreaseForecast || 0;
+            const profitAmount = salesAmount * ((settings.profitRate || 0) / 100);
+            totalSalesProspect += salesAmount;
+            totalProfitProspect += profitAmount;
+        }
+    });
+    
     const salesTarget = settings.yearlySalesIncreaseTarget || 0;
-    const salesProspect = progress.salesTarget?.prospect || 0;
-    const salesRate = salesTarget > 0 ? (salesProspect / salesTarget) * 100 : 0;
-    
-    // 粗利増見込の表示  
     const profitTarget = settings.yearlyProfitIncreaseTarget || 0;
-    const profitProspect = progress.prospect?.total || 0;
-    const profitRate = profitTarget > 0 ? (profitProspect / profitTarget) * 100 : 0;
+    const salesRate = salesTarget > 0 ? (totalSalesProspect / salesTarget) * 100 : 0;
+    const profitRate = profitTarget > 0 ? (totalProfitProspect / profitTarget) * 100 : 0;
     
-    elSales.textContent = `売上増見込 ${formatAmount(salesProspect)}/${formatAmount(salesTarget)} (${salesRate.toFixed(1)}%)`;
-    elProfit.textContent = `粗利増見込 ${formatAmount(profitProspect)}/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)`;
+    // 見込み値を強調表示
+    elSales.innerHTML = `売上増見込 <span class="value-emphasis">${formatAmount(totalSalesProspect)}</span>/${formatAmount(salesTarget)} (${salesRate.toFixed(1)}%)`;
+    elProfit.innerHTML = `粗利増見込 <span class="value-emphasis">${formatAmount(totalProfitProspect)}</span>/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)`;
 }
 
-
 function updateDashboard() {
+    // 売上フィールドの編集機能を無効化
+    lockAutoCalculatedFields();
+    
+    if (!document.getElementById('monthlyProfitTarget')) {
+        console.log('Dashboard elements not ready yet, skipping update');
+        return;
+    }
+
     const settings = getActiveSettings();
     const { months, currentMonthIndex } = getFiscalYearStructure();
     const currentMonth = months[currentMonthIndex].month;
     const profitRate = (settings.profitRate || 0) / 100;
 
-    // === 新4枚カードの計算と表示更新 ===
-    
-    // 1. 月別粗利
+    // 1. 月別粗利（円表記）
     const monthlyProfitTarget = settings.monthlyProfitTargets[currentMonth] || 0;
     const monthlyProfitActual = settings.monthlyProfitActuals[currentMonth] || 0;
     const monthlyProfitDiff = monthlyProfitActual - monthlyProfitTarget;
@@ -3872,25 +4017,24 @@ function updateDashboard() {
     updateCardDifference('monthlyProfitDiff', monthlyProfitDiff);
     updateCardValue('monthlyProfitRate', `${monthlyProfitRate.toFixed(1)}%`);
 
-    // 2. 月別売上（粗利 ÷ 粗利率で逆算）
+    // 2. 月別売上（円表記）
     const monthlySalesTarget = profitRate > 0 ? monthlyProfitTarget / profitRate : 0;
     const monthlySalesActual = profitRate > 0 ? monthlyProfitActual / profitRate : 0;
     const monthlySalesDiff = monthlySalesActual - monthlySalesTarget;
     const monthlySalesRate = monthlySalesTarget > 0 ? (monthlySalesActual / monthlySalesTarget) * 100 : 0;
 
-updateCardValue('monthlySalesTarget', formatManYen(monthlySalesTarget));
-updateCardValue('monthlySalesActual', formatManYen(monthlySalesActual));
-updateCardDifference('monthlySalesDiff', monthlySalesDiff, formatManYen);
-updateCardValue('monthlySalesRate', `${monthlySalesRate.toFixed(1)}%`);
+    updateCardValue('monthlySalesTarget', formatAmount(monthlySalesTarget));
+    updateCardValue('monthlySalesActual', formatAmount(monthlySalesActual));
+    updateCardDifference('monthlySalesDiff', monthlySalesDiff);
+    updateCardValue('monthlySalesRate', `${monthlySalesRate.toFixed(1)}%`);
 
-    // 3. 累積粗利（会計年度開始から当月まで）
+    // 3. 累積粗利（目標は月別の合算、実績は独立手入力）
     let cumulativeProfitTarget = 0;
     for (let i = 0; i <= currentMonthIndex; i++) {
-    const monthNum = months[i].month;
-    cumulativeProfitTarget += settings.monthlyProfitTargets[monthNum] || 0;
-}
-    // 累積実績：独立した手入力値を使用
-const cumulativeProfitActual = settings.cumulativeProfitActual || 0;
+        const monthNum = months[i].month;
+        cumulativeProfitTarget += settings.monthlyProfitTargets[monthNum] || 0;
+    }
+    const cumulativeProfitActual = settings.cumulativeProfitActual || 0;
     const cumulativeProfitDiff = cumulativeProfitActual - cumulativeProfitTarget;
     const cumulativeProfitRate = cumulativeProfitTarget > 0 ? (cumulativeProfitActual / cumulativeProfitTarget) * 100 : 0;
 
@@ -3899,41 +4043,34 @@ const cumulativeProfitActual = settings.cumulativeProfitActual || 0;
     updateCardDifference('cumulativeProfitDiff', cumulativeProfitDiff);
     updateCardValue('cumulativeProfitRate', `${cumulativeProfitRate.toFixed(1)}%`);
 
-    // 4. 累積売上（粗利 ÷ 粗利率で逆算）
+    // 4. 累積売上（円表記）
     const cumulativeSalesTarget = profitRate > 0 ? cumulativeProfitTarget / profitRate : 0;
     const cumulativeSalesActual = profitRate > 0 ? cumulativeProfitActual / profitRate : 0;
     const cumulativeSalesDiff = cumulativeSalesActual - cumulativeSalesTarget;
     const cumulativeSalesRate = cumulativeSalesTarget > 0 ? (cumulativeSalesActual / cumulativeSalesTarget) * 100 : 0;
 
-updateCardValue('cumulativeSalesTarget', formatManYen(cumulativeSalesTarget));
-updateCardValue('cumulativeSalesActual', formatManYen(cumulativeSalesActual));
-updateCardDifference('cumulativeSalesDiff', cumulativeSalesDiff, formatManYen);
-updateCardValue('cumulativeSalesRate', `${cumulativeSalesRate.toFixed(1)}%`);
+    updateCardValue('cumulativeSalesTarget', formatAmount(cumulativeSalesTarget));
+    updateCardValue('cumulativeSalesActual', formatAmount(cumulativeSalesActual));
+    updateCardDifference('cumulativeSalesDiff', cumulativeSalesDiff);
+    updateCardValue('cumulativeSalesRate', `${cumulativeSalesRate.toFixed(1)}%`);
 
-    // === 既存のファネル更新（そのまま維持） ===
+    // ファネル更新
     const progress = calculateAllProgress();
+    const safeUpdateElement = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    };
     
-    const probUnder50 = document.getElementById('probUnder50');
-    if (probUnder50) probUnder50.textContent = formatManYen(progress.funnel.probUnder50);
-    
-    const prob5060 = document.getElementById('prob5060');
-    if (prob5060) prob5060.textContent = formatManYen(progress.funnel.prob5060);
-    
-    const prob70 = document.getElementById('prob70');
-    if (prob70) prob70.textContent = formatManYen(progress.funnel.prob70);
-    
-    const prob80 = document.getElementById('prob80');
-    if (prob80) prob80.textContent = formatManYen(progress.funnel.prob80);
-    
-    const prob90 = document.getElementById('prob90');
-    if (prob90) prob90.textContent = formatManYen(progress.funnel.prob90);
-    
-    const prob100 = document.getElementById('prob100');
-    if (prob100) prob100.textContent = formatManYen(progress.funnel.prob100);
+    safeUpdateElement('probUnder50', formatManYen(progress.funnel.probUnder50));
+    safeUpdateElement('prob5060', formatManYen(progress.funnel.prob5060));
+    safeUpdateElement('prob70', formatManYen(progress.funnel.prob70));
+    safeUpdateElement('prob80', formatManYen(progress.funnel.prob80));
+    safeUpdateElement('prob90', formatManYen(progress.funnel.prob90));
+    safeUpdateElement('prob100', formatManYen(progress.funnel.prob100));
 
-    // 中段カードの更新
     updateMiddleCards();
 }
+
 
 async function displayMasterView() {
     if (window.innerWidth < 1025) {
@@ -5154,20 +5291,18 @@ function renderCards() {
     const areaFilter = document.getElementById('areaFilter').value;
 
     let filteredCards = cardsData.filter(cardData => {
-        const title = cardData.jukuName.toLowerCase();
-        const status = cardData.status;
-        const area = cardData.area || '';
-        
-        const displayMonth = cardData.displayMonth || getFiscalYearStructure().currentMonthKey;
-        const monthData = cardData.monthlyData?.[displayMonth] || { probability: 50 };
-        
-        let show = true;
-        if (searchTerm && !title.includes(searchTerm)) show = false;
-        if (statusFilter !== 'all' && status !== statusFilter) show = false;
-        if (probabilityFilter !== 'all' && !matchesProbabilityFilter(monthData.probability, probabilityFilter)) show = false;
-        if (areaFilter !== 'all' && (!area || !area.includes(areaFilter))) show = false;
-        return show;
-    });
+    const title = cardData.jukuName.toLowerCase();
+    const status = cardData.status;
+    const cardAddress = cardData.address || '';
+    const cardMunicipality = extractMunicipality(cardAddress);
+    
+    let show = true;
+    if (searchTerm && !title.includes(searchTerm)) show = false;
+    if (statusFilter !== 'all' && status !== statusFilter) show = false;
+    if (areaFilter !== 'all' && cardMunicipality !== areaFilter) show = false;
+    return show;
+});
+
 
     filteredCards = getSortedCards(filteredCards);
 

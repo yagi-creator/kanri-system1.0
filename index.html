@@ -3140,8 +3140,6 @@ function updateCardDifference(elementId, amount, formatter = formatAmount) {
     }
 }
 
-
-
 function editMonthlyProfitInline(element) {
     if (!currentUser || currentViewTarget !== currentUser.uid) {
         showToast('自分のデータ表示中のみ編集可能です', 'error');
@@ -3156,22 +3154,21 @@ function editMonthlyProfitInline(element) {
     
     const parsedValue = parseNumberSafely(newValue);
 
-    // 1) モデル更新
+    // 1) データ更新
     personalSettings.monthlyProfitActuals[currentMonth] = parsedValue;
 
-    // 2) UIを即時更新（リペイントを優先）
+    // 2) UI即時反映
     element.textContent = formatAmount(parsedValue);
 
-    // 3) 進捗キャッシュを無効化してダッシュボード再計算を即時実行
+    // 3) 再計算を即時反映（キャッシュ無効化→再描画）
     progressCache = null;
     updateDashboard();
 
-    // 4) 保存はブラウザのアイドル時間に遅延実行（最高の最適化）
+    // 4) 保存はアイドル時間に遅延実行（体感速度を最優先）
     scheduleSavePersonalSettings();
 
     showToast('月別粗利実績を更新しました', 'success');
 }
-
 
 function editCumulativeProfitInline(element) {
     if (!currentUser || currentViewTarget !== currentUser.uid) {
@@ -3645,6 +3642,32 @@ async function savePersonalSettingsComplete() {
         }
     }
 }
+        // 保存処理をブラウザのアイドル時間に遅延実行（重複をまとめる）
+let scheduledSaveToken = null;
+
+function scheduleSavePersonalSettings() {
+    // 既にスケジュール済みなら何もしない（連打を1回にまとめる）
+    if (scheduledSaveToken) return;
+
+    const executeSave = () => {
+        scheduledSaveToken = null; // 次のスケジュールを許可
+        try {
+            savePersonalSettingsComplete();
+        } catch (error) {
+            console.error('Delayed save failed:', error);
+            showToast('保存処理でエラーが発生しました', 'error');
+        }
+    };
+
+    if ('requestIdleCallback' in window) {
+        // Safari等で未実装のことがあるため timeout も設定
+        scheduledSaveToken = requestIdleCallback(executeSave, { timeout: 2000 });
+    } else {
+        // フォールバック（次フレームで実行）
+        scheduledSaveToken = setTimeout(executeSave, 0);
+    }
+}
+
 
         // 保存処理をブラウザのアイドル時間に遅延実行するヘルパー関数
 function scheduleSavePersonalSettings() {

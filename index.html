@@ -3557,10 +3557,21 @@ async function saveCardsData() {
         }
         return;
     }
+
+    // 他人表示中は保存しない（権限エラー防止）
+    if (currentViewTarget && currentViewTarget !== currentUser.uid) {
+        console.log('他人データ表示中のため、Firestore保存をスキップしました');
+        return;
+    }
     
     try {
-        for (const card of cardsData) {
-            const assignedId = card.assignedUserId || currentUser.uid;
+        // 自分のカードのみフィルタリング
+        const ownCards = cardsData.filter(card => 
+            card.assignedUserId === currentUser.uid
+        );
+
+        for (const card of ownCards) {
+            const assignedId = currentUser.uid;
             
             if (!card.docId) {
                 card.docId = `${assignedId}_${card.id}`;
@@ -3580,13 +3591,12 @@ async function saveCardsData() {
         }
 
         updateAreaFilterOptions();
-        showToast('チームデータを保存しました', 'success');
-        console.log('Firestoreに保存完了:', cardsData.length, '件');
+        showToast('データを保存しました', 'success');
+        console.log('Firestoreに保存完了:', ownCards.length, '件');
         
     } catch (error) {
         console.error('Firestore save error:', error);
         
-        // 🆕 詳細なエラーメッセージマッピング
         const errorMessages = {
             'permission-denied': '保存権限がありません。管理者にお問い合わせください',
             'quota-exceeded': 'ストレージ容量が上限に達しています',
@@ -3600,7 +3610,7 @@ async function saveCardsData() {
         const message = errorMessages[error.code] || `保存エラー: ${error.message || 'データ保存に失敗しました'}`;
         showToast(message, 'error');
         
-        // 🆕 自動バックアップ機能
+        // 自動バックアップ機能（既存コードを維持）
         try {
             const backupKey = `salesDashboard_backup_${Date.now()}`;
             localStorage.setItem(backupKey, JSON.stringify({
@@ -3618,7 +3628,6 @@ async function saveCardsData() {
         }
     }
 }
-
 
 function loadCardsData() {
     try {
@@ -5198,29 +5207,32 @@ function changeCardDisplayMonth(cardId, newMonthKey) {
 }
 
 function changeAllCardsDisplayMonth(newMonthKey) {
-    // ダッシュボード全体のアクティブ月を更新
+    // UIのアクティブ月を更新
     activeDashboardMonthKey = newMonthKey;
-    
-    cardsData.forEach(cardData => {
-        cardData.displayMonth = newMonthKey;
-    });
-    saveCardsData();
-    
+
+    // 自分表示中のみ displayMonth を保存対象にする
+    const selfId = currentUser?.uid || null;
+    if (selfId && currentViewTarget === selfId) {
+        cardsData.forEach(cardData => {
+            cardData.displayMonth = newMonthKey;
+        });
+        saveCardsData();
+        showToast('表示月を変更し、データを保存しました', 'info');
+    } else {
+        showToast('表示月を変更しました（閲覧モード）', 'info');
+    }
+
     const fiscalStructure = getFiscalYearStructure();
     const monthInfo = fiscalStructure.months.find(m => m.key === newMonthKey);
     if (monthInfo) {
         document.getElementById('currentDateDisplay').textContent = monthInfo.label;
     }
-    
-    // ダッシュボード全体を再計算
+
+    // 再計算と描画は常に実行
     progressCache = null;
     updateDashboard();
-    
     renderCardsOptimized();
-    showToast('全カードの表示月を変更しました', 'info');
 }
-
-
 
 function openMonthlyHistoryModal(cardId) {
     const cardData = cardsData.find(card => card.id === cardId);

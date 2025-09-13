@@ -3219,13 +3219,13 @@ function editCumulativeProfitInline(element) {
         return;
     }
 
-    // アクティブ月を取得
+    // 🆕 グローバル月セレクターに連動した対象月を取得
     const { months } = getFiscalYearStructure();
     const activeMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
     const activeMonthInfo = months.find(m => m.key === activeMonthKey);
-    const activeMonth = activeMonthInfo ? activeMonthInfo.month : getCurrentMonth();
+    const targetMonth = activeMonthInfo ? activeMonthInfo.month : getCurrentMonth();
     
-    // 月ごとの累積粗利実績データ構造を初期化（存在しない場合）
+    // 🆕 月ごとの累積粗利実績データ構造を確実に初期化
     if (!personalSettings.monthlyCumulativeProfitActuals) {
         personalSettings.monthlyCumulativeProfitActuals = {
             10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
@@ -3233,31 +3233,48 @@ function editCumulativeProfitInline(element) {
         };
     }
 
-    const currentValue = personalSettings.monthlyCumulativeProfitActuals[activeMonth] || 0;
+    const currentValue = personalSettings.monthlyCumulativeProfitActuals[targetMonth] || 0;
     
-    const newValue = prompt(`累積粗利実績を入力してください（円）\n対象月: ${activeMonth}月\n\n例: 5000000`, currentValue);
+    const newValue = prompt(
+        `累積粗利実績を入力してください（円）\n対象月: ${targetMonth}月\n※${targetMonth}月時点での累積粗利の数値を直接入力\n\n例: 5,000,000\n（空欄で削除）`, 
+        currentValue
+    );
     if (newValue === null) return;
+    
+    // 🆕 空欄入力で該当月の値を削除（未設定化）
+    if (String(newValue).trim() === '') {
+        delete personalSettings.monthlyCumulativeProfitActuals[targetMonth];
+        element.textContent = formatAmount(0);
+        progressCache = null;
+        updateDashboard();
+        scheduleSavePersonalSettings();
+        showToast(`${targetMonth}月の累積粗利実績を削除しました`, 'success');
+        return;
+    }
     
     const parsedValue = parseNumberSafely(newValue);
     
-    // 1) 新構造への更新（必ずnumber型で保存）
-    personalSettings.monthlyCumulativeProfitActuals[activeMonth] = Number(parsedValue);
+    // 🆕 選択月の累積粗利実績を直接保存（月別管理）
+    personalSettings.monthlyCumulativeProfitActuals[targetMonth] = Number(parsedValue);
     
-    // 2) 後方互換性のため旧フィールドも更新
-    personalSettings.cumulativeProfitActual = Number(parsedValue);
+    // 後方互換性のため旧フィールドも更新（現在月の場合のみ）
+    if (targetMonth === getCurrentMonth()) {
+        personalSettings.cumulativeProfitActual = Number(parsedValue);
+    }
     
-    // 3) UIを即時更新
+    // UIを即時更新
     element.textContent = formatAmount(parsedValue);
     
-    // 4) 再計算と描画更新
+    // 再計算と描画更新
     progressCache = null;
     updateDashboard();
     
-    // 5) 保存処理
+    // 保存処理
     scheduleSavePersonalSettings();
     
-    showToast(`${activeMonth}月の累積粗利実績を更新しました`, 'success');
+    showToast(`${targetMonth}月の累積粗利実績を更新しました`, 'success');
 }
+
 
 function formatDateForDisplay(s) {
     if (!s) return '—';

@@ -1212,34 +1212,7 @@
             cursor: not-allowed;
             opacity: 0.7;
         }
-
-        .fab {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,123,255,0.4);
-            transition: all 0.2s ease;
-            z-index: 100;
-        }
-
-        .fab:focus {
-            outline: 2px solid #007bff;
-            outline-offset: 2px;
-        }
-
-        .fab:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(0,123,255,0.6);
-        }
-
+      
         .toast {
             position: fixed;
             top: 20px;
@@ -2214,8 +2187,7 @@ window.firebaseImports = {
     <div id="masterViewContent" style="display: none;">
     </div>
     </div>
-    <button class="fab" onclick="openNewCardModal()" title="新規塾登録" aria-label="新規塾登録">➕</button>
-
+  
     <div class="modal" id="personalSettingsModal" role="dialog" aria-modal="true">
         <div class="modal-content">
             <div class="modal-header">
@@ -2973,8 +2945,13 @@ let personalSettings = {
         10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
         4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
     },
-    cumulativeProfitActual: 0
+    cumulativeProfitActual: 0,  // 後方互換性のため残す
+    monthlyCumulativeProfitActuals: {  // 新規追加：月ごとの累積粗利実績
+        10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+        4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+    }
 };
+
 let activeProbabilityFilter = 'all';
 let userSettingsCache = {};
         
@@ -3004,7 +2981,6 @@ const PROBABILITY_CONFIG = {
 function getCurrentMonth() { 
     return new Date().getMonth() + 1; 
 }
-        // デフォルト設定を取得する関数
 function getDefaultSettings() {
     return {
         userName: '担当者',
@@ -3020,9 +2996,14 @@ function getDefaultSettings() {
             10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
             4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
         },
-        cumulativeProfitActual: 0
+        cumulativeProfitActual: 0,
+        monthlyCumulativeProfitActuals: {
+            10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+            4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+        }
     };
 }
+
 
 
 // アクティブな個人設定を取得する関数
@@ -3212,31 +3193,42 @@ function editCumulativeProfitInline(element) {
         return;
     }
 
-    const currentValue = personalSettings.cumulativeProfitActual || 0;
+    // アクティブ月を取得
+    const { months } = getFiscalYearStructure();
+    const activeMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
+    const activeMonthInfo = months.find(m => m.key === activeMonthKey);
+    const activeMonth = activeMonthInfo ? activeMonthInfo.month : getCurrentMonth();
     
-    const newValue = prompt('累積粗利実績を入力してください（円）\n\n例: 5000000\n※月別実績とは独立して管理されます', currentValue);
+    // 月ごとの累積粗利実績データ構造を初期化（存在しない場合）
+    if (!personalSettings.monthlyCumulativeProfitActuals) {
+        personalSettings.monthlyCumulativeProfitActuals = {
+            10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+            4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+        };
+    }
+
+    const currentValue = personalSettings.monthlyCumulativeProfitActuals[activeMonth] || 0;
+    
+    const newValue = prompt(`累積粗利実績を入力してください（円）\n対象月: ${activeMonth}月\n\n例: 5000000`, currentValue);
     if (newValue === null) return;
     
     const parsedValue = parseNumberSafely(newValue);
     
     // 1) モデル更新
-    personalSettings.cumulativeProfitActual = parsedValue;
+    personalSettings.monthlyCumulativeProfitActuals[activeMonth] = parsedValue;
     
-    // 2) UIを即時更新（体感遅延を無くす）
+    // 2) UIを即時更新
     element.textContent = formatAmount(parsedValue);
     
-    // 3) 再計算キャッシュを先に無効化してダッシュボードを更新
+    // 3) 再計算と描画更新
     progressCache = null;
     updateDashboard();
     
-    // 4) 保存はブラウザのアイドル時間に遅延実行（最高の最適化）
+    // 4) 保存処理
     scheduleSavePersonalSettings();
     
-    showToast('累積粗利実績を更新しました', 'success');
+    showToast(`${activeMonth}月の累積粗利実績を更新しました`, 'success');
 }
-
-
-
 
 function formatDateForDisplay(s) {
     if (!s) return '—';
@@ -3340,25 +3332,6 @@ function parseNumberSafely(value) {
     
     const parsed = Number(normalized);
     return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
-}
-        function editMonthlyProfitActual(element) {
-    const currentMonth = getCurrentMonth();
-    const currentValue = personalSettings.monthlyProfitActuals[currentMonth] || 0;
-    
-    const newValue = prompt('月別粗利実績を入力してください（円）\n\n例: 500000', currentValue);
-    if (newValue === null) return; // キャンセル時は何もしない
-    
-    const parsedValue = parseNumberSafely(newValue);
-    personalSettings.monthlyProfitActuals[currentMonth] = parsedValue;
-    
-    // 即座に表示を更新
-    element.textContent = formatAmount(parsedValue);
-    
-    // データ保存と全体更新
-    savePersonalSettingsComplete();
-    progressCache = null;
-    updateDashboard();
-    showToast('月別粗利実績を更新しました', 'success');
 }
 
         function editYearlyProfitTarget(element) {
@@ -3722,15 +3695,25 @@ async function syncPersonalSettingsOnLogin() {
             window.firebaseImports.doc(window.db, 'users', currentUser.uid)
         );
         
-        if (userDoc.exists() && userDoc.data().personalSettings) {
+                if (userDoc.exists() && userDoc.data().personalSettings) {
             // クラウド設定で上書き
             personalSettings = { 
                 ...personalSettings, 
                 ...userDoc.data().personalSettings 
             };
+            
+            // 互換性処理
+            if (!personalSettings.monthlyCumulativeProfitActuals) {
+                personalSettings.monthlyCumulativeProfitActuals = {
+                    10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+                    4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+                };
+            }
+            
             savePersonalSettings();
             updatePersonalSalesTarget();
             updateDashboard();
+
             showToast('クラウドから個人設定を同期しました', 'info');
         } else {
             // 初回：ローカル設定をクラウドに保存
@@ -3762,13 +3745,43 @@ function loadPersonalSettings() {
                     4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
                 };
             }
+            
+            // 🆕 新フィールド（月ごとの累積粗利実績）を初期化
+            if (!personalSettings.monthlyCumulativeProfitActuals) {
+                personalSettings.monthlyCumulativeProfitActuals = {
+                    10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+                    4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+                };
+            }
+            
             updatePersonalSalesTarget();
+            
+            // 🆕 後方互換性：旧データから新構造への一回限りの移行
+            const oldCumulativeValue = Number(personalSettings.cumulativeProfitActual || 0);
+            if (oldCumulativeValue > 0) {
+                const currentMonth = getCurrentMonth();
+                const existingValue = Number(personalSettings.monthlyCumulativeProfitActuals[currentMonth] || 0);
+                
+                // 現在月の新データが未設定の場合のみ移行（重複防止）
+                if (!existingValue || existingValue === 0) {
+                    personalSettings.monthlyCumulativeProfitActuals[currentMonth] = oldCumulativeValue;
+                    
+                    // 移行完了をローカルストレージに保存
+                    try {
+                        savePersonalSettings();
+                        console.log(`データ移行完了: cumulativeProfitActual(${oldCumulativeValue}) → monthlyCumulativeProfitActuals[${currentMonth}]`);
+                    } catch(e) {
+                        console.warn('移行データの保存に失敗:', e);
+                    }
+                }
+            }
         }
     } catch (e) {
         showToast('個人設定読み込みエラー', 'error');
         console.error('Personal settings load error:', e);
     }
 }
+
 
 function migrateToV9Structure() {
     const fiscalStructure = getFiscalYearStructure();
@@ -4114,10 +4127,11 @@ function updateDashboard() {
     const activeMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
     const activeMonthInfo = months.find(m => m.key === activeMonthKey);
     const activeMonth = activeMonthInfo ? activeMonthInfo.month : months[currentMonthIndex].month;
+    const activeIndex = activeMonthInfo ? months.indexOf(activeMonthInfo) : currentMonthIndex;
 
     // 1. 月別粗利（選択月に対応）
-const monthlyProfitTarget = settings.monthlyProfitTargets[activeMonth] || 0;
-const monthlyProfitActual = settings.monthlyProfitActuals[activeMonth] || 0;
+    const monthlyProfitTarget = settings.monthlyProfitTargets[activeMonth] || 0;
+    const monthlyProfitActual = settings.monthlyProfitActuals[activeMonth] || 0;
 
     const monthlyProfitDiff = monthlyProfitActual - monthlyProfitTarget;
     const monthlyProfitRate = monthlyProfitTarget > 0 ? (monthlyProfitActual / monthlyProfitTarget) * 100 : 0;
@@ -4138,13 +4152,16 @@ const monthlyProfitActual = settings.monthlyProfitActuals[activeMonth] || 0;
     updateCardDifference('monthlySalesDiff', monthlySalesDiff);
     updateCardValue('monthlySalesRate', `${monthlySalesRate.toFixed(1)}%`);
 
-    // 3. 累積粗利（目標は月別の合算、実績は独立手入力）
+    // 3. 累積粗利（目標：選択月まで合算、実績：選択月の手入力値）
     let cumulativeProfitTarget = 0;
-    for (let i = 0; i <= currentMonthIndex; i++) {
+    for (let i = 0; i <= activeIndex; i++) {
         const monthNum = months[i].month;
         cumulativeProfitTarget += settings.monthlyProfitTargets[monthNum] || 0;
     }
-    const cumulativeProfitActual = settings.cumulativeProfitActual || 0;
+    
+    // 月ごとの累積粗利実績から選択月の値を取得（後方互換性あり）
+    const cumulativeProfitActual = settings.monthlyCumulativeProfitActuals?.[activeMonth] || settings.cumulativeProfitActual || 0;
+
     const cumulativeProfitDiff = cumulativeProfitActual - cumulativeProfitTarget;
     const cumulativeProfitRate = cumulativeProfitTarget > 0 ? (cumulativeProfitActual / cumulativeProfitTarget) * 100 : 0;
 
@@ -4180,7 +4197,6 @@ const monthlyProfitActual = settings.monthlyProfitActuals[activeMonth] || 0;
 
     updateMiddleCards();
 }
-
 
 async function displayMasterView() {
     if (window.innerWidth < 1025) {
@@ -4304,13 +4320,17 @@ function generateMasterMainCards(staff, cardsData) {
     const monthlySalesDiff = monthlySalesActual - monthlySalesTarget;
     const monthlySalesRate = monthlySalesTarget > 0 ? (monthlySalesActual / monthlySalesTarget) * 100 : 0;
 
-    // 累積粗利（選択月まで）
+    // 累積粗利（選択月まで目標合算、選択月実績値）
     let cumulativeProfitTarget = 0;
     for (let i = 0; i <= idx; i++) {
         const monthNum = months[i].month;
         cumulativeProfitTarget += s.monthlyProfitTargets?.[monthNum] || 0;
     }
-    const cumulativeProfitActual = s.cumulativeProfitActual || 0;
+
+    // 選択月の累積粗利実績を取得（後方互換性あり）
+    const selectedMonth = months[idx].month;
+    const cumulativeProfitActual = s.monthlyCumulativeProfitActuals?.[selectedMonth] || s.cumulativeProfitActual || 0;
+
     const cumulativeProfitDiff = cumulativeProfitActual - cumulativeProfitTarget;
     const cumulativeProfitRate = cumulativeProfitTarget > 0 ? (cumulativeProfitActual / cumulativeProfitTarget) * 100 : 0;
 
@@ -4421,6 +4441,7 @@ function generateMasterMainCards(staff, cardsData) {
         </div>
     `;
 }
+
 function generateMasterMiddleCards(staff, cardsData) {
     const s = staff.settings;
     const activeMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
@@ -4446,6 +4467,7 @@ function generateMasterMiddleCards(staff, cardsData) {
         <div class="master-middle-card">粗利増見込 ${formatAmount(totalProfitProspect)}/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)</div>
     `;
 }
+
 function generateMasterFunnel(staff, cardsData) {
     const s = staff.settings;
     const activeMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
@@ -4491,7 +4513,6 @@ function generateMasterFunnel(staff, cardsData) {
         </div>
     `;
 }
-
        
 function createTableRow(cardData) {
     const fiscalStructure = getFiscalYearStructure();
@@ -5249,6 +5270,7 @@ function changeAllCardsDisplayMonth(newMonthKey) {
     updateDashboard();
     renderCardsOptimized();
 }
+
 
 function openMonthlyHistoryModal(cardId) {
     const cardData = cardsData.find(card => card.id === cardId);

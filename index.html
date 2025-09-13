@@ -3748,13 +3748,21 @@ async function syncPersonalSettingsOnLogin() {
         ...userDoc.data().personalSettings 
     };
     
-    // 互換性処理
-    if (!personalSettings.monthlyCumulativeProfitActuals) {
-        personalSettings.monthlyCumulativeProfitActuals = {
-            10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
-            4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
-        };
+    // 🆕 後方互換性の強化：古いcumulativeProfitActualを現在月に移行
+if (!personalSettings.monthlyCumulativeProfitActuals) {
+    personalSettings.monthlyCumulativeProfitActuals = {
+        10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+        4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+    };
+    
+    // 古いデータがある場合は現在月に移行
+    if (personalSettings.cumulativeProfitActual && personalSettings.cumulativeProfitActual > 0) {
+        const currentMonth = getCurrentMonth();
+        personalSettings.monthlyCumulativeProfitActuals[currentMonth] = personalSettings.cumulativeProfitActual;
+        console.log(`古い累積粗利データ(${personalSettings.cumulativeProfitActual})を${currentMonth}月に移行しました`);
     }
+}
+
     
     // 🆕 ローカルストレージを最新クラウドデータで強制更新
     savePersonalSettings();
@@ -4208,7 +4216,12 @@ function updateDashboard() {
     }
     
     // 月ごとの累積粗利実績から選択月の値を取得（後方互換性あり）
-    const cumulativeProfitActual = settings.monthlyCumulativeProfitActuals?.[activeMonth] || settings.cumulativeProfitActual || 0;
+    // 🆕 0を正しい値として扱う：undefined/nullの場合のみフォールバック
+const monthCumulativeValue = settings.monthlyCumulativeProfitActuals?.[activeMonth];
+const cumulativeProfitActual = (monthCumulativeValue !== undefined && monthCumulativeValue !== null)
+    ? monthCumulativeValue
+    : (settings.cumulativeProfitActual ?? 0);
+
 
     const cumulativeProfitDiff = cumulativeProfitActual - cumulativeProfitTarget;
     const cumulativeProfitRate = cumulativeProfitTarget > 0 ? (cumulativeProfitActual / cumulativeProfitTarget) * 100 : 0;
@@ -4377,7 +4390,12 @@ function generateMasterMainCards(staff, cardsData) {
 
     // 選択月の累積粗利実績を取得（後方互換性あり）
     const selectedMonth = months[idx].month;
-    const cumulativeProfitActual = s.monthlyCumulativeProfitActuals?.[selectedMonth] || s.cumulativeProfitActual || 0;
+    // 🆕 マスタービューでも同様の修正
+const monthCumulativeValue = s.monthlyCumulativeProfitActuals?.[selectedMonth];
+const cumulativeProfitActual = (monthCumulativeValue !== undefined && monthCumulativeValue !== null)
+    ? monthCumulativeValue
+    : (s.cumulativeProfitActual ?? 0);
+
 
     const cumulativeProfitDiff = cumulativeProfitActual - cumulativeProfitTarget;
     const cumulativeProfitRate = cumulativeProfitTarget > 0 ? (cumulativeProfitActual / cumulativeProfitTarget) * 100 : 0;

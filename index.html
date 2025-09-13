@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="上半期営業支援ダッシュボード">
     <meta name="theme-color" content="#007bff">
-    <title>上半期営業支援ダッシュボード v10.3</title>
+    <title>上半期営業支援ダッシュボード v10.4</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -2872,36 +2872,56 @@ function setupFirebaseAuth() {
             currentUser = user;
             
             if (user) {
-                console.log('ログイン中 UID:', user.uid, 'メール:', user.email);
-                
-                try {
-                    const userDoc = await window.firebaseImports.getDoc(
-                        window.firebaseImports.doc(window.db, 'users', user.uid)
-                    );
-                    
-                    if (userDoc.exists()) {
-                        currentUserData = userDoc.data();
-                        currentUserRole = currentUserData.role;
-                        currentViewTarget = user.uid;
-                        
-                        await loadAvailableViewTargets();
-                        updateAuthUI();
-                        updateViewSelector();
-                        
-                        await loadCardsDataForTarget(currentViewTarget);
-                        await syncPersonalSettingsOnLogin();
+    console.log('ログイン中 UID:', user.uid, 'メール:', user.email);
+    
+    try {
+        const userDoc = await window.firebaseImports.getDoc(
+            window.firebaseImports.doc(window.db, 'users', user.uid)
+        );
+        
+        if (userDoc.exists()) {
+            currentUserData = userDoc.data();
+            currentUserRole = currentUserData.role;
+            currentViewTarget = user.uid; // 必ず自分のデータを表示
+            
+            // 🆕 起動時は必ず現在月を表示
+            const fiscalStructure = getFiscalYearStructure();
+            activeDashboardMonthKey = fiscalStructure.currentMonthKey;
+            
+            // グローバル月セレクターを現在月に設定
+            const globalSelector = document.getElementById('globalMonthSelector');
+            if (globalSelector) {
+                globalSelector.value = activeDashboardMonthKey;
+            }
+            
+            // ヘッダーの日付表示を更新
+            const monthInfo = fiscalStructure.months.find(m => m.key === activeDashboardMonthKey);
+            if (monthInfo) {
+                document.getElementById('currentDateDisplay').textContent = monthInfo.label;
+            }
+            
+            // マスタービューが表示中なら通常画面に戻す
+            document.getElementById('masterViewContent').style.display = 'none';
+            document.getElementById('normalDashboardContent').style.display = 'block';
+            
+            await loadAvailableViewTargets();
+            updateAuthUI();
+            updateViewSelector();
+            
+            await loadCardsDataForTarget(currentViewTarget);
+            await syncPersonalSettingsOnLogin();
 
-                        // 自分の設定をキャッシュに保存（必須）
-                        if (user && user.uid) {
-                            userSettingsCache[user.uid] = { ...personalSettings };
-                        }
+            // 自分の設定をキャッシュに保存（必須）
+            if (user && user.uid) {
+                userSettingsCache[user.uid] = { ...personalSettings };
+            }
 
-                        progressCache = null;
-                        renderCardsOptimized();
-                        updateDashboard();
-                        
-                        showToast(`${currentUserData.name}さん（${currentUserRole}）として認識されました`, 'success');
-                    } else {
+            progressCache = null;
+            renderCardsOptimized();
+            updateDashboard();
+            
+            showToast(`${currentUserData.name}さん（${currentUserRole}）として認識されました`, 'success');
+        }else {
                         showToast('ユーザー情報が未登録です（Step 4を確認）', 'error');
                     }
                 } catch (error) {
@@ -2937,6 +2957,7 @@ let renderTimeout;
 let scrollPosition = 0;
 let currentEditingMemo = null;
 let isComposing = false;
+        let activeDashboardMonthKey = null; // 追加：ダッシュボードのアクティブ月
 
 let personalSettings = {
     userName: '担当者',
@@ -3931,7 +3952,7 @@ function showToast(message, type = 'success') {
 
 function calculateQualifiedProspects() {
     const settings = getActiveSettings();
-    const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+    const currentMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
     
     const qualifiedProfit = cardsData.reduce((total, card) => {
         const monthData = card.monthlyData?.[currentMonthKey] || { 
@@ -3954,7 +3975,8 @@ function calculateQualifiedProspects() {
 function calculateAllProgress() {
     const settings = getActiveSettings();
     const now = Date.now();
-    const cacheKey = `${cardsData.length}-${settings.yearlyProfitIncreaseTarget}-${getCurrentMonth()}-${currentViewTarget || ''}`;
+    const monthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
+    const cacheKey = `${cardsData.length}-${settings.yearlyProfitIncreaseTarget}-${monthKey}-${currentViewTarget || ''}`;
     
     if (progressCache && 
         progressCache.cacheKey === cacheKey && 
@@ -3975,9 +3997,8 @@ function calculateAllProgress() {
     const yearlyRate = yearlyTarget > 0 ? (yearlyActual / yearlyTarget) * 100 : 0;
     
     const salesIncreaseTarget = settings.yearlySalesIncreaseTarget || 0;
-    const currentMonthKey = getFiscalYearStructure().currentMonthKey;
     const totalSalesProspect = cardsData.reduce((sum, card) => {
-        const monthData = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0 };
+        const monthData = card.monthlyData?.[monthKey] || { salesIncreaseForecast: 0 };
         return sum + (monthData.salesIncreaseForecast || 0);
     }, 0);
     const salesTargetRate = salesIncreaseTarget > 0 ? (totalSalesProspect / salesIncreaseTarget) * 100 : 0;
@@ -3990,7 +4011,7 @@ function calculateAllProgress() {
     let probUnder50 = 0, prob5060 = 0, prob70 = 0, prob80 = 0, prob90 = 0, prob100 = 0;
 
     cardsData.forEach(card => {
-        const monthData = card.monthlyData?.[currentMonthKey] || { 
+        const monthData = card.monthlyData?.[monthKey] || { 
             salesIncreaseForecast: 0, 
             probability: 50 
         };
@@ -4029,13 +4050,14 @@ function calculateAllProgress() {
     
     return result;
 }
+
 function updateMiddleCards() {
     const elSales = document.getElementById('salesProspectDisplay');
     const elProfit = document.getElementById('profitProspectDisplay');
     if (!elSales || !elProfit) return;
 
     const settings = getActiveSettings();
-    const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+    const currentMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
     
     // 80%以上の確度のみで売上・粗利見込を集計
     let totalSalesProspect = 0;
@@ -4065,6 +4087,7 @@ function updateMiddleCards() {
     elProfit.innerHTML = `粗利増見込 <span class="value-emphasis">${formatAmount(totalProfitProspect)}</span>/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)`;
 }
 
+
 function updateDashboard() {
     // 売上フィールドの編集機能を無効化
     lockAutoCalculatedFields();
@@ -4076,12 +4099,17 @@ function updateDashboard() {
 
     const settings = getActiveSettings();
     const { months, currentMonthIndex } = getFiscalYearStructure();
-    const currentMonth = months[currentMonthIndex].month;
     const profitRate = (settings.profitRate || 0) / 100;
 
-    // 1. 月別粗利（円表記）
-    const monthlyProfitTarget = settings.monthlyProfitTargets[currentMonth] || 0;
-    const monthlyProfitActual = settings.monthlyProfitActuals[currentMonth] || 0;
+    // アクティブ月の取得（グローバル月セレクターに連動）
+    const activeMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
+    const activeMonthInfo = months.find(m => m.key === activeMonthKey);
+    const activeMonth = activeMonthInfo ? activeMonthInfo.month : months[currentMonthIndex].month;
+
+    // 1. 月別粗利（選択月に対応）
+const monthlyProfitTarget = settings.monthlyProfitTargets[activeMonth] || 0;
+const monthlyProfitActual = settings.monthlyProfitActuals[activeMonth] || 0;
+
     const monthlyProfitDiff = monthlyProfitActual - monthlyProfitTarget;
     const monthlyProfitRate = monthlyProfitTarget > 0 ? (monthlyProfitActual / monthlyProfitTarget) * 100 : 0;
 
@@ -5170,6 +5198,9 @@ function changeCardDisplayMonth(cardId, newMonthKey) {
 }
 
 function changeAllCardsDisplayMonth(newMonthKey) {
+    // ダッシュボード全体のアクティブ月を更新
+    activeDashboardMonthKey = newMonthKey;
+    
     cardsData.forEach(cardData => {
         cardData.displayMonth = newMonthKey;
     });
@@ -5181,9 +5212,15 @@ function changeAllCardsDisplayMonth(newMonthKey) {
         document.getElementById('currentDateDisplay').textContent = monthInfo.label;
     }
     
+    // ダッシュボード全体を再計算
+    progressCache = null;
+    updateDashboard();
+    
     renderCardsOptimized();
     showToast('全カードの表示月を変更しました', 'info');
 }
+
+
 
 function openMonthlyHistoryModal(cardId) {
     const cardData = cardsData.find(card => card.id === cardId);

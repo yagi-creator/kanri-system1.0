@@ -4279,29 +4279,34 @@ async function displayMasterView() {
     }
 }
 
-
-
 function generateMasterMainCards(staff, cardsData) {
     const s = staff.settings;
-    const { months, currentMonthIndex } = getFiscalYearStructure();
-    const currentMonth = months[currentMonthIndex].month;
+    const { months } = getFiscalYearStructure();
+
+    // グローバル月セレクターの値を使用
+    const activeKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
+    const activeIndex = Math.max(0, months.findIndex(m => m.key === activeKey));
+    const fallbackIndex = getFiscalYearStructure().currentMonthIndex;
+    const idx = activeIndex >= 0 ? activeIndex : fallbackIndex;
+
+    const currentMonth = months[idx].month;
     const profitRate = (s.profitRate || 0) / 100;
 
-    // 1. 月別粗利（円表記）
+    // 月別粗利（選択月）
     const monthlyProfitTarget = s.monthlyProfitTargets?.[currentMonth] || 0;
     const monthlyProfitActual = s.monthlyProfitActuals?.[currentMonth] || 0;
     const monthlyProfitDiff = monthlyProfitActual - monthlyProfitTarget;
     const monthlyProfitRate = monthlyProfitTarget > 0 ? (monthlyProfitActual / monthlyProfitTarget) * 100 : 0;
 
-    // 2. 月別売上（円表記）
+    // 月別売上（選択月）
     const monthlySalesTarget = profitRate > 0 ? monthlyProfitTarget / profitRate : 0;
     const monthlySalesActual = profitRate > 0 ? monthlyProfitActual / profitRate : 0;
     const monthlySalesDiff = monthlySalesActual - monthlySalesTarget;
     const monthlySalesRate = monthlySalesTarget > 0 ? (monthlySalesActual / monthlySalesTarget) * 100 : 0;
 
-    // 3. 累積粗利（目標は月別の合算、実績は独立手入力）
+    // 累積粗利（選択月まで）
     let cumulativeProfitTarget = 0;
-    for (let i = 0; i <= currentMonthIndex; i++) {
+    for (let i = 0; i <= idx; i++) {
         const monthNum = months[i].month;
         cumulativeProfitTarget += s.monthlyProfitTargets?.[monthNum] || 0;
     }
@@ -4309,7 +4314,7 @@ function generateMasterMainCards(staff, cardsData) {
     const cumulativeProfitDiff = cumulativeProfitActual - cumulativeProfitTarget;
     const cumulativeProfitRate = cumulativeProfitTarget > 0 ? (cumulativeProfitActual / cumulativeProfitTarget) * 100 : 0;
 
-    // 4. 累積売上（円表記）
+    // 累積売上（選択月まで）
     const cumulativeSalesTarget = profitRate > 0 ? cumulativeProfitTarget / profitRate : 0;
     const cumulativeSalesActual = profitRate > 0 ? cumulativeProfitActual / profitRate : 0;
     const cumulativeSalesDiff = cumulativeSalesActual - cumulativeSalesTarget;
@@ -4416,16 +4421,14 @@ function generateMasterMainCards(staff, cardsData) {
         </div>
     `;
 }
-
-
 function generateMasterMiddleCards(staff, cardsData) {
     const s = staff.settings;
-    const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+    const activeMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
     
     let totalSalesProspect = 0;
     let totalProfitProspect = 0;
     cardsData.forEach(card => {
-        const md = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0, probability: 50 };
+        const md = card.monthlyData?.[activeMonthKey] || { salesIncreaseForecast: 0, probability: 50 };
         if (md.probability >= 80) {
             const salesAmount = md.salesIncreaseForecast || 0;
             const profitAmount = salesAmount * ((s.profitRate || 0) / 100);
@@ -4443,14 +4446,13 @@ function generateMasterMiddleCards(staff, cardsData) {
         <div class="master-middle-card">粗利増見込 ${formatAmount(totalProfitProspect)}/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)</div>
     `;
 }
-
 function generateMasterFunnel(staff, cardsData) {
     const s = staff.settings;
-    const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+    const activeMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
     let probUnder50 = 0, prob5060 = 0, prob70 = 0, prob80 = 0, prob90 = 0, prob100 = 0;
     
     cardsData.forEach(card => {
-        const md = card.monthlyData?.[currentMonthKey] || { salesIncreaseForecast: 0, probability: 50 };
+        const md = card.monthlyData?.[activeMonthKey] || { salesIncreaseForecast: 0, probability: 50 };
         const profit = (md.salesIncreaseForecast || 0) * ((s.profitRate || 0) / 100);
         if (md.probability < 50) probUnder50 += profit;
         else if (md.probability < 70) prob5060 += profit;
@@ -4489,6 +4491,7 @@ function generateMasterFunnel(staff, cardsData) {
         </div>
     `;
 }
+
        
 function createTableRow(cardData) {
     const fiscalStructure = getFiscalYearStructure();
@@ -5200,9 +5203,17 @@ function applyFilters() {
 function changeCardDisplayMonth(cardId, newMonthKey) {
     const cardData = cardsData.find(card => card.id === cardId);
     if (!cardData) return;
-    
+
     cardData.displayMonth = newMonthKey;
-    saveCardsData();
+
+    // 自分のデータ表示中のときだけ保存
+    if (currentUser?.uid && currentViewTarget === currentUser.uid) {
+        saveCardsData();
+        showToast('表示月を変更し、データを保存しました', 'info');
+    } else {
+        showToast('表示月を変更しました（閲覧モード）', 'info');
+    }
+
     renderCardsOptimized();
 }
 
@@ -5226,6 +5237,11 @@ function changeAllCardsDisplayMonth(newMonthKey) {
     const monthInfo = fiscalStructure.months.find(m => m.key === newMonthKey);
     if (monthInfo) {
         document.getElementById('currentDateDisplay').textContent = monthInfo.label;
+    }
+
+    // マスタービュー表示中なら再描画
+    if (currentViewTarget === 'master') {
+        displayMasterView();
     }
 
     // 再計算と描画は常に実行

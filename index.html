@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="上半期営業支援ダッシュボード">
     <meta name="theme-color" content="#007bff">
-    <title>上半期営業支援ダッシュボード v10.2</title>
+    <title>上半期営業支援ダッシュボード v10.3</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -1035,12 +1035,13 @@
         }
 
         .monthly-row {
-            display: grid;
-            grid-template-columns: 80px 1fr 1fr 20px;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 10px;
-        }
+    display: grid;
+    grid-template-columns: 70px 1fr 1fr 20px; /* 月名欄縮小 */
+    gap: 8px; /* ギャップ縮小 */
+    align-items: center;
+    margin-bottom: 8px;
+}
+
 
         .month-name {
             font-size: 14px;
@@ -1050,14 +1051,18 @@
         }
 
         .monthly-input {
-            padding: 8px 10px;
-            border: 1px solid rgba(0,0,0,0.3);
-            border-radius: 4px;
-            font-size: 16px;
-            text-align: right;
-            background: rgba(255,255,255,0.9);
-            color: #333;
-        }
+    padding: 6px 8px; /* パディング縮小 */
+    border: 1px solid rgba(0,0,0,0.3);
+    border-radius: 4px;
+    font-size: 14px; /* フォントサイズ縮小 */
+    text-align: right;
+    background: rgba(255,255,255,0.9);
+    color: #333;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 120px; /* 最大幅制限 */
+}
+
 
         .monthly-input::placeholder {
             color: rgba(0,0,0,0.6);
@@ -1749,7 +1754,7 @@
 .progress-middle-content {
     font-size: 13px;
     font-weight: 600;
-    color: #856404;
+    color: #333;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
@@ -1758,6 +1763,7 @@
 @media (max-width: 1024px) {
     .progress-middle-content {
         font-size: 12px;
+        color: #333; /* 黒色で統一 */
     }
 }
 
@@ -1860,7 +1866,7 @@
     justify-content: center;
     font-size: 12px;
     font-weight: 600;
-    color: #856404;
+    color: #333; /* 黒色に変更 */
     text-align: center;
 }
 @media (max-width: 1024px) {
@@ -1871,7 +1877,7 @@
 .value-emphasis {
     font-size: 18px !important;
     font-weight: 800 !important;
-    color: #B8860B !important;
+    color: #333 !important;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
 
@@ -1918,7 +1924,55 @@
     background: #E8F4FD !important;
     color: #1565C0 !important;
 }
+/* 追加：個人設定モーダルの月別入力欄をスマホ対応（影響範囲を限定） */
+#personalSettingsModal .monthly-row {
+    display: grid;
+    grid-template-columns: 70px 130px 130px 1fr; /* 固定幅で横スクロール防止 */
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
 
+#personalSettingsModal .monthly-input {
+    padding: 6px 8px;
+    border: 1px solid rgba(0,0,0,0.3);
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: right;
+    background: rgba(255,255,255,0.9);
+    color: #333;
+    width: 100%;
+    max-width: 130px;
+    box-sizing: border-box;
+}
+
+/* スマホ専用：さらに小さく調整 */
+@media (max-width: 768px) {
+    #personalSettingsModal .monthly-data-section {
+        padding: 12px;
+        overflow-x: hidden; /* 横スクロール完全防止 */
+    }
+    
+    #personalSettingsModal .monthly-row {
+        grid-template-columns: 60px 110px 110px 1fr; /* スマホでさらに縮小 */
+        gap: 6px;
+        margin-bottom: 6px;
+    }
+    
+    #personalSettingsModal .monthly-row > :nth-child(4) {
+        display: none; /* 4番目の空セルを非表示 */
+    }
+    
+    #personalSettingsModal .monthly-input {
+        font-size: 13px;
+        padding: 4px 6px;
+        max-width: 110px;
+    }
+    
+    #personalSettingsModal .month-name {
+        font-size: 12px;
+    }
+}
     </style>
    <!-- Firebase SDK -->
 <script type="module">
@@ -1991,6 +2045,7 @@ window.firebaseImports = {
 </div>
         
         <!-- progress-sectionラッパーを削除し、各セクションをcontainerの直接の子に -->
+        <div id="normalDashboardContent">
 <div class="progress-main-cards">
     <!-- 月別粗利カード -->
     <div class="progress-card monthly-profit-card">
@@ -2197,7 +2252,10 @@ window.firebaseImports = {
             <div class="mobile-cards-container" id="cardsContainer"></div>
         </div>
     </div>
-
+      <!-- マスタービューコンテンツ（初期は非表示） -->
+    <div id="masterViewContent" style="display: none;">
+    </div>
+    </div>
     <button class="fab" onclick="openNewCardModal()" title="新規塾登録" aria-label="新規塾登録">➕</button>
 
     <div class="modal" id="personalSettingsModal" role="dialog" aria-modal="true">
@@ -2720,23 +2778,40 @@ async function changeViewTarget() {
     const viewSelector = document.getElementById('viewSelector');
     const newTargetId = viewSelector.value;
     
+    // コンテンツ表示領域のDOM要素を取得
+    const normalContent = document.getElementById('normalDashboardContent');
+    const masterContent = document.getElementById('masterViewContent');
+    
+    // 「マスター」ビューへの切り替え
     if (newTargetId === 'master') {
         currentViewTarget = 'master';
         updateViewSelector();
+        
+        // ヘッダーを維持したまま、通常コンテンツを非表示にしてマスターコンテンツを表示
+        normalContent.style.display = 'none';
+        masterContent.style.display = 'block';
+        
         await displayMasterView();
         showToast('マスター管理画面を表示中', 'info');
         return;
     }
     
+    // 通常ビューへの切り替え（自分または他のスタッフのデータ表示）
     if (newTargetId && newTargetId !== currentViewTarget) {
         currentViewTarget = newTargetId;
         updateViewSelector();
         
+        // マスタービューから戻る場合のコンテンツ切り替え
+        if (masterContent.style.display === 'block') {
+            masterContent.style.display = 'none';
+            normalContent.style.display = 'block';
+        }
+        
+        // 選択されたユーザーの個人設定とカードデータを読み込み
         await loadSettingsForTarget(newTargetId);
         await loadCardsDataForTarget(newTargetId);
         
-        restoreNormalDashboard();
-        
+        // キャッシュをクリアしてダッシュボードを更新
         progressCache = null;
         renderCardsOptimized();
         updateDashboard();
@@ -2747,6 +2822,7 @@ async function changeViewTarget() {
         }
     }
 }
+
 
 function restoreNormalDashboard() {
     // マスタービュー表示後に通常画面へ戻す最短手段：リロード
@@ -3019,11 +3095,15 @@ function formatManYen(amount, decimals = 1) {
     return `${sign}¥${manYen.toFixed(decimals)}万`;
 }
 
-function formatAmount(amount) { 
-    const absAmount = Math.abs(amount || 0);
-    const sign = amount < 0 ? '-' : '';
+function formatAmount(amount) {
+    const num = Number.isFinite(amount) ? amount : 0;
+    const rounded = Math.round(num); // 四捨五入で整数化
+    const absAmount = Math.abs(rounded);
+    const sign = rounded < 0 ? '-' : '';
     return `${sign}¥${absAmount.toLocaleString()}`;
 }
+
+
         // === 4枚カード用ヘルパー関数群（エラー解消） ===
 
 // カード値更新のヘルパー関数
@@ -4151,6 +4231,7 @@ async function displayMasterView() {
         return;
     }
     
+    // 全ユーザーのデータを取得
     const usersCollection = await window.firebaseImports.getDocs(
         window.firebaseImports.collection(window.db, 'users')
     );
@@ -4167,14 +4248,21 @@ async function displayMasterView() {
         });
     });
     
+    // マスタービューコンテンツ領域を取得（ヘッダーは維持）
+    const masterViewContentDiv = document.getElementById('masterViewContent');
+    masterViewContentDiv.innerHTML = ''; // 前回の内容のみをクリア
+    
+    // マスターコンテナを作成
     const masterContainer = document.createElement('div');
     masterContainer.className = 'master-view-container';
     masterContainer.innerHTML = '<h2>👑 マスター管理画面（全スタッフ一覧）</h2>';
     
+    // 各スタッフのセクションを生成
     for (const staff of staffList) {
         const staffSection = document.createElement('div');
         staffSection.className = 'master-staff-section';
         
+        // スタッフの塾データを取得
         const staffCardsQuery = window.firebaseImports.query(
             window.firebaseImports.collection(window.db, 'juku_cards'),
             window.firebaseImports.where('assignedUserId', '==', staff.id)
@@ -4184,6 +4272,7 @@ async function displayMasterView() {
         const staffCardsData = [];
         staffCards.forEach((doc) => staffCardsData.push(doc.data()));
         
+        // スタッフセクションのHTML生成
         staffSection.innerHTML = `
             <div class="master-staff-name">担当: ${staff.name}（${staff.role === 'admin' ? '管理者' : staff.role === 'manager' ? 'マネージャー' : '営業担当'}）</div>
             <div class="master-main-cards">
@@ -4200,45 +4289,147 @@ async function displayMasterView() {
         masterContainer.appendChild(staffSection);
     }
     
-    const mainContainer = document.querySelector('.container');
-    mainContainer.innerHTML = '';
-    mainContainer.appendChild(masterContainer);
+    // ヘッダーを維持したまま、マスターコンテンツ領域にのみ追加
+    masterViewContentDiv.appendChild(masterContainer);
 }
+
 
 function generateMasterMainCards(staff, cardsData) {
     const s = staff.settings;
-    const currentMonth = getCurrentMonth();
-    const monthlyTarget = s.monthlyProfitTargets?.[currentMonth] || 0;
-    const monthlyActual = s.monthlyProfitActuals?.[currentMonth] || 0;
-    const monthlyDiff = monthlyActual - monthlyTarget;
-    const monthlyRate = monthlyTarget > 0 ? (monthlyActual / monthlyTarget) * 100 : 0;
-    
-    const yearlyTarget = s.yearlyProfitTarget || 0;
-    const yearlyActual = (s.yearlyProfitActual != null) ? s.yearlyProfitActual : Object.values(s.monthlyProfitActuals || {}).reduce((a,b)=>a+(b||0),0);
-    const yearlyDiff = yearlyActual - yearlyTarget;
-    const yearlyRate = yearlyTarget > 0 ? (yearlyActual / yearlyTarget) * 100 : 0;
-    
+    const { months, currentMonthIndex } = getFiscalYearStructure();
+    const currentMonth = months[currentMonthIndex].month;
+    const profitRate = (s.profitRate || 0) / 100;
+
+    // 1. 月別粗利（円表記）
+    const monthlyProfitTarget = s.monthlyProfitTargets?.[currentMonth] || 0;
+    const monthlyProfitActual = s.monthlyProfitActuals?.[currentMonth] || 0;
+    const monthlyProfitDiff = monthlyProfitActual - monthlyProfitTarget;
+    const monthlyProfitRate = monthlyProfitTarget > 0 ? (monthlyProfitActual / monthlyProfitTarget) * 100 : 0;
+
+    // 2. 月別売上（円表記）
+    const monthlySalesTarget = profitRate > 0 ? monthlyProfitTarget / profitRate : 0;
+    const monthlySalesActual = profitRate > 0 ? monthlyProfitActual / profitRate : 0;
+    const monthlySalesDiff = monthlySalesActual - monthlySalesTarget;
+    const monthlySalesRate = monthlySalesTarget > 0 ? (monthlySalesActual / monthlySalesTarget) * 100 : 0;
+
+    // 3. 累積粗利（目標は月別の合算、実績は独立手入力）
+    let cumulativeProfitTarget = 0;
+    for (let i = 0; i <= currentMonthIndex; i++) {
+        const monthNum = months[i].month;
+        cumulativeProfitTarget += s.monthlyProfitTargets?.[monthNum] || 0;
+    }
+    const cumulativeProfitActual = s.cumulativeProfitActual || 0;
+    const cumulativeProfitDiff = cumulativeProfitActual - cumulativeProfitTarget;
+    const cumulativeProfitRate = cumulativeProfitTarget > 0 ? (cumulativeProfitActual / cumulativeProfitTarget) * 100 : 0;
+
+    // 4. 累積売上（円表記）
+    const cumulativeSalesTarget = profitRate > 0 ? cumulativeProfitTarget / profitRate : 0;
+    const cumulativeSalesActual = profitRate > 0 ? cumulativeProfitActual / profitRate : 0;
+    const cumulativeSalesDiff = cumulativeSalesActual - cumulativeSalesTarget;
+    const cumulativeSalesRate = cumulativeSalesTarget > 0 ? (cumulativeSalesActual / cumulativeSalesTarget) * 100 : 0;
+
+    // 差額表示のヘルパー関数
+    const formatDiff = (amount) => {
+        const diff = formatDifferenceAmount(amount, formatAmount);
+        const className = diff.isNegative ? 'negative' : (amount > 0 ? 'positive' : 'neutral');
+        return `<span class="metric-value ${className}">${diff.text}</span>`;
+    };
+
     return `
-        <div class="progress-card progress-card-monthly-profit">
-            <h3>月別目標（粗利）</h3>
-            <div class="card-content">
-                <div>目標：${formatAmount(monthlyTarget)}</div>
-                <div>進捗：${formatAmount(monthlyActual)}</div>
-                <div>差額：${formatAmount(monthlyDiff)}</div>
-                <div>達成率：${monthlyRate.toFixed(1)}%</div>
+        <!-- 月別粗利カード -->
+        <div class="progress-card monthly-profit-card">
+            <h3>月別粗利</h3>
+            <div class="card-metrics">
+                <div class="metric-row">
+                    <span class="metric-label">目標:</span>
+                    <span class="metric-value">${formatAmount(monthlyProfitTarget)}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">実績:</span>
+                    <span class="metric-value">${formatAmount(monthlyProfitActual)}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">差額:</span>
+                    ${formatDiff(monthlyProfitDiff)}
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">達成率:</span>
+                    <span class="metric-value">${monthlyProfitRate.toFixed(1)}%</span>
+                </div>
             </div>
         </div>
-        <div class="progress-card progress-card-yearly-profit">
-            <h3>年間目標（粗利）</h3>
-            <div class="card-content">
-                <div>目標：${formatAmount(yearlyTarget)}</div>
-                <div>実績：${formatAmount(yearlyActual)}</div>
-                <div>差額：${formatAmount(yearlyDiff)}</div>
-                <div>達成率：${yearlyRate.toFixed(1)}%</div>
+
+        <!-- 月別売上カード -->
+        <div class="progress-card monthly-sales-card">
+            <h3>月別売上</h3>
+            <div class="card-metrics">
+                <div class="metric-row">
+                    <span class="metric-label">目標:</span>
+                    <span class="metric-value">${formatAmount(monthlySalesTarget)}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">実績:</span>
+                    <span class="metric-value">${formatAmount(monthlySalesActual)}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">差額:</span>
+                    ${formatDiff(monthlySalesDiff)}
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">達成率:</span>
+                    <span class="metric-value">${monthlySalesRate.toFixed(1)}%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 累積粗利カード -->
+        <div class="progress-card cumulative-profit-card">
+            <h3>累積粗利</h3>
+            <div class="card-metrics">
+                <div class="metric-row">
+                    <span class="metric-label">目標:</span>
+                    <span class="metric-value">${formatAmount(cumulativeProfitTarget)}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">実績:</span>
+                    <span class="metric-value">${formatAmount(cumulativeProfitActual)}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">差額:</span>
+                    ${formatDiff(cumulativeProfitDiff)}
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">達成率:</span>
+                    <span class="metric-value">${cumulativeProfitRate.toFixed(1)}%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 累積売上カード -->
+        <div class="progress-card cumulative-sales-card">
+            <h3>累積売上</h3>
+            <div class="card-metrics">
+                <div class="metric-row">
+                    <span class="metric-label">目標:</span>
+                    <span class="metric-value">${formatAmount(cumulativeSalesTarget)}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">実績:</span>
+                    <span class="metric-value">${formatAmount(cumulativeSalesActual)}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">差額:</span>
+                    ${formatDiff(cumulativeSalesDiff)}
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">達成率:</span>
+                    <span class="metric-value">${cumulativeSalesRate.toFixed(1)}%</span>
+                </div>
             </div>
         </div>
     `;
 }
+
 
 function generateMasterMiddleCards(staff, cardsData) {
     const s = staff.settings;

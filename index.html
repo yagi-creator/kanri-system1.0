@@ -1554,30 +1554,16 @@
         display: flex;
         flex-direction: column;
     }
-    .header-section { order: 1; }
-    .progress-main-cards { order: 2; }
-    .progress-middle-section { order: 3; }
-    .funnel-section { order: 4; }
-    .control-section { order: 5; }
-    .cards-section { order: 6; }
-
-    .progress-main-cards {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-    .progress-middle-section {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-    .funnel-section {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 16px;
-    }
+    .header-section { order: 0; }  /* ヘッダーを最優先 */
+    #normalDashboardContent { order: 1; display: flex; flex-direction: column; }
+    #masterViewContent { order: 2; }
+    
+    /* 内側セクションの順序制御 */
+    #normalDashboardContent .progress-main-cards { order: 1; }
+    #normalDashboardContent .progress-middle-section { order: 2; }
+    #normalDashboardContent .funnel-section { order: 3; }
+    #normalDashboardContent .control-section { order: 4; }
+    #normalDashboardContent .cards-section { order: 5; }
 }
 
 /* スマホ版レイアウト（1024px以下） */
@@ -1587,41 +1573,19 @@
         display: flex;
         flex-direction: column;
     }
-
-    .header-section { order: 1; }
-    .progress-middle-section { 
-        order: 2;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-    .funnel-section { 
-        order: 3;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(2, 1fr);
-        gap: 8px;
-        margin-bottom: 16px;
-    }
-    .control-section { order: 4; }
-    .cards-section { order: 5; }
-    .progress-main-cards { 
-        order: 6; /* 塾カードの下に配置 */
-        display: grid;
-         grid-template-columns: 1fr; /* 1列×4段に変更 */
-        gap: 12px;
-        margin-bottom: 16px;
-        margin-top: 16px;
-    }
-    .control-section .control-buttons {
-        display: none;
-    }
+    .header-section { order: 0; }  /* ヘッダーを最優先 */
+    #normalDashboardContent { order: 1; display: flex; flex-direction: column; }
+    #masterViewContent { order: 2; }
+    
+    /* スマホ版の内側セクション順序 */
+    #normalDashboardContent .progress-middle-section { order: 1; }
+    #normalDashboardContent .funnel-section { order: 2; }
+    #normalDashboardContent .control-section { order: 3; }
+    #normalDashboardContent .cards-section { order: 4; }
+    #normalDashboardContent .progress-main-cards { order: 5; }
 }
 
-
-
-/* カード色分け */
+        /* カード色分け */
 .progress-card-monthly-profit {
     background: #2E7D32 !important;
     color: #FFFFFF !important;
@@ -1696,22 +1660,7 @@
     background: #E8F4FD !important; /* 水色系・薄い */
     color: #1565C0 !important;
 }
-
-/* 手入力可能な粗利実績の薄いピンク背景 */
-.editable-profit-field {
-    background: #FFF0F5 !important;
-    border: 1px solid #F8BBD9 !important;
-    border-radius: 4px;
-    padding: 4px 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.editable-profit-field:hover {
-    background: #FFE6F0 !important;
-    transform: scale(1.02);
-}
-/* 自動計算フィールド（手入力不可）の背景色 */
+        /* 自動計算フィールド（手入力不可）の背景色 */
 .auto-calculated-field {
     background: #F8F9FA !important;
     border: 1px solid #DEE2E6 !important;
@@ -3106,30 +3055,6 @@ function formatAmount(amount) {
 
         // === 4枚カード用ヘルパー関数群（エラー解消） ===
 
-// カード値更新のヘルパー関数
-function updateCardValue(elementId, value) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.textContent = value;
-    } else {
-        console.warn(`Element with id '${elementId}' not found`);
-    }
-}
-
-// カード差額更新のヘルパー関数
-function updateCardDifference(elementId, amount) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        const absAmount = Math.abs(amount);
-        const formattedAmount = formatAmount(absAmount);
-        const diffText = amount < 0 ? `Δ${formattedAmount}` : formattedAmount;
-        
-        element.textContent = diffText;
-        element.classList.remove('negative', 'positive', 'neutral');
-        element.classList.add(amount < 0 ? 'negative' : amount > 0 ? 'positive' : 'neutral');
-    }
-}
-
 // 売上フィールドを強制的に編集不可にする防御機能
 function lockAutoCalculatedFields() {
     ['monthlySalesActual', 'cumulativeSalesActual'].forEach(id => {
@@ -3747,17 +3672,6 @@ function scheduleSavePersonalSettings() {
         scheduledSaveToken = setTimeout(executeSave, 0);
     }
 }
-
-
-        // 保存処理をブラウザのアイドル時間に遅延実行するヘルパー関数
-function scheduleSavePersonalSettings() {
-    if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => savePersonalSettingsComplete());
-    } else {
-        setTimeout(() => savePersonalSettingsComplete(), 0);
-    }
-}
-
 
 // ログイン時同期関数
 async function syncPersonalSettingsOnLogin() {

@@ -3742,25 +3742,27 @@ async function syncPersonalSettingsOnLogin() {
         );
         
                 if (userDoc.exists() && userDoc.data().personalSettings) {
-            // クラウド設定で上書き
-            personalSettings = { 
-                ...personalSettings, 
-                ...userDoc.data().personalSettings 
-            };
-            
-            // 互換性処理
-            if (!personalSettings.monthlyCumulativeProfitActuals) {
-                personalSettings.monthlyCumulativeProfitActuals = {
-                    10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
-                    4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
-                };
-            }
-            
-            savePersonalSettings();
-            updatePersonalSalesTarget();
-            updateDashboard();
+    // 🆕 クラウド優先：ローカル設定を完全に置き換え
+    personalSettings = { 
+        ...getDefaultSettings(),
+        ...userDoc.data().personalSettings 
+    };
+    
+    // 互換性処理
+    if (!personalSettings.monthlyCumulativeProfitActuals) {
+        personalSettings.monthlyCumulativeProfitActuals = {
+            10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+            4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
+        };
+    }
+    
+    // 🆕 ローカルストレージを最新クラウドデータで強制更新
+    savePersonalSettings();
+    updatePersonalSalesTarget();
+    updateDashboard();
 
-            showToast('クラウドから個人設定を同期しました', 'info');
+    showToast('クラウドから個人設定を同期し、ローカルを更新しました', 'info');
+
         } else {
             // 初回：ローカル設定をクラウドに保存
             await savePersonalSettingsComplete();

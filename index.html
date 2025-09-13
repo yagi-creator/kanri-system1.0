@@ -1554,17 +1554,24 @@
         display: flex;
         flex-direction: column;
     }
-    .header-section { order: 0; }  /* ヘッダーを最優先 */
+    .header-section { order: 0; }
     #normalDashboardContent { order: 1; display: flex; flex-direction: column; }
     #masterViewContent { order: 2; }
     
     /* 内側セクションの順序制御 */
-    #normalDashboardContent .progress-main-cards { order: 1; }
+    #normalDashboardContent .progress-main-cards {
+        order: 1;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+    }
     #normalDashboardContent .progress-middle-section { order: 2; }
     #normalDashboardContent .funnel-section { order: 3; }
     #normalDashboardContent .control-section { order: 4; }
     #normalDashboardContent .cards-section { order: 5; }
 }
+
 
 /* スマホ版レイアウト（1024px以下） */
 @media (max-width: 1024px) {
@@ -5661,11 +5668,6 @@ function enhanceAccessibility() {
     document.querySelectorAll('.modal').forEach(modal => {
         modal.setAttribute('role', 'dialog');
         modal.setAttribute('aria-modal', 'true');
-    });
-    
-    document.querySelectorAll('.action-btn').forEach((btn, index) => {
-        const actions = ['編集', '履歴', '削除'];
-        btn.setAttribute('aria-label', actions[index % 3]);
     });
 }
 

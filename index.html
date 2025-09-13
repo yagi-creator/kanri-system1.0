@@ -1904,6 +1904,32 @@
         font-size: 12px;
     }
 }
+        /* スマホ表示での確実な順序制御 */
+@media (max-width: 1024px) {
+    /* コンテナのflex設定を確実に適用 */
+    #normalDashboardContent {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    /* 順序の確実な適用（既存設定の強化） */
+    #normalDashboardContent .progress-middle-section { 
+        order: 10 !important; 
+    }
+    #normalDashboardContent .funnel-section { 
+        order: 20 !important; 
+    }
+    #normalDashboardContent .control-section { 
+        order: 30 !important; 
+    }
+    #normalDashboardContent .cards-section { 
+        order: 40 !important; 
+    }
+    #normalDashboardContent .progress-main-cards { 
+        order: 50 !important; 
+    }
+}
+
     </style>
    <!-- Firebase SDK -->
 <script type="module">

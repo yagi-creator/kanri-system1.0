@@ -1929,6 +1929,30 @@
         order: 50 !important; 
     }
 }
+/* スマホ版で四角ボタンを非表示 */
+@media (max-width: 1024px) {
+    .control-buttons {
+        display: none !important;
+    }
+    
+    /* FABボタンを確実に表示 */
+    .fab-settings, .fab-add {
+        display: block !important;
+    }
+}
+
+/* PC版でFABボタンを非表示（既存の設定を強化） */
+@media (min-width: 1025px) {
+    .fab-settings, .fab-add {
+        display: none !important;
+    }
+    
+    /* 四角ボタンを確実に表示 */
+    .control-buttons {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
 
     </style>
   <!-- Firebase SDK -->
@@ -2152,12 +2176,12 @@ window.db = initializeFirestore(app, {
             </div>
             
             <div class="control-buttons">
-                <button class="btn btn-primary" onclick="openNewCardModal()" aria-label="新規塾登録を開く">
-                    ➕ 新規塾登録
-                </button>
-                <button class="btn btn-settings" onclick="openPersonalSettingsModal()" aria-label="個人設定を開く">
-                    ⚙️ 個人設定
-                </button>
+                <button class="btn btn-primary" onclick="openNewCardModal()" aria-label="塾登録を開く">
+    ➕ 塾登録
+</button>
+<button class="btn btn-settings" onclick="openPersonalSettingsModal()" aria-label="個人設定を開く">
+    ⚙️ 個人設定
+</button>
             </div>
 
             <button class="btn btn-secondary" onclick="clearFilters()" style="width: 100%; margin-bottom: 16px;" aria-label="フィルタをクリア">
@@ -2313,7 +2337,7 @@ window.db = initializeFirestore(app, {
     <div class="modal" id="newCardModal" role="dialog" aria-modal="true">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">新規塾登録</div>
+                <div class="modal-title">塾登録</div>
                 <button class="close-btn" onclick="closeNewCardModal()" aria-label="閉じる">&times;</button>
             </div>
             

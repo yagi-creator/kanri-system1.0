@@ -1931,18 +1931,28 @@
 }
 
     </style>
-   <!-- Firebase SDK -->
+  <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
   import { initializeFirestore, doc, getDoc, getDocs, collection, query, where, setDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
+  // Firebase設定情報（確実に定義）
+  const firebaseConfig = {
+    apiKey: "AIzaSyC_EUgAAVFfk0TonQgKVMxs8TcuvFdXKIQ",
+    authDomain: "eigyo-shiendashboard.firebaseapp.com",
+    projectId: "eigyo-shiendashboard",
+    storageBucket: "eigyo-shiendashboard.firebasestorage.app",
+    messagingSenderId: "665404365898",
+    appId: "1:665404365898:web:a60374339c99ea5c16dab3"
+  };
+
   const app = initializeApp(firebaseConfig);
   window.firebaseAuth = getAuth(app);
   
-  // 🆕 企業ネットワーク対応：ロングポーリング強制設定
+  // 🆕 企業ネットワーク対応：HTTP 400エラー解消
   window.db = initializeFirestore(app, {
-    experimentalAutoDetectLongPolling: true,  // 自動検出を有効
+    experimentalAutoDetectLongPolling: true,  // 自動検出
     experimentalForceLongPolling: true,       // XHRロングポーリング強制
     useFetchStreams: false                    // HTTP/2ストリーミング無効化
   });
@@ -1962,6 +1972,7 @@
     serverTimestamp
   };
 </script>
+
 </head>
 <body>
     <div class="container">

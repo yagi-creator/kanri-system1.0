@@ -1950,12 +1950,12 @@
   const app = initializeApp(firebaseConfig);
   window.firebaseAuth = getAuth(app);
   
-  // 🆕 企業ネットワーク対応：HTTP 400エラー解消
-  window.db = initializeFirestore(app, {
-    experimentalAutoDetectLongPolling: true,  // 自動検出
-    experimentalForceLongPolling: true,       // XHRロングポーリング強制
-    useFetchStreams: false                    // HTTP/2ストリーミング無効化
-  });
+ // 🆕 企業ネットワーク対応：HTTP 400エラー解消（修正版）
+window.db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,       // 企業ネットワーク対応（これだけで十分）
+  useFetchStreams: false                    // プロキシ環境対応
+});
+
 
   window.firebaseImports = {
     signInWithEmailAndPassword,

@@ -24,30 +24,35 @@
     (function() {
         const SVG_SOURCE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <rect width="512" height="512" fill="#005BAC"/>
-  <g fill="#FFFFFF" transform="translate(60,30) scale(0.75)">
-    <g transform="translate(64,128) scale(1.2)">
-      <rect x="0" y="256" width="192" height="8" rx="4"/>
-      <rect x="24" y="192" width="32" height="64" rx="6"/>
-      <rect x="72" y="160" width="32" height="96" rx="6"/>
-      <rect x="120" y="128" width="32" height="128" rx="6"/>
+  <!-- iOSでの角丸対応のため全体を少し縮小 -->
+  <g transform="translate(256,256) scale(0.85) translate(-256,-256)">
+    <g fill="#FFFFFF" transform="translate(60,30) scale(0.75)">
+      <g transform="translate(64,128) scale(1.2)">
+        <rect x="0" y="256" width="192" height="8" rx="4"/>
+        <rect x="24" y="192" width="32" height="64" rx="6"/>
+        <rect x="72" y="160" width="32" height="96" rx="6"/>
+        <rect x="120" y="128" width="32" height="128" rx="6"/>
+      </g>
+      <g transform="translate(300,240)" opacity="0.9">
+        <rect x="-8" y="-64" width="16" height="20" rx="3"/>
+        <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(45)"/>
+        <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(90)"/>
+        <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(135)"/>
+        <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(180)"/>
+        <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(225)"/>
+        <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(270)"/>
+        <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(315)"/>
+        <circle r="40" fill="none" stroke="#FFFFFF" stroke-width="16"/>
+      </g>
     </g>
-    <g transform="translate(300,240)" opacity="0.9">
-      <rect x="-8" y="-64" width="16" height="20" rx="3"/>
-      <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(45)"/>
-      <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(90)"/>
-      <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(135)"/>
-      <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(180)"/>
-      <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(225)"/>
-      <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(270)"/>
-      <rect x="-8" y="-64" width="16" height="20" rx="3" transform="rotate(315)"/>
-      <circle r="40" fill="none" stroke="#FFFFFF" stroke-width="16"/>
+    <!-- フォント指定をiOS対応に変更 -->
+    <g fill="#FFFFFF" font-family="system-ui, -apple-system, sans-serif" font-weight="bold" text-anchor="middle">
+      <text x="256" y="385" font-size="48">営業支援</text>
+      <text x="256" y="445" font-size="48">システム</text>
     </g>
-  </g>
-  <g fill="#FFFFFF" font-family="'Noto Sans JP','Hiragino Sans','Yu Gothic',sans-serif" font-weight="700" text-anchor="middle">
-    <text x="256" y="380" font-size="50">営業支援</text>
-    <text x="256" y="440" font-size="46">システム</text>
   </g>
 </svg>`;
+
 
         function svgToPng(svgText, size) {
             return new Promise((resolve) => {

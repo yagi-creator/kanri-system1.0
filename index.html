@@ -1935,22 +1935,19 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-  import { getFirestore, doc, getDoc, getDocs, collection, query, where, setDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyC_EUgAAVFfk0TonQgKVMxs8TcuvFdXKIQ",
-    authDomain: "eigyo-shiendashboard.firebaseapp.com",
-    projectId: "eigyo-shiendashboard",
-    storageBucket: "eigyo-shiendashboard.firebasestorage.app",
-    messagingSenderId: "665404365898",
-    appId: "1:665404365898:web:a60374339c99ea5c16dab3"
-  };
+  import { initializeFirestore, doc, getDoc, getDocs, collection, query, where, setDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   const app = initializeApp(firebaseConfig);
   window.firebaseAuth = getAuth(app);
-  window.db = getFirestore(app);
-window.firebaseImports = {
+  
+  // 🆕 企業ネットワーク対応：ロングポーリング強制設定
+  window.db = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,  // 自動検出を有効
+    experimentalForceLongPolling: true,       // XHRロングポーリング強制
+    useFetchStreams: false                    // HTTP/2ストリーミング無効化
+  });
+
+  window.firebaseImports = {
     signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
@@ -1963,8 +1960,7 @@ window.firebaseImports = {
     setDoc,
     deleteDoc,
     serverTimestamp
-};
-
+  };
 </script>
 </head>
 <body>
@@ -3614,38 +3610,68 @@ async function saveCardsData() {
         console.log('Firestoreに保存完了:', ownCards.length, '件');
         
     } catch (error) {
-        console.error('Firestore save error:', error);
+    console.error('Firestore save error:', error);
+    
+    // 🆕 ネットワークエラーの自動判定
+    const isNetworkError = error.code === 'unavailable' || 
+                          error.code === 'deadline-exceeded' ||
+                          error.message?.includes('net::ERR_QUIC_PROTOCOL_ERROR') ||
+                          error.message?.includes('400');
+    
+    if (isNetworkError) {
+        console.log('ネットワークエラーを検出：自動回復を開始');
         
-        const errorMessages = {
-            'permission-denied': '保存権限がありません。管理者にお問い合わせください',
-            'quota-exceeded': 'ストレージ容量が上限に達しています',
-            'unavailable': 'サービスが一時的に利用できません。時間をおいて再試行してください',
-            'deadline-exceeded': 'ネットワークが不安定です。接続を確認してください',
-            'cancelled': '保存操作がキャンセルされました',
-            'internal': '予期せぬエラーが発生しました',
-            'unauthenticated': '認証が必要です。再ログインしてください'
-        };
-        
-        const message = errorMessages[error.code] || `保存エラー: ${error.message || 'データ保存に失敗しました'}`;
-        showToast(message, 'error');
-        
-        // 自動バックアップ機能（既存コードを維持）
+        // まずローカルにデータを退避保存
         try {
-            const backupKey = `salesDashboard_backup_${Date.now()}`;
+            const backupKey = `salesDashboard_network_backup_${Date.now()}`;
             localStorage.setItem(backupKey, JSON.stringify({
                 cardsData: cardsData,
                 nextCardId: nextCardId,
                 timestamp: new Date().toISOString(),
                 userInfo: currentUser?.uid || 'unknown',
-                errorCode: error.code || 'unknown_error'
+                errorType: 'network_error'
             }));
-            showToast('ローカルにバックアップを保存しました（復旧可能）', 'info');
-            console.log('バックアップ保存完了:', backupKey);
+            
+            showToast('ネットワーク不安定：ローカルに保存しました（5秒後に自動再試行）', 'info');
+            
+            // 🆕 5秒後に自動でもう一度保存を試す
+            setTimeout(() => {
+                console.log('自動リトライを実行中...');
+                saveCardsData();
+            }, 5000);
+            
         } catch (backupError) {
-            console.error('Backup failed:', backupError);
-            showToast('バックアップ保存も失敗しました。重要なデータは手動で控えてください', 'error');
+            console.error('バックアップ保存失敗:', backupError);
+            showToast('保存に失敗しました。重要なデータは手動で控えてください', 'error');
         }
+        return; // ネットワークエラーの場合はここで終了
     }
+    
+    // 通常のエラー（権限不足など）の処理
+    const errorMessages = {
+        'permission-denied': '保存権限がありません。管理者にお問い合わせください',
+        'quota-exceeded': 'ストレージ容量が上限に達しています',
+        'unauthenticated': '認証が必要です。再ログインしてください'
+    };
+    
+    const message = errorMessages[error.code] || `保存エラー: ${error.message || 'データ保存に失敗しました'}`;
+    showToast(message, 'error');
+    
+    // 既存のバックアップ機能
+    try {
+        const backupKey = `salesDashboard_backup_${Date.now()}`;
+        localStorage.setItem(backupKey, JSON.stringify({
+            cardsData: cardsData,
+            nextCardId: nextCardId,
+            timestamp: new Date().toISOString(),
+            userInfo: currentUser?.uid || 'unknown',
+            errorCode: error.code || 'unknown_error'
+        }));
+        console.log('バックアップ保存完了:', backupKey);
+    } catch (backupError) {
+        console.error('バックアップ失敗:', backupError);
+    }
+}
 }
 
 function loadCardsData() {

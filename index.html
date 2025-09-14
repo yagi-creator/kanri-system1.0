@@ -2234,7 +2234,7 @@ window.db = initializeFirestore(app, {
     <!-- 🆕 3枚目カード追加 -->
     <div class="progress-middle-card full-width">
         <div class="progress-middle-content" id="personalIncreaseTargetDisplay">
-            個人設定増目標 0.0万円 | 粗利率 0.0%
+            個人設定売上増目標 0.0万円 | 粗利率 0.0%
         </div>
     </div>
 </div>
@@ -2380,9 +2380,9 @@ window.db = initializeFirestore(app, {
                         <input type="number" class="form-input" value="0" id="yearlySalesIncreaseTarget" readonly>
                         <small>粗利増目標を個人粗利率で逆算した値</small>
                     </div>
-                    <!-- 🆕 個人設定増目標の追加 -->
+                    <!-- 🆕 個人設定売上増目標の追加 -->
                     <div class="form-group">
-                        <label class="form-label" for="personalSalesIncreaseTarget">個人設定増目標</label>
+                        <label class="form-label" for="personalSalesIncreaseTarget">個人設定売上増目標</label>
                         <input type="number" class="form-input" value="0" id="personalSalesIncreaseTarget" placeholder="例: 5000000">
                         <small>自由設定の売上増加目標（中段カードに万円表示されます）</small>
                     </div>
@@ -3099,7 +3099,7 @@ let personalSettings = {
     yearlyProfitTarget: 0,
     yearlyProfitIncreaseTarget: 0,
     yearlySalesIncreaseTarget: 0,
-    personalSalesIncreaseTarget: 0, // 🆕 個人設定増目標（売上）
+    personalSalesIncreaseTarget: 0, // 🆕 個人設定売上増目標
     monthlyProfitActuals: {
         10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
         4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
@@ -4343,7 +4343,7 @@ function updateMiddleCards() {
     // 🆕 3枚目カードの更新処理
     const manualTarget = settings.personalSalesIncreaseTarget || settings.yearlySalesIncreaseTarget || 0;
     const pr = Number(settings.profitRate || 0);
-    elPersonal.innerHTML = `個人設定増目標 <span class="value-emphasis">${formatManPlain(manualTarget)}</span> | 粗利率 ${pr.toFixed(1)}%`;
+    elPersonal.innerHTML = `個人設定売上増目標 <span class="value-emphasis">${formatManPlain(manualTarget)}</span> | 粗利率 ${pr.toFixed(1)}%`;
 }
 
 function updateDashboard() {
@@ -4716,7 +4716,7 @@ function generateMasterMiddleCards(staff, cardsData) {
         <div class="master-middle-card">売上増見込 ${formatAmount(totalSalesProspect)}/${formatAmount(salesTarget)} (${salesRate.toFixed(1)}%)</div>
         <div class="master-middle-card">粗利増見込 ${formatAmount(totalProfitProspect)}/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)</div>
         <div class="master-middle-card full-width">
-            個人設定増目標 <span class="value-emphasis">${formatManPlain(manualTarget)}</span> | 粗利率 ${pr.toFixed(1)}%
+            個人設定売上増目標 <span class="value-emphasis">${formatManPlain(manualTarget)}</span> | 粗利率 ${pr.toFixed(1)}%
         </div>
     `;
 }

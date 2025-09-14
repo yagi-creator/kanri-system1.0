@@ -1954,6 +1954,98 @@
     }
 }
 
+        /* === レイアウト重なり問題の完全解消 === */
+
+/* 4枚カードの安定配置 */
+.progress-main-cards {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    margin-bottom: 16px !important;
+    align-items: stretch !important;
+}
+
+/* 中段カードを3枚対応のグリッド配置 */
+.progress-middle-section {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    margin-bottom: 16px !important;
+    align-items: stretch !important;
+}
+
+/* 3枚目カードを下段全幅表示 */
+.progress-middle-card.full-width {
+    grid-column: 1 / -1 !important;
+}
+
+/* ファネルの6項目安定配置 */
+.funnel-section {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+}
+
+/* 各セクション間の確実な余白確保 */
+.header-section,
+.progress-main-cards,
+.progress-middle-section,
+.funnel-section,
+.control-section,
+.cards-section {
+    margin-bottom: 16px !important;
+    position: relative !important;
+    z-index: auto !important;
+}
+
+/* スマホ版レイアウト調整 */
+@media (max-width: 1024px) {
+    .progress-main-cards {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .progress-middle-section {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .progress-middle-card.full-width {
+        grid-column: auto !important;
+    }
+    
+    .funnel-section {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .funnel-section {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* マスタービューの中段カードも同様に調整 */
+.master-middle-cards {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    margin-bottom: 16px !important;
+}
+
+.master-middle-card.full-width {
+    grid-column: 1 / -1 !important;
+}
+
+@media (max-width: 1024px) {
+    .master-middle-cards {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .master-middle-card.full-width {
+        grid-column: auto !important;
+    }
+}
+        
     </style>
   <!-- Firebase SDK -->
 <script type="module">
@@ -2280,6 +2372,12 @@ window.db = initializeFirestore(app, {
                         <label class="form-label" for="yearlySalesIncreaseTarget">年間売上増目標</label>
                         <input type="number" class="form-input" value="0" id="yearlySalesIncreaseTarget" readonly>
                         <small>粗利増目標を個人粗利率で逆算した値</small>
+                    </div>
+                    <!-- 🆕 個人設定増目標の追加 -->
+                    <div class="form-group">
+                        <label class="form-label" for="personalSalesIncreaseTarget">個人設定増目標</label>
+                        <input type="number" class="form-input" value="0" id="personalSalesIncreaseTarget" placeholder="例: 5000000">
+                        <small>自由設定の売上増加目標（中段カードに万円表示されます）</small>
                     </div>
                 </div>
 
@@ -2994,6 +3092,7 @@ let personalSettings = {
     yearlyProfitTarget: 0,
     yearlyProfitIncreaseTarget: 0,
     yearlySalesIncreaseTarget: 0,
+    personalSalesIncreaseTarget: 0, // 🆕 個人設定増目標（売上）
     monthlyProfitActuals: {
         10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
         4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
@@ -3002,12 +3101,13 @@ let personalSettings = {
         10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
         4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
     },
-    cumulativeProfitActual: 0,  // 後方互換性のため残す
-    monthlyCumulativeProfitActuals: {  // 新規追加：月ごとの累積粗利実績
+    cumulativeProfitActual: 0,
+    monthlyCumulativeProfitActuals: {
         10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
         4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
     }
 };
+
 
 let activeProbabilityFilter = 'all';
 let userSettingsCache = {};
@@ -3038,13 +3138,15 @@ const PROBABILITY_CONFIG = {
 function getCurrentMonth() { 
     return new Date().getMonth() + 1; 
 }
-function getDefaultSettings() {
+
+        function getDefaultSettings() {
     return {
         userName: '担当者',
         profitRate: 0,
         yearlyProfitTarget: 0,
         yearlyProfitIncreaseTarget: 0,
         yearlySalesIncreaseTarget: 0,
+        personalSalesIncreaseTarget: 0, // 🆕 追加
         monthlyProfitActuals: {
             10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
             4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
@@ -3060,8 +3162,6 @@ function getDefaultSettings() {
         }
     };
 }
-
-
 
 // アクティブな個人設定を取得する関数
 function getActiveSettings() {

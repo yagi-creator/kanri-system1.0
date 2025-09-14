@@ -2231,7 +2231,14 @@ window.db = initializeFirestore(app, {
             粗利増見込 ¥0/¥0 (0.0%)
         </div>
     </div>
+    <!-- 🆕 3枚目カード追加 -->
+    <div class="progress-middle-card full-width">
+        <div class="progress-middle-content" id="personalIncreaseTargetDisplay">
+            個人設定増目標 0.0万円 | 粗利率 0.0%
+        </div>
+    </div>
 </div>
+
 
 <div class="funnel-section">
     <div class="funnel-item" onclick="filterByProbability('under50')" aria-label="確率50%未満で絞り込み">
@@ -3212,6 +3219,11 @@ function formatManYen(amount, decimals = 1) {
     const sign = amount < 0 ? '-' : '';
     return `${sign}¥${manYen.toFixed(decimals)}万`;
 }
+        function formatManPlain(amount, decimals = 1) {
+    const num = Number(amount) || 0;
+    const sign = num < 0 ? '-' : '';
+    return `${sign}${(Math.abs(num) / 10000).toFixed(decimals)}万円`;
+}
 
 function formatAmount(amount) {
     const num = Number.isFinite(amount) ? amount : 0;
@@ -3443,9 +3455,11 @@ function formatWithCommas(value) {
 // 数値フィールドのフォーカス・ブラー処理
 function setupNumberFormatting() {
     const numberFields = [
-        'newSalesIncreaseForecast', 'newProfitActual', 
-        'editProfitActual', 'yearlyProfitTarget', 'yearlyProfitIncreaseTarget'
-    ];
+    'newSalesIncreaseForecast', 'newProfitActual', 
+    'editProfitActual', 'yearlyProfitTarget', 'yearlyProfitIncreaseTarget',
+    'personalSalesIncreaseTarget' // 🆕 追加
+];
+
     
     numberFields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
@@ -4293,7 +4307,8 @@ function calculateAllProgress() {
 function updateMiddleCards() {
     const elSales = document.getElementById('salesProspectDisplay');
     const elProfit = document.getElementById('profitProspectDisplay');
-    if (!elSales || !elProfit) return;
+    const elPersonal = document.getElementById('personalIncreaseTargetDisplay'); // 🆕 3枚目要素取得
+    if (!elSales || !elProfit || !elPersonal) return; // 🆕 3枚目チェック追加
 
     const settings = getActiveSettings();
     const currentMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
@@ -4324,8 +4339,12 @@ function updateMiddleCards() {
     // 見込み値を強調表示
     elSales.innerHTML = `売上増見込 <span class="value-emphasis">${formatAmount(totalSalesProspect)}</span>/${formatAmount(salesTarget)} (${salesRate.toFixed(1)}%)`;
     elProfit.innerHTML = `粗利増見込 <span class="value-emphasis">${formatAmount(totalProfitProspect)}</span>/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)`;
-}
 
+    // 🆕 3枚目カードの更新処理
+    const manualTarget = settings.personalSalesIncreaseTarget || settings.yearlySalesIncreaseTarget || 0;
+    const pr = Number(settings.profitRate || 0);
+    elPersonal.innerHTML = `個人設定増目標 <span class="value-emphasis">${formatManPlain(manualTarget)}</span> | 粗利率 ${pr.toFixed(1)}%`;
+}
 
 function updateDashboard() {
     // 売上フィールドの編集機能を無効化
@@ -4689,9 +4708,16 @@ function generateMasterMiddleCards(staff, cardsData) {
     const salesRate = salesTarget > 0 ? (totalSalesProspect / salesTarget) * 100 : 0;
     const profitRate = profitTarget > 0 ? (totalProfitProspect / profitTarget) * 100 : 0;
     
+    // 🆕 3枚目カード用データ取得
+    const manualTarget = s.personalSalesIncreaseTarget || s.yearlySalesIncreaseTarget || 0;
+    const pr = Number(s.profitRate || 0);
+    
     return `
         <div class="master-middle-card">売上増見込 ${formatAmount(totalSalesProspect)}/${formatAmount(salesTarget)} (${salesRate.toFixed(1)}%)</div>
         <div class="master-middle-card">粗利増見込 ${formatAmount(totalProfitProspect)}/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)</div>
+        <div class="master-middle-card full-width">
+            個人設定増目標 <span class="value-emphasis">${formatManPlain(manualTarget)}</span> | 粗利率 ${pr.toFixed(1)}%
+        </div>
     `;
 }
 
@@ -5395,6 +5421,7 @@ function openPersonalSettingsModal() {
     document.getElementById('yearlyProfitTarget').value = personalSettings.yearlyProfitTarget;
     document.getElementById('yearlyProfitIncreaseTarget').value = personalSettings.yearlyProfitIncreaseTarget;
     document.getElementById('yearlySalesIncreaseTarget').value = personalSettings.yearlySalesIncreaseTarget;
+document.getElementById('personalSalesIncreaseTarget').value = personalSettings.personalSalesIncreaseTarget || 0;
     
     const monthlyContainer = document.getElementById('monthlyProfitContainer');
     const fiscalMonths = getFiscalYearStructure().months;
@@ -6056,6 +6083,7 @@ document.addEventListener('DOMContentLoaded', function() {
         personalSettings.profitRate = Math.max(0, Math.min(100, parseFloat(document.getElementById('profitRate').value) || 0));
         personalSettings.yearlyProfitTarget = parseNumberSafely(document.getElementById('yearlyProfitTarget').value);
         personalSettings.yearlyProfitIncreaseTarget = parseNumberSafely(document.getElementById('yearlyProfitIncreaseTarget').value);
+personalSettings.personalSalesIncreaseTarget = parseNumberSafely(document.getElementById('personalSalesIncreaseTarget').value);
         
         updatePersonalSalesTarget();
         // 累積粗利実績の互換性確保

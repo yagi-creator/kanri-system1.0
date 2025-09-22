@@ -1973,13 +1973,13 @@
     background: #E8F4FD !important;
     color: #1565C0 !important;
 }
-/* 追加：個人設定モーダルの月別入力欄をスマホ対応（影響範囲を限定） */
 #personalSettingsModal .monthly-row {
     display: grid;
-    grid-template-columns: 70px 130px 130px 1fr; /* 固定幅で横スクロール防止 */
+    grid-template-columns: 50px minmax(0, 1fr) minmax(0, 1fr); /* 3列レイアウト、柔軟な幅調整 */
     gap: 8px;
     align-items: center;
     margin-bottom: 8px;
+    width: 100%;
 }
 
 #personalSettingsModal .monthly-input {
@@ -1991,37 +1991,36 @@
     background: rgba(255,255,255,0.9);
     color: #333;
     width: 100%;
-    max-width: 130px;
+    min-width: 0 !important; /* iOS/Safari対応：グリッド内縮小を許可 */
     box-sizing: border-box;
 }
 
-/* スマホ専用：さらに小さく調整 */
+/* スマホ専用：最適化された表示 */
 @media (max-width: 768px) {
     #personalSettingsModal .monthly-data-section {
-        padding: 12px;
-        overflow-x: hidden; /* 横スクロール完全防止 */
+        padding: 10px;
+        overflow-x: auto; /* フォールバック：必要時のみスクロール許可 */
     }
     
     #personalSettingsModal .monthly-row {
-        grid-template-columns: 60px 110px 110px 1fr; /* スマホでさらに縮小 */
+        grid-template-columns: 45px minmax(0, 1fr) minmax(0, 1fr);
         gap: 6px;
         margin-bottom: 6px;
-    }
-    
-    #personalSettingsModal .monthly-row > :nth-child(4) {
-        display: none; /* 4番目の空セルを非表示 */
+        min-width: 280px; /* 最小表示幅を確保 */
     }
     
     #personalSettingsModal .monthly-input {
         font-size: 13px;
         padding: 4px 6px;
-        max-width: 110px;
+        min-width: 70px; /* 入力しやすい最小幅 */
     }
     
     #personalSettingsModal .month-name {
         font-size: 12px;
+        text-align: center;
     }
 }
+
         /* スマホ表示での確実な順序制御 */
 @media (max-width: 1024px) {
     /* コンテナのflex設定を確実に適用 */
@@ -5575,21 +5574,21 @@ document.getElementById('personalSalesIncreaseTarget').value = personalSettings.
     monthlyContainer.innerHTML = '';
     
     fiscalMonths.forEach(monthInfo => {
-        const monthDiv = document.createElement('div');
-        monthDiv.className = 'monthly-row';
-        const actualValue = personalSettings.monthlyProfitActuals[monthInfo.month] || 0;
-        const targetValue = personalSettings.monthlyProfitTargets[monthInfo.month] || 0;
-        const actualDisplay = actualValue === 0 ? '' : actualValue;
-        const targetDisplay = targetValue === 0 ? '' : targetValue;
-        
-        monthDiv.innerHTML = `
-            <div class="month-name">${monthInfo.label.substring(monthInfo.label.indexOf('年') + 1)}</div>
-            <input type="number" class="monthly-input" placeholder="実績" id="monthlyProfitActual${monthInfo.month}" value="${actualDisplay}">
-            <input type="number" class="monthly-input" placeholder="目標" id="monthlyProfitTarget${monthInfo.month}" value="${targetDisplay}">
-            <div style="font-size: 10px; color: rgba(0,0,0,0.7); text-align: center;"></div>
-        `;
-        monthlyContainer.appendChild(monthDiv);
-    });
+    const monthDiv = document.createElement('div');
+    monthDiv.className = 'monthly-row';
+    const actualValue = personalSettings.monthlyProfitActuals[monthInfo.month] || 0;
+    const targetValue = personalSettings.monthlyProfitTargets[monthInfo.month] || 0;
+    const actualDisplay = actualValue === 0 ? '' : actualValue;
+    const targetDisplay = targetValue === 0 ? '' : targetValue;
+    
+    monthDiv.innerHTML = `
+        <div class="month-name">${monthInfo.month}月</div>
+        <input type="number" class="monthly-input" placeholder="実績" id="monthlyProfitActual${monthInfo.month}" value="${actualDisplay}" title="月別粗利実績（円）">
+        <input type="number" class="monthly-input" placeholder="目標" id="monthlyProfitTarget${monthInfo.month}" value="${targetDisplay}" title="月別粗利目標（円）">
+    `;
+    monthlyContainer.appendChild(monthDiv);
+});
+
     
     setTimeout(() => {
         setupMonthlyInputHandlers('monthlyProfitContainer');

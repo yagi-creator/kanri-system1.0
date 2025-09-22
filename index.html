@@ -1144,14 +1144,13 @@
         }
 
         .monthly-data-section {
-            background: rgba(255,255,255,0.6);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 16px;
-            max-height: 300px;
-            overflow-y: auto;
-            color: #333;
-        }
+    background: rgba(255,255,255,0.6);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+    color: #333;
+}
+
 
         .monthly-row {
     display: grid;
@@ -2164,6 +2163,19 @@
         grid-column: auto !important;
     }
 }
+        /* 月別データ表示の改善（スマホ対応） */
+@media (max-width: 768px) {
+    .monthly-data-section {
+        max-height: none !important;
+        overflow-y: visible !important;
+    }
+    
+    .modal-content {
+        max-height: 95vh !important;
+        overflow-y: auto;
+    }
+}
+
         
     </style>
   <!-- Firebase SDK -->
@@ -5521,13 +5533,28 @@ function openNewCardModal() {
         return;
     }
     
-    document.getElementById('newCardForm').reset();
+    const form = document.getElementById('newCardForm');
+    form.reset();
+    
+    // 二重送信防止の初期化
+    form.dataset.submitting = 'false';
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const cancelBtn = form.querySelector('.btn-secondary');
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '登録';
+    }
+    if (cancelBtn) {
+        cancelBtn.disabled = false;
+    }
+    
     updateActualSales('new');
     document.getElementById('newSalesActual').readOnly = true;
     document.getElementById('newSalesActual').style.background = '#f8f9fa';
     openModal('newCardModal');
     setTimeout(() => setupNumberFormatting(), 100);
 }
+
 
 function closeNewCardModal() {
     document.getElementById('newCardForm').reset();
@@ -6232,8 +6259,28 @@ if (typeof personalSettings.cumulativeProfitActual === 'undefined') {
     });
 
     document.getElementById('newCardForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
+    e.preventDefault();
+    
+    // 二重送信防止チェック
+    if (this.dataset.submitting === 'true') {
+        showToast('処理中です。少々お待ちください', 'info');
+        return;
+    }
+    
+    // 送信状態をロック
+    this.dataset.submitting = 'true';
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const cancelBtn = this.querySelector('.btn-secondary');
+    
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '登録中...';
+    }
+    if (cancelBtn) {
+        cancelBtn.disabled = true;
+    }
+    
+    try {
         const jukuName = document.getElementById('newJukuName').value.trim();
         const status = document.getElementById('newJukuStatus').value;
         const address = document.getElementById('newAddressInput').value.trim();
@@ -6275,19 +6322,19 @@ if (typeof personalSettings.cumulativeProfitActual === 'undefined') {
             },
             seasonalExam: {
                 hasUsage: (value => {
-        if (value === 'unknown') return null;
-        return value === 'true';
-    })(document.getElementById('newSeasonalUsage').value),
+                    if (value === 'unknown') return null;
+                    return value === 'true';
+                })(document.getElementById('newSeasonalUsage').value),
                 usagePeriod: document.getElementById('newSeasonalPeriod').value.trim()
             }
         };
 
-                // docId生成（ユーザーUID_カードIDで一意性確保）
+        // docId生成（ユーザーUID_カードIDで一意性確保）
         const newDocId = `${currentUser.uid}_${nextCardId}`;
 
         const cardData = {
             id: nextCardId++,
-            docId: newDocId,  // この行を追加
+            docId: newDocId,
             jukuName: jukuName,
             status: status,
             address: address,
@@ -6315,10 +6362,25 @@ if (typeof personalSettings.cumulativeProfitActual === 'undefined') {
         renderCardsOptimized();
         updateDashboard();
         
-        document.getElementById('newCardForm').reset();
+        this.reset();
         closeNewCardModal();
         showToast(`新規塾「${cardData.jukuName}」を登録しました！`, 'success');
-    });
+        
+    } catch (error) {
+        console.error('塾登録エラー:', error);
+        showToast('登録に失敗しました。通信状態をご確認ください。', 'error');
+    } finally {
+        // 必ずロック解除とボタン状態復帰
+        this.dataset.submitting = 'false';
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '登録';
+        }
+        if (cancelBtn) {
+            cancelBtn.disabled = false;
+        }
+    }
+});
 
     document.getElementById('editCardForm').addEventListener('submit', async function(e) {
         e.preventDefault();

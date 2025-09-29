@@ -5137,14 +5137,16 @@ function createNewCardElement(cardData) {
     
     card.innerHTML = `
         <div class="card-header-new">
-            <div class="card-title-clickable" onclick="openMonthlyHistoryModal(${cardData.id})">
-                ${escapeHtml(cardData.jukuName)}
-            </div>
-            <select class="month-selector" onchange="changeCardDisplayMonth(${cardData.id}, this.value)">
-                ${fiscalStructure.months.map(month => 
-                    `<option value="${month.key}" ${month.key === displayMonth ? 'selected' : ''}>${month.month}月</option>`                ).join('')}
-            </select>
-        </div>
+    <div class="card-title-clickable" onclick="onJukuNameClick(${cardData.id})">
+        ${escapeHtml(cardData.jukuName)}
+    </div>
+    <select class="month-selector" onchange="changeCardDisplayMonth(${cardData.id}, this.value)">
+        ${fiscalStructure.months.map(month => 
+            `<option value="${month.key}" ${month.key === displayMonth ? 'selected' : ''}>${month.month}月</option>`
+        ).join('')}
+    </select>
+</div>
+
         
         <div class="annual-metrics-row">
             <div class="annual-metric">

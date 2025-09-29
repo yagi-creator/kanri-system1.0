@@ -596,13 +596,27 @@
 }
 
 /* 列幅の最適化 */
+/* 列幅の最適化 */
 .col-level { width: 8px; padding: 0 !important; }
-.col-name { width: 180px; }
+.col-name { width: 150px; }
 .col-prev-amount, .col-current-amount { width: 100px; text-align: center; }
 .col-prev-prob, .col-current-prob { width: 80px; text-align: center; }
 .col-change { width: 90px; text-align: center; }
+.col-edit { width: 60px; text-align: center; }
 .col-detail { width: 70px; text-align: center; }
 
+/* PC版テーブルの編集可能セルの色付け */
+@media (min-width: 1025px) {
+    .desktop-table-container .editable-cell {
+        background: rgba(76, 175, 80, 0.08) !important;
+        border: 1px solid rgba(76, 175, 80, 0.2);
+        border-radius: 4px;
+        padding: 4px;
+    }
+    .desktop-table-container .editable-cell:hover {
+        background: rgba(76, 175, 80, 0.16) !important;
+    }
+}
 
         .juku-table th {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -2481,15 +2495,17 @@ window.db = initializeFirestore(app, {
                     <thead>
     <tr>
         <th class="col-level"></th>
-        <th class="col-name">塾名</th>
+        <th class="col-name">塾名 / URL</th>
         <th class="col-prev-amount">先月見込</th>
         <th class="col-prev-prob">先月確率</th>
         <th class="col-current-amount">今月見込</th>
         <th class="col-current-prob">今月確率</th>
         <th class="col-change">変化</th>
+        <th class="col-edit">編集</th>
         <th class="col-detail">詳細</th>
     </tr>
 </thead>
+
 
                     <tbody id="jukuTableBody"></tbody>
                 </table>
@@ -2610,7 +2626,11 @@ window.db = initializeFirestore(app, {
                     <label class="form-label" for="newJukuName">塾名 *</label>
                     <input type="text" class="form-input" placeholder="例：○○学習塾" required maxlength="100" id="newJukuName">
                 </div>
-                
+                <div class="form-group">
+    <label class="form-label" for="newJukuUrl">塾URL</label>
+    <input type="url" class="form-input" placeholder="例: https://www.example.com" id="newJukuUrl">
+    <small>塾のウェブサイトURL (https:// または http:// で始まる必要があります)</small>
+</div>
                 <div class="form-group">
                     <label class="form-label" for="newJukuStatus">区分</label>
                     <select class="form-select" id="newJukuStatus">
@@ -2716,7 +2736,11 @@ window.db = initializeFirestore(app, {
                     <label class="form-label" for="editJukuName">塾名</label>
                     <input type="text" class="form-input" id="editJukuName" required maxlength="100">
                 </div>
-                
+                <div class="form-group">
+    <label class="form-label" for="editJukuUrl">塾URL</label>
+    <input type="url" class="form-input" placeholder="例: https://www.example.com" id="editJukuUrl">
+    <small>塾のウェブサイトURL (https:// または http:// で始まる必要があります)</small>
+</div>
                 <div class="form-group">
                     <label class="form-label" for="editJukuStatus">区分</label>
                     <select class="form-select" id="editJukuStatus">
@@ -2995,8 +3019,8 @@ function updateViewSelector() {
         viewSelector.appendChild(option);
     });
     
-    // Admin権限があれば「マスター」を追加（PC幅条件を撤廃）
-if (currentUserRole === 'admin') {
+    // Admin権限があり、かつPC幅（1025px以上）の場合のみ「マスター」を追加
+if (currentUserRole === 'admin' && window.innerWidth >= 1025) {
     const masterOption = document.createElement('option');
     masterOption.value = 'master';
     masterOption.textContent = 'マスター';
@@ -4956,14 +4980,13 @@ function createTableRow(cardData) {
             <div class="level-indicator level-${level}"></div>
         </td>
         <td class="col-name">
-            ${canEdit ? `
-                <div class="editable-cell" onclick="editTableName(${cardData.id})">
-                    ${escapeHtml(cardData.jukuName)}
-                </div>
-            ` : `
-                <div>${escapeHtml(cardData.jukuName)}</div>
-            `}
-        </td>
+    <div class="juku-name-cell">
+        <a href="#" class="juku-name-link" onclick="onJukuNameClick(${cardData.id}); return false;" style="color: #20B2AA; text-decoration: none;">
+            ${escapeHtml(cardData.jukuName)}
+        </a>
+    </div>
+</td>
+
         <td class="col-prev-amount">
             ${formatManYen(previousData.salesIncreaseForecast || 0)}
         </td>
@@ -4993,9 +5016,13 @@ function createTableRow(cardData) {
                 ${formatManYen(change.amount)} ${change.direction === 'increase' ? '↗' : change.direction === 'decrease' ? '↘' : '→'}
             </span>
         </td>
-        <td class="col-detail">
-            <button class="detail-btn" onclick="openMonthlyHistoryModal(${cardData.id})">詳細</button>
-        </td>
+        <td class="col-edit">
+    ${hasPermission('edit_data', cardData) ? `<button class="detail-btn" onclick="openEditFromTable(${cardData.id})">編集</button>` : ''}
+</td>
+<td class="col-detail">
+    <button class="detail-btn" onclick="openMonthlyHistoryModal(${cardData.id})">詳細</button>
+</td>
+
     `;
     
     // 閲覧専用カードのスタイル適用
@@ -6217,6 +6244,64 @@ function enhanceAccessibility() {
     });
 }
 
+// URLバリデーション関数
+function isValidHttpUrl(url) {
+    try {
+        const u = new URL(url);
+        return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
+// 塾名クリック時の処理
+function onJukuNameClick(cardId) {
+    const cardData = cardsData.find(x => x.id === cardId);
+    const url = (cardData && cardData.jukuUrl || '').trim();
+    if (url && isValidHttpUrl(url)) {
+        window.open(url, '_blank', 'noopener');
+    } else {
+        showToast('ZOHOを登録して下さい', 'info');
+    }
+}
+
+// テーブルから編集モーダルを開く
+function openEditFromTable(cardId) {
+    const cardData = cardsData.find(card => card.id === cardId);
+    if (!cardData) return;
+    if (!hasPermission('edit_data', cardData)) {
+        showToast('編集権限がありません', 'error');
+        return;
+    }
+    
+    document.getElementById('editCardId').value = cardData.id;
+    document.getElementById('editModalTitle').textContent = `${cardData.jukuName} - 編集`;
+    document.getElementById('editJukuName').value = cardData.jukuName;
+    document.getElementById('editJukuStatus').value = cardData.status;
+    document.getElementById('editAddressInput').value = cardData.address || '';
+    document.getElementById('editAreaInput').value = cardData.area || '';
+    document.getElementById('editProfitActual').value = cardData.annualProfitActual || 0;
+    document.getElementById('editSalesActual').value = calculateSalesFromProfit(cardData.annualProfitActual || 0);
+    
+    // URL値の設定
+    const editUrlEl = document.getElementById('editJukuUrl');
+    if (editUrlEl) editUrlEl.value = cardData.jukuUrl || '';
+
+    const materials = cardData.annualMaterials || {
+        yearRound: { hasOrder: false, orderPeriod: "" },
+        seasonalExam: { hasUsage: null, usagePeriod: "" }
+    };
+    document.getElementById('editYearRoundOrder').value = String(materials.yearRound.hasOrder);
+    document.getElementById('editYearRoundPeriod').value = materials.yearRound.orderPeriod || '';
+    const seasonalValue = (materials.seasonalExam.hasUsage === null || typeof materials.seasonalExam.hasUsage === 'undefined')
+        ? 'unknown'
+        : String(materials.seasonalExam.hasUsage);
+    document.getElementById('editSeasonalUsage').value = seasonalValue;
+    document.getElementById('editSeasonalPeriod').value = materials.seasonalExam.usagePeriod || '';
+    
+    openEditCardModal();
+}
+        
 document.addEventListener('DOMContentLoaded', function() {
     loadPersonalSettings();
     loadCardsData();
@@ -6312,7 +6397,17 @@ if (typeof personalSettings.cumulativeProfitActual === 'undefined') {
     
     try {
         const jukuName = document.getElementById('newJukuName').value.trim();
-        const status = document.getElementById('newJukuStatus').value;
+const jukuUrlRaw = (document.getElementById('newJukuUrl')?.value || '').trim();
+let jukuUrl = '';
+if (jukuUrlRaw) {
+    if (!isValidHttpUrl(jukuUrlRaw)) {
+        showToast('有効なURLを入力してください（http(s)から始まる必要があります）', 'error');
+        return;
+    }
+    jukuUrl = jukuUrlRaw;
+}
+const status = document.getElementById('newJukuStatus').value;
+
         const address = document.getElementById('newAddressInput').value.trim();
         const area = document.getElementById('newAreaInput').value.trim();
         const salesIncreaseForecast = parseNumberSafely(document.getElementById('newSalesIncreaseForecast').value);
@@ -6363,14 +6458,15 @@ if (typeof personalSettings.cumulativeProfitActual === 'undefined') {
         const newDocId = `${currentUser.uid}_${nextCardId}`;
 
         const cardData = {
-            id: nextCardId++,
-            docId: newDocId,
-            jukuName: jukuName,
-            status: status,
-            address: address,
-            area: area,
-            assignedUserId: currentUser.uid,
-            assignedUserName: currentUserData.name,
+    id: nextCardId++,
+    docId: newDocId,
+    jukuName: jukuName,
+    jukuUrl: jukuUrl,
+    status: status,
+    address: address,
+    area: area,
+    assignedUserId: currentUser.uid,
+    assignedUserName: currentUserData.name,
 
             displayMonth: currentMonthKey,
             monthlyData: monthlyData,
@@ -6424,8 +6520,19 @@ if (typeof personalSettings.cumulativeProfitActual === 'undefined') {
         }
 
         const annualProfitActual = parseNumberSafely(document.getElementById('editProfitActual').value);
-        
-        cardData.jukuName = document.getElementById('editJukuName').value.trim();
+const editUrlRaw = (document.getElementById('editJukuUrl')?.value || '').trim();
+let editUrl = '';
+if (editUrlRaw) {
+    if (!isValidHttpUrl(editUrlRaw)) {
+        showToast('有効なURLを入力してください（http(s)から始まる必要があります）', 'error');
+        return;
+    }
+    editUrl = editUrlRaw;
+}
+
+cardData.jukuName = document.getElementById('editJukuName').value.trim();
+cardData.jukuUrl = editUrl;
+
         cardData.status = document.getElementById('editJukuStatus').value;
         cardData.address = document.getElementById('editAddressInput').value.trim();
         cardData.area = document.getElementById('editAreaInput').value.trim();
@@ -6462,6 +6569,36 @@ if (typeof personalSettings.cumulativeProfitActual === 'undefined') {
         showToast(`${cardData.jukuName}のデータを更新しました！`, 'success');
         closeEditCardModal();
     });
+
+    renderCardsOptimized();
+    updateDashboard();
+     // リサイズ時のマスターオプション動的切り替え
+    function handleResponsiveMasterOption() {
+        const isDesktop = window.innerWidth >= 1025;
+        if (currentUserRole === 'admin') {
+            updateViewSelector();
+            if (!isDesktop && currentViewTarget === 'master') {
+                currentViewTarget = currentUser?.uid || null;
+                document.getElementById('masterViewContent').style.display = 'none';
+                document.getElementById('normalDashboardContent').style.display = 'block';
+                showToast('スマホ画面幅のためマスタービューを終了しました', 'info');
+                if (currentViewTarget) {
+                    loadSettingsForTarget(currentViewTarget);
+                    loadCardsDataForTarget(currentViewTarget).then(() => {
+                        progressCache = null;
+                        renderCardsOptimized();
+                        updateDashboard();
+                    });
+                }
+            }
+        }
+    }
+
+    // リサイズイベント登録
+    window.addEventListener('resize', handleResponsiveMasterOption);
+    
+    // 初期適用（画面幅チェック）
+    handleResponsiveMasterOption();
 
     renderCardsOptimized();
     updateDashboard();

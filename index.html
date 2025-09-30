@@ -1943,9 +1943,37 @@
     text-align: center;
 }
 @media (max-width: 1024px) {
-    .master-view-container { display: none !important; }
-    .master-view-option { display: none !important; }
+    /* マスタービューをスマホでも表示可能に */
+    .master-view-container { 
+        display: block !important; 
+        padding: 12px;
+    }
+    .master-view-option { display: inline !important; }
+    
+    /* スマホ版レイアウト調整 */
+    .master-main-cards {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    
+    .master-middle-cards {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    
+    .master-middle-card.full-width {
+        grid-column: auto !important;
+    }
+    
+    .master-staff-section {
+        margin-bottom: 24px;
+        padding: 16px;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
 }
+
 /* 中段黄色カードの見込み値強調 */
 .value-emphasis {
     font-size: 18px !important;
@@ -3019,8 +3047,8 @@ function updateViewSelector() {
         viewSelector.appendChild(option);
     });
     
-    // Admin権限があり、かつPC幅（1025px以上）の場合のみ「マスター」を追加
-if (currentUserRole === 'admin' && window.innerWidth >= 1025) {
+// Admin権限があれば画面幅に関係なく「マスター」を追加
+if (currentUserRole === 'admin') {
     const masterOption = document.createElement('option');
     masterOption.value = 'master';
     masterOption.textContent = 'マスター';
@@ -3028,6 +3056,7 @@ if (currentUserRole === 'admin' && window.innerWidth >= 1025) {
     if (currentViewTarget === 'master') masterOption.selected = true;
     viewSelector.appendChild(masterOption);
 }
+
 
     
     const currentTarget = availableViewTargets.find(t => t.id === currentViewTarget);
@@ -4623,14 +4652,11 @@ const cumulativeProfitActual = (monthCumulativeValue !== undefined && monthCumul
 }
 
 async function displayMasterView() {
-    if (window.innerWidth < 1025) {
-        showToast('マスタービューはPC版でのみ利用可能です', 'info');
-        return;
-    }
     if (currentUserRole !== 'admin') {
         showToast('管理者権限が必要です', 'error');
         return;
     }
+
     
     const masterViewContentDiv = document.getElementById('masterViewContent');
     // ローディング表示
@@ -4914,43 +4940,43 @@ function generateMasterFunnel(staff, cardsData) {
         const md = card.monthlyData?.[activeMonthKey] || { salesIncreaseForecast: 0, probability: 50 };
         const profit = (md.salesIncreaseForecast || 0) * ((s.profitRate || 0) / 100);
         if (md.probability < 50) probUnder50 += profit;
-        else if (md.probability < 70) prob5060 += profit;
-        else if (md.probability < 80) prob70 += profit;
-        else if (md.probability < 90) prob80 += profit;
-        else if (md.probability < 100) prob90 += profit;
-        else prob100 += profit;
+        else if (md.probability <= 60) prob5060 += profit;   // 50/60%のみ
+        else if (md.probability === 70) prob70 += profit;    // 70%ちょうど
+        else if (md.probability === 80) prob80 += profit;    // 80%ちょうど
+        else if (md.probability === 90) prob90 += profit;    // 90%ちょうど
+        else if (md.probability === 100) prob100 += profit;  // 100%
     });
     
     return `
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <div class="funnel-item" style="flex:1;min-width:120px;background:#fff;border-radius:8px;padding:8px;text-align:center;">
-                <div style="font-size:11px;margin-bottom:2px;color:#333;">50%未満</div>
-                <div style="font-size:12px;font-weight:bold;color:#333;">${formatManYen(probUnder50)}</div>
+        <div class="funnel-section">
+            <div class="funnel-item">
+                <div class="funnel-label">50%未満</div>
+                <div class="funnel-value">${formatManYen(probUnder50)}</div>
             </div>
-            <div class="funnel-item" style="flex:1;min-width:120px;background:#fff;border-radius:8px;padding:8px;text-align:center;">
-                <div style="font-size:11px;margin-bottom:2px;color:#333;">50%-70%未満</div>
-                <div style="font-size:12px;font-weight:bold;color:#333;">${formatManYen(prob5060)}</div>
+            <div class="funnel-item">
+                <div class="funnel-label">50%-70%未満</div>
+                <div class="funnel-value">${formatManYen(prob5060)}</div>
             </div>
-            <div class="funnel-item" style="flex:1;min-width:120px;background:#fff;border-radius:8px;padding:8px;text-align:center;">
-                <div style="font-size:11px;margin-bottom:2px;color:#333;">70%以上</div>
-                <div style="font-size:12px;font-weight:bold;color:#333;">${formatManYen(prob70)}</div>
+            <div class="funnel-item">
+                <div class="funnel-label">70%以上</div>
+                <div class="funnel-value">${formatManYen(prob70)}</div>
             </div>
-           <div class="funnel-item" style="flex:1;min-width:120px;background:#FFF3CD;border:1px solid #FFE082;border-radius:8px;padding:8px;text-align:center;">
-    <div style="font-size:11px;margin-bottom:2px;color:#333;">80%以上</div>
-    <div style="font-size:12px;font-weight:bold;color:#333;">${formatManYen(prob80)}</div>
-</div>
-<div class="funnel-item" style="flex:1;min-width:120px;background:#FFF3CD;border:1px solid #FFE082;border-radius:8px;padding:8px;text-align:center;">
-    <div style="font-size:11px;margin-bottom:2px;color:#333;">90%以上</div>
-    <div style="font-size:12px;font-weight:bold;color:#333;">${formatManYen(prob90)}</div>
-</div>
-<div class="funnel-item" style="flex:1;min-width:120px;background:#FFF3CD;border:1px solid #FFE082;border-radius:8px;padding:8px;text-align:center;">
-    <div style="font-size:11px;margin-bottom:2px;color:#333;">100%</div>
-    <div style="font-size:12px;font-weight:bold;color:#333;">${formatManYen(prob100)}</div>
-</div>
-
+            <div class="funnel-item">
+                <div class="funnel-label">80%以上</div>
+                <div class="funnel-value">${formatManYen(prob80)}</div>
+            </div>
+            <div class="funnel-item">
+                <div class="funnel-label">90%以上</div>
+                <div class="funnel-value">${formatManYen(prob90)}</div>
+            </div>
+            <div class="funnel-item">
+                <div class="funnel-label">100%</div>
+                <div class="funnel-value">${formatManYen(prob100)}</div>
+            </div>
         </div>
     `;
 }
+
        
 function createTableRow(cardData) {
     const fiscalStructure = getFiscalYearStructure();
@@ -5279,7 +5305,24 @@ function openModal(modalId) {
     document.body.style.top = `-${scrollPosition}px`;
     document.body.style.width = '100%';
     document.body.classList.add('modal-open');
-    document.getElementById(modalId).style.display = 'flex';
+    
+    const modal = document.getElementById(modalId);
+    modal.style.display = 'flex';
+    
+    // モーダルを開いたら毎回一番上へスクロール
+    modal.scrollTop = 0;
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) {
+        modalContent.scrollTop = 0;
+    }
+    
+    // iOS/Safari対策（次フレームでもう一度確実にリセット）
+    requestAnimationFrame(() => {
+        modal.scrollTop = 0;
+        if (modalContent) {
+            modalContent.scrollTop = 0;
+        }
+    });
 }
 
 function closeModal(modalId) {
@@ -5611,7 +5654,13 @@ function openNewCardModal() {
     document.getElementById('newSalesActual').readOnly = true;
     document.getElementById('newSalesActual').style.background = '#f8f9fa';
     openModal('newCardModal');
-    setTimeout(() => setupNumberFormatting(), 100);
+setTimeout(() => {
+    // 確実にスクロール位置をリセット
+    const modalContent = document.querySelector('#newCardModal .modal-content');
+    if (modalContent) modalContent.scrollTop = 0;
+    setupNumberFormatting();
+}, 100);
+
 }
 
 
@@ -5655,7 +5704,13 @@ document.getElementById('personalSalesIncreaseTarget').value = personalSettings.
     }, 100);
     
     openModal('personalSettingsModal');
-    setTimeout(() => setupNumberFormatting(), 100);
+setTimeout(() => {
+    // 確実にスクロール位置をリセット
+    const modalContent = document.querySelector('#personalSettingsModal .modal-content');
+    if (modalContent) modalContent.scrollTop = 0;
+    setupNumberFormatting();
+}, 100);
+
 }
 
 function closePersonalSettingsModal() {
@@ -5818,7 +5873,13 @@ function openEditCardModal() {
     document.getElementById('editSalesActual').readOnly = true;
     document.getElementById('editSalesActual').style.background = '#f8f9fa';
     openModal('editCardModal');
-    setTimeout(() => setupNumberFormatting(), 100);
+setTimeout(() => {
+    // 確実にスクロール位置をリセット
+    const modalContent = document.querySelector('#editCardModal .modal-content');
+    if (modalContent) modalContent.scrollTop = 0;
+    setupNumberFormatting();
+}, 100);
+
 }
 
 function closeEditCardModal() {
@@ -6574,27 +6635,15 @@ cardData.jukuUrl = editUrl;
 
     renderCardsOptimized();
     updateDashboard();
-     // リサイズ時のマスターオプション動的切り替え
-    function handleResponsiveMasterOption() {
-        const isDesktop = window.innerWidth >= 1025;
-        if (currentUserRole === 'admin') {
-            updateViewSelector();
-            if (!isDesktop && currentViewTarget === 'master') {
-                currentViewTarget = currentUser?.uid || null;
-                document.getElementById('masterViewContent').style.display = 'none';
-                document.getElementById('normalDashboardContent').style.display = 'block';
-                showToast('スマホ画面幅のためマスタービューを終了しました', 'info');
-                if (currentViewTarget) {
-                    loadSettingsForTarget(currentViewTarget);
-                    loadCardsDataForTarget(currentViewTarget).then(() => {
-                        progressCache = null;
-                        renderCardsOptimized();
-                        updateDashboard();
-                    });
-                }
-            }
+function handleResponsiveMasterOption() {
+    if (currentUserRole === 'admin') {
+        updateViewSelector();
+        // マスタービュー表示中なら画面幅に関係なく再描画
+        if (currentViewTarget === 'master') {
+            displayMasterView();
         }
     }
+}
 
     // リサイズイベント登録
     window.addEventListener('resize', handleResponsiveMasterOption);

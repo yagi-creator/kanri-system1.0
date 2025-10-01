@@ -6026,6 +6026,15 @@ function getCardActiveMonthKey(card) {
     return card.displayMonth || globalKey;
 }
 
+// Timestamp/Date/ISO文字列すべてに対応する関数
+function getDateMillis(dateValue) {
+    if (!dateValue) return 0;
+    if (typeof dateValue.toDate === 'function') return dateValue.toDate().getTime(); // Firestore Timestamp
+    if (dateValue instanceof Date) return dateValue.getTime(); // Date object
+    const parsed = new Date(dateValue);
+    return isNaN(parsed.getTime()) ? 0 : parsed.getTime(); // ISO string
+}
+
 function getSortedCards(cards) {
     const sortType = document.getElementById('sortSelect').value;
     const sortedCards = [...cards];
@@ -6047,26 +6056,16 @@ function getSortedCards(cards) {
                 const bForecast = b.monthlyData?.[bKey]?.salesIncreaseForecast || 0;
                 return aForecast - bForecast;
             });
-        // Timestamp/Date/ISO文字列すべてに対応する関数
-function getDateMillis(dateValue) {
-    if (!dateValue) return 0;
-    if (typeof dateValue.toDate === 'function') return dateValue.toDate().getTime(); // Firestore Timestamp
-    if (dateValue instanceof Date) return dateValue.getTime(); // Date object
-    const parsed = new Date(dateValue);
-    return isNaN(parsed.getTime()) ? 0 : parsed.getTime(); // ISO string
-}
-
-case 'updated-desc':
-    return sortedCards.sort((a, b) => {
-        const diff = getDateMillis(b.lastUpdated) - getDateMillis(a.lastUpdated);
-        return diff !== 0 ? diff : (b.id || 0) - (a.id || 0); // タイブレイク
-    });
-case 'updated-asc':
-    return sortedCards.sort((a, b) => {
-        const diff = getDateMillis(a.lastUpdated) - getDateMillis(b.lastUpdated);
-        return diff !== 0 ? diff : (a.id || 0) - (b.id || 0); // タイブレイク
-    });
-
+        case 'updated-desc':
+            return sortedCards.sort((a, b) => {
+                const diff = getDateMillis(b.lastUpdated) - getDateMillis(a.lastUpdated);
+                return diff !== 0 ? diff : (b.id || 0) - (a.id || 0); // タイブレイク
+            });
+        case 'updated-asc':
+            return sortedCards.sort((a, b) => {
+                const diff = getDateMillis(a.lastUpdated) - getDateMillis(b.lastUpdated);
+                return diff !== 0 ? diff : (a.id || 0) - (b.id || 0); // タイブレイク
+            });
         case 'probability-desc':
             return sortedCards.sort((a, b) => {
                 const aKey = getCardActiveMonthKey(a);

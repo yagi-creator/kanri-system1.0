@@ -3664,15 +3664,13 @@ function formatWithCommas(value) {
     return Number.isFinite(num) ? num.toLocaleString() : '';
 }
 
-// 数値フィールドのフォーカス・ブラー処理
 function setupNumberFormatting() {
     const numberFields = [
     'newSalesIncreaseForecast', 'newProfitActual', 
     'editProfitActual', 'yearlyProfitTarget', 'yearlyProfitIncreaseTarget',
-    'personalSalesIncreaseTarget' // 🆕 追加
+    'personalSalesIncreaseTarget'
 ];
 
-    
     numberFields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
         if (!field) return;
@@ -5849,6 +5847,7 @@ function editCard(button) {
     document.getElementById('editCardId').value = cardData.id;
     document.getElementById('editModalTitle').textContent = `${cardData.jukuName} - 編集`;
     document.getElementById('editJukuName').value = cardData.jukuName;
+    document.getElementById('editJukuUrl').value = cardData.jukuUrl || '';
     document.getElementById('editJukuStatus').value = cardData.status;
     document.getElementById('editAddressInput').value = cardData.address;
     document.getElementById('editAreaInput').value = cardData.area || '';

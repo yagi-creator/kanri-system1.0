@@ -3956,12 +3956,18 @@ async function saveCardsData() {
             const cardRef = window.firebaseImports.doc(window.db, 'juku_cards', card.docId);
             
             const cardToSave = {
-                ...card,
-                assignedUserId: assignedId,
-                assignedUserName: card.assignedUserName || (currentUserData?.name || personalSettings.userName),
-                lastUpdated: window.firebaseImports.serverTimestamp(),
-                updatedBy: currentUser.uid
-            };
+    ...card,
+    assignedUserId: assignedId,
+    assignedUserName: card.assignedUserName || (currentUserData?.name || personalSettings.userName),
+    // lastUpdatedの上書きを削除（各カードの個別時刻を保持）
+    updatedBy: currentUser.uid
+};
+
+// 互換性確保：古いデータの時刻フォーマット統一
+if (!cardToSave.lastUpdated || typeof cardToSave.lastUpdated === 'string') {
+    cardToSave.lastUpdated = new Date(cardToSave.lastUpdated || Date.now());
+}
+
             
             await window.firebaseImports.setDoc(cardRef, cardToSave);
         }
@@ -5069,7 +5075,7 @@ function editTableName(id) {
     const v = prompt('塾名を編集', c.jukuName);
     if (v !== null && v.trim() !== c.jukuName) {
         c.jukuName = v.trim();
-        c.lastUpdated = new Date().toISOString();
+         c.lastUpdated = new Date();
         saveCardsData();
         renderCardsOptimized();
         showToast('塾名を更新', 'success');
@@ -5093,7 +5099,7 @@ function editTableForecast(id, key) {
         if (!c.monthlyData) c.monthlyData = {};
         if (!c.monthlyData[key]) c.monthlyData[key] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
         c.monthlyData[key].salesIncreaseForecast = n;
-        c.lastUpdated = new Date().toISOString();
+         c.lastUpdated = new Date();
         if (confirm('将来月も更新?')) propagateToFutureMonths(id, n, c.monthlyData[key].probability);
         else saveCardsData();
         progressCache = null;
@@ -5124,7 +5130,7 @@ function editTableProbability(id, key) {
             if (!c.monthlyData) c.monthlyData = {};
             if (!c.monthlyData[key]) c.monthlyData[key] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
             c.monthlyData[key].probability = nv;
-            c.lastUpdated = new Date().toISOString();
+             c.lastUpdated = new Date();
             if (confirm('将来月も更新?')) propagateToFutureMonths(id, c.monthlyData[key].salesIncreaseForecast, nv);
             else saveCardsData();
             progressCache = null;
@@ -5760,13 +5766,11 @@ function changeAllCardsDisplayMonth(newMonthKey) {
     const selfId = currentUser?.uid || null;
     if (selfId && currentViewTarget === selfId) {
         cardsData.forEach(cardData => {
-            cardData.displayMonth = newMonthKey;
-        });
-        saveCardsData();
-        showToast('表示月を変更し、データを保存しました', 'info');
-    } else {
-        showToast('表示月を変更しました（閲覧モード）', 'info');
-    }
+    cardData.displayMonth = newMonthKey;
+});
+// 表示専用変更のためクラウド保存しない
+showToast('表示月を変更しました', 'info');
+
 
     const fiscalStructure = getFiscalYearStructure();
     const monthInfo = fiscalStructure.months.find(m => m.key === newMonthKey);
@@ -5990,7 +5994,7 @@ function saveMemoContent() {
     }
 
     cardData.monthlyData[monthKey].memo = newMemoContent;
-    cardData.lastUpdated = new Date().toISOString();
+   cardData.lastUpdated = new Date();
 
     saveCardsData();
     renderCardsOptimized();
@@ -6045,10 +6049,26 @@ function getSortedCards(cards) {
                 const bForecast = b.monthlyData?.[bKey]?.salesIncreaseForecast || 0;
                 return aForecast - bForecast;
             });
-        case 'updated-desc':
-            return sortedCards.sort((a, b) => new Date(b.lastUpdated || '1970-01-01') - new Date(a.lastUpdated || '1970-01-01'));
-        case 'updated-asc':
-            return sortedCards.sort((a, b) => new Date(a.lastUpdated || '1970-01-01') - new Date(b.lastUpdated || '1970-01-01'));
+        // Timestamp/Date/ISO文字列すべてに対応する関数
+function getDateMillis(dateValue) {
+    if (!dateValue) return 0;
+    if (typeof dateValue.toDate === 'function') return dateValue.toDate().getTime(); // Firestore Timestamp
+    if (dateValue instanceof Date) return dateValue.getTime(); // Date object
+    const parsed = new Date(dateValue);
+    return isNaN(parsed.getTime()) ? 0 : parsed.getTime(); // ISO string
+}
+
+case 'updated-desc':
+    return sortedCards.sort((a, b) => {
+        const diff = getDateMillis(b.lastUpdated) - getDateMillis(a.lastUpdated);
+        return diff !== 0 ? diff : (b.id || 0) - (a.id || 0); // タイブレイク
+    });
+case 'updated-asc':
+    return sortedCards.sort((a, b) => {
+        const diff = getDateMillis(a.lastUpdated) - getDateMillis(b.lastUpdated);
+        return diff !== 0 ? diff : (a.id || 0) - (b.id || 0); // タイブレイク
+    });
+
         case 'probability-desc':
             return sortedCards.sort((a, b) => {
                 const aKey = getCardActiveMonthKey(a);
@@ -6128,7 +6148,7 @@ function editSalesIncreaseForecast(cardId, monthKey, element) {
         
         if (cardData.monthlyData[monthKey].salesIncreaseForecast !== newValue) {
             cardData.monthlyData[monthKey].salesIncreaseForecast = newValue;
-            cardData.lastUpdated = new Date().toISOString();
+           cardData.lastUpdated = new Date();
             
             if (confirm('将来月のデータも同じ値に更新しますか？\n（キャンセルすると当月のみ更新されます）')) {
                 propagateToFutureMonths(cardId, newValue, cardData.monthlyData[monthKey].probability);
@@ -6193,7 +6213,7 @@ function editProbability(cardId, monthKey, element) {
         
         if (cardData.monthlyData[monthKey].probability !== newValue) {
             cardData.monthlyData[monthKey].probability = newValue;
-            cardData.lastUpdated = new Date().toISOString();
+           cardData.lastUpdated = new Date();
             
             if (confirm('将来月のデータも同じ確率に更新しますか？\n（キャンセルすると当月のみ更新されます）')) {
                 propagateToFutureMonths(cardId, cardData.monthlyData[monthKey].salesIncreaseForecast, newValue);
@@ -6536,7 +6556,7 @@ const status = document.getElementById('newJukuStatus').value;
             annualProfitActual: annualProfitActual,
             annualMaterials: annualMaterials,
             registeredMonth: currentMonthKey,
-            lastUpdated: new Date().toISOString()
+             lastUpdated: new Date()
         };
 
         const errors = validateCardData(cardData);
@@ -6616,7 +6636,7 @@ cardData.jukuUrl = editUrl;
 
         };
         
-        cardData.lastUpdated = new Date().toISOString();
+       cardData.lastUpdated = new Date();
 
         const errors = validateCardData(cardData);
         if (errors.length > 0) {

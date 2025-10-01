@@ -5766,11 +5766,11 @@ function changeAllCardsDisplayMonth(newMonthKey) {
     const selfId = currentUser?.uid || null;
     if (selfId && currentViewTarget === selfId) {
         cardsData.forEach(cardData => {
-    cardData.displayMonth = newMonthKey;
-});
-// 表示専用変更のためクラウド保存しない
-showToast('表示月を変更しました', 'info');
-
+            cardData.displayMonth = newMonthKey;
+        });
+        // 表示専用変更のためクラウド保存しない
+        showToast('表示月を変更しました', 'info');
+    }
 
     const fiscalStructure = getFiscalYearStructure();
     const monthInfo = fiscalStructure.months.find(m => m.key === newMonthKey);
@@ -5788,7 +5788,6 @@ showToast('表示月を変更しました', 'info');
     updateDashboard();
     renderCardsOptimized();
 }
-
 
 function openMonthlyHistoryModal(cardId) {
     const cardData = cardsData.find(card => card.id === cardId);

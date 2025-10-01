@@ -4332,10 +4332,13 @@ function migrateToV9Structure() {
 }
 
 function initializeDisplayMonth() {
-    const currentMonthKey = getFiscalYearStructure().currentMonthKey;
+    const fs = getFiscalYearStructure();
+    const currentMonthKey = fs.currentMonthKey;
+    const validKeys = new Set(fs.months.map(m => m.key));
     
     cardsData.forEach(cardData => {
-        if (!cardData.displayMonth) {
+        // 未設定または無効なキーの場合に自動修正
+        if (!cardData.displayMonth || !validKeys.has(cardData.displayMonth)) {
             cardData.displayMonth = currentMonthKey;
         }
     });
@@ -5001,16 +5004,21 @@ function generateMasterFunnel(staff, cardsData) {
        
 function createTableRow(cardData) {
     const fiscalStructure = getFiscalYearStructure();
-    const displayMonth = cardData.displayMonth || fiscalStructure.currentMonthKey;
+    const displayMonth = getCardActiveMonthKey(cardData);  // 🔧 グローバル月セレクターと連動
     const previousMonth = getPreviousMonth(displayMonth);
+    
+    // 10月判定を追加
+    const displayMonthInfo = fiscalStructure.months.find(m => m.key === displayMonth);
+    const isFirstFiscalMonth = displayMonthInfo && displayMonthInfo.month === 10;
     
     // 2ヶ月分のデータ取得
     const currentData = cardData.monthlyData?.[displayMonth] || { 
         salesIncreaseForecast: 0, probability: 50, memo: "" 
     };
-    const previousData = cardData.monthlyData?.[previousMonth.key] || { 
-        salesIncreaseForecast: 0, probability: 50, memo: "" 
-    };
+    const previousData = isFirstFiscalMonth 
+        ? { salesIncreaseForecast: 0, probability: 0, memo: "会計年度開始" }
+        : (cardData.monthlyData?.[previousMonth.key] || { salesIncreaseForecast: 0, probability: 50, memo: "" });
+
     
     const level = getCardLevel(currentData.salesIncreaseForecast || 0);
     const change = calculateMonthlyChange(cardData, displayMonth);
@@ -5034,12 +5042,13 @@ function createTableRow(cardData) {
     </div>
 </td>
 
-        <td class="col-prev-amount">
-            ${formatManYen(previousData.salesIncreaseForecast || 0)}
+                <td class="col-prev-amount">
+            ${isFirstFiscalMonth ? '—' : formatManYen(previousData.salesIncreaseForecast || 0)}
         </td>
         <td class="col-prev-prob">
-            ${getProbabilityLabel(previousData.probability || 50)}
+            ${isFirstFiscalMonth ? '—' : getProbabilityLabel(previousData.probability || 50)}
         </td>
+
         <td class="col-current-amount">
             ${canEdit && isCurrentMonth ? `
                 <div class="editable-cell" onclick="editTableForecast(${cardData.id},'${displayMonth}')">
@@ -5162,15 +5171,20 @@ function editTableProbability(id, key) {
 
 function createNewCardElement(cardData) {
     const fiscalStructure = getFiscalYearStructure();
-    const displayMonth = cardData.displayMonth || fiscalStructure.currentMonthKey;
+    const displayMonth = getCardActiveMonthKey(cardData);  // 🔧 グローバル月セレクターと連動
     const previousMonth = getPreviousMonth(displayMonth);
+    
+    // 🔧 追加：10月（会計年度初月）の判定
+    const displayMonthInfo = fiscalStructure.months.find(m => m.key === displayMonth);
+    const isFirstFiscalMonth = displayMonthInfo && displayMonthInfo.month === 10;
     
     const currentData = cardData.monthlyData?.[displayMonth] || { 
         salesIncreaseForecast: 0, probability: 50, memo: "" 
     };
-    const previousData = cardData.monthlyData?.[previousMonth.key] || { 
-        salesIncreaseForecast: 0, probability: 50, memo: "" 
-    };
+    // 🔧 修正：10月の場合は前月データを特別扱い
+    const previousData = isFirstFiscalMonth 
+        ? { salesIncreaseForecast: 0, probability: 0, memo: "会計年度開始" }
+        : (cardData.monthlyData?.[previousMonth.key] || { salesIncreaseForecast: 0, probability: 50, memo: "" });
     
     const cardLevel = getCardLevel(currentData.salesIncreaseForecast || 0);
     
@@ -5182,29 +5196,29 @@ function createNewCardElement(cardData) {
     
     const currentForecast = currentData.salesIncreaseForecast || 0;
     const previousForecast = previousData.salesIncreaseForecast || 0;
-    const difference = currentForecast - previousForecast;
-    const changeIcon = difference > 0 ? '📈' : difference < 0 ? '📉' : '➡️';
+    // 🔧 修正：10月の場合は差額計算と表示を特別扱い
+    const difference = isFirstFiscalMonth ? currentForecast : (currentForecast - previousForecast);
+    const changeIcon = isFirstFiscalMonth ? '🆕' : (difference > 0 ? '📈' : difference < 0 ? '📉' : '➡️');
     const changeClass = difference > 0 ? 'comparison-positive' : difference < 0 ? 'comparison-negative' : 'comparison-neutral';
     
     card.innerHTML = `
         <div class="card-header-new">
-    <div class="card-title-clickable" onclick="onJukuNameClick(${cardData.id})">
-        ${escapeHtml(cardData.jukuName)}
-    </div>
-    <select class="month-selector" onchange="changeCardDisplayMonth(${cardData.id}, this.value)">
-        ${fiscalStructure.months.map(month => 
-            `<option value="${month.key}" ${month.key === displayMonth ? 'selected' : ''}>${month.month}月</option>`
-        ).join('')}
-    </select>
-</div>
+            <div class="card-title-clickable" onclick="onJukuNameClick(${cardData.id})">
+                ${escapeHtml(cardData.jukuName)}
+            </div>
+            <select class="month-selector" onchange="changeCardDisplayMonth(${cardData.id}, this.value)">
+                ${fiscalStructure.months.map(month => 
+                    `<option value="${month.key}" ${month.key === displayMonth ? 'selected' : ''}>${month.month}月</option>`
+                ).join('')}
+            </select>
+        </div>
 
-        
         <div class="annual-metrics-row">
             <div class="annual-metric">
-                <div class="annual-metric-label">売上増見込（${fiscalStructure.months.find(m => m.key === displayMonth)?.month}月時点）</div>
+                <div class="annual-metric-label">売上増見込（${displayMonthInfo?.month || getCurrentMonth()}月時点）</div>
                 <div class="annual-metric-value">${formatAmount(currentData.salesIncreaseForecast || 0)}</div>
                 <div class="change-indicator ${changeClass}">
-                    ${changeIcon} ${formatAmount(difference)}
+                    ${isFirstFiscalMonth ? '🆕' : changeIcon} ${isFirstFiscalMonth ? '新年度開始' : formatAmount(difference)}
                 </div>
             </div>
             <div class="annual-metric">
@@ -5223,14 +5237,14 @@ function createNewCardElement(cardData) {
         
         <div class="monthly-comparison-section">
             <div class="month-data-column">
-                <div class="month-data-header">先月 (${previousMonth.month}月)</div>
+                <div class="month-data-header">${isFirstFiscalMonth ? '前年度' : '先月'} (${isFirstFiscalMonth ? '前年9月' : previousMonth.month + '月'})</div>
                 <div class="month-data-content">
-                    <div class="forecast-amount">売上増見込: ${formatAmount(previousData.salesIncreaseForecast)}</div>
-                    <div class="forecast-probability">確率: ${getProbabilityLabel(previousData.probability)}</div>
+                    <div class="forecast-amount">売上増見込: ${isFirstFiscalMonth ? '—' : formatAmount(previousData.salesIncreaseForecast)}</div>
+                    <div class="forecast-probability">確率: ${isFirstFiscalMonth ? '—' : getProbabilityLabel(previousData.probability)}</div>
                 </div>
             </div>
             <div class="month-data-column">
-                <div class="month-data-header">今月 (${fiscalStructure.months.find(m => m.key === displayMonth)?.month}月)</div>
+                <div class="month-data-header">今月 (${displayMonthInfo?.month || getCurrentMonth()}月)</div>
                 <div class="month-data-content">
                     <div class="editable-field" onclick="editSalesIncreaseForecast(${cardData.id}, '${displayMonth}', this)">
                         <span class="display-value">売上増見込: ${formatAmount(currentData.salesIncreaseForecast)}</span>
@@ -6042,9 +6056,19 @@ function setupMonthlyInputHandlers(containerId) {
 }
 
 function getCardActiveMonthKey(card) {
-    const globalSel = document.getElementById('globalMonthSelector');
-    const globalKey = globalSel && globalSel.value ? globalSel.value : getFiscalYearStructure().currentMonthKey;
-    return card.displayMonth || globalKey;
+    const fiscal = getFiscalYearStructure();
+    const globalKey = activeDashboardMonthKey || fiscal.currentMonthKey;
+    const validKeys = new Set(fiscal.months.map(m => m.key));
+    const viewingOwn = currentUser?.uid && currentViewTarget === currentUser.uid;
+
+    if (viewingOwn) {
+        // 自分のデータ：有効なキーなら使用、無効なら現在月
+        const candidate = card.displayMonth || globalKey;
+        return validKeys.has(candidate) ? candidate : globalKey;
+    } else {
+        // 部下閲覧時：常にグローバル月を使用（保存はしない）
+        return validKeys.has(globalKey) ? globalKey : fiscal.currentMonthKey;
+    }
 }
 
 // Timestamp/Date/ISO文字列すべてに対応する関数

@@ -1120,11 +1120,6 @@
     box-shadow: 0 0 0 2px rgba(32, 178, 170, 0.25);
 }
 
-.search-input:focus {
-    border-color: #20B2AA;
-    box-shadow: 0 0 0 2px rgba(32, 178, 170, 0.25);
-}
-
         .form-input[readonly] {
             background: #f8f9fa;
             color: #6c757d;
@@ -2321,12 +2316,22 @@ window.db = initializeFirestore(app, {
             </div>
             
             <div class="view-selector-section" id="viewSelectorSection" style="display: none;">
-                <label class="view-selector-label">データ表示:</label>
-                <select class="view-selector" id="viewSelector" onchange="changeViewTarget()">
-                    <option value="">選択してください</option>
-                </select>
-                <span class="view-permission-info" id="viewPermissionInfo"></span>
-            </div>
+    <label class="view-selector-label">データ表示:</label>
+    <select class="view-selector" id="viewSelector" onchange="changeViewTarget()">
+        <option value="">選択してください</option>
+    </select>
+    <span class="view-permission-info" id="viewPermissionInfo"></span>
+</div>
+
+<!-- 🆕 地域選択セレクター -->
+<div class="view-selector-section" id="regionSelectorSection" style="display: none;">
+    <label class="view-selector-label">地域:</label>
+    <select class="view-selector" id="globalRegionSelector" onchange="changeRegionFilter()">
+        <option value="all">全エリア</option>
+        <option value="kansai">関西</option>
+        <option value="shikoku">四国</option>
+    </select>
+</div>
         </div>
         
         <div class="auth-buttons" id="authButtons">
@@ -2686,9 +2691,19 @@ window.db = initializeFirestore(app, {
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="newAreaInput">エリア</label>
-                    <input type="text" class="form-input" id="newAreaInput" placeholder="例: 大阪北部">
-                </div>
+    <label class="form-label" for="newAreaInput">エリア</label>
+    <input type="text" class="form-input" id="newAreaInput" placeholder="例: 大阪北部">
+</div>
+
+<!-- 🆕 地域選択 -->
+<div class="form-group">
+    <label class="form-label" for="newJukuRegion">地域 *</label>
+    <select class="form-select" id="newJukuRegion" required>
+        <option value="kansai">関西</option>
+        <option value="shikoku">四国</option>
+    </select>
+</div>
+
 
                 <div class="settings-section">
                     <h4>営業データ</h4>
@@ -2796,9 +2811,18 @@ window.db = initializeFirestore(app, {
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="editAreaInput">エリア</label>
-                    <input type="text" class="form-input" id="editAreaInput">
-                </div>
+    <label class="form-label" for="editAreaInput">エリア</label>
+    <input type="text" class="form-input" id="editAreaInput">
+</div>
+
+<!-- 🆕 地域選択 -->
+<div class="form-group">
+    <label class="form-label" for="editJukuRegion">地域 *</label>
+    <select class="form-select" id="editJukuRegion" required>
+        <option value="kansai">関西</option>
+        <option value="shikoku">四国</option>
+    </select>
+</div>
 
                 <div class="settings-section">
                     <h4>年間データ</h4>
@@ -2880,6 +2904,7 @@ let currentUserData = null;
 let currentUserRole = null;
 let currentViewTarget = null;
 let availableViewTargets = [];
+let currentRegionFilter = 'all'; // 🆕 地域フィルター追加
 
 async function quickLogin() {
     if (!window.firebaseImports || !window.firebaseAuth) {
@@ -2958,30 +2983,40 @@ async function loadAvailableViewTargets() {
             const userId = doc.id;
             
             if (userId === currentUser.uid) {
-                availableViewTargets.push({
-                    id: userId,
-                    name: userData.name,
-                    role: userData.role,
-                    canEdit: true
-                });
-                return;
-            }
+   availableViewTargets.push({
+    id: userId,
+    name: userData.name,
+    role: userData.role,
+    email: userData.email || currentUser.email || '',
+    regions: Array.isArray(userData.regions) ? userData.regions : [],
+    canEdit: true
+});
+
+    return;
+}
+
             
             if (currentUserRole === 'admin') {
-                availableViewTargets.push({
-                    id: userId,
-                    name: userData.name,
-                    role: userData.role,
-                    canEdit: false
-                });
+availableViewTargets.push({
+    id: userId,
+    name: userData.name,
+    role: userData.role,
+    email: userData.email || '',
+    regions: Array.isArray(userData.regions) ? userData.regions : [],
+    canEdit: false
+});
+
             } else if (currentUserRole === 'manager') {
                 if (currentUserData.subordinates && currentUserData.subordinates.includes(userId)) {
                     availableViewTargets.push({
-                        id: userId,
-                        name: userData.name,
-                        role: userData.role,
-                        canEdit: false
-                    });
+    id: userId,
+    name: userData.name,
+    role: userData.role,
+    email: userData.email || '',
+    regions: Array.isArray(userData.regions) ? userData.regions : [],
+    canEdit: false
+});
+
                 }
             }
         });
@@ -3018,11 +3053,15 @@ function updateAuthUI() {
             viewSelectorSection.style.display = 'flex';
         }
         
+        // 🆕 地域セレクター表示更新
+        updateRegionSelectorVisibility();
+        
         loginBtn.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
     } else {
         loginUserInfo.textContent = '未ログイン';
         viewSelectorSection.style.display = 'none';
+        document.getElementById('regionSelectorSection').style.display = 'none'; // 🆕
         loginBtn.style.display = 'inline-block';
         logoutBtn.style.display = 'none';
     }
@@ -3069,8 +3108,6 @@ if (currentUserRole === 'admin') {
     viewSelector.appendChild(masterOption);
 }
 
-
-    
     const currentTarget = availableViewTargets.find(t => t.id === currentViewTarget);
     if (viewPermissionInfo) {
         if (currentTarget) {
@@ -3090,6 +3127,93 @@ if (currentUserRole === 'admin') {
     }
 }
 
+function updateRegionSelectorOptions() {
+    const regionSelector = document.getElementById('globalRegionSelector');
+    if (!regionSelector) return;
+    
+    regionSelector.innerHTML = '';
+    
+    const userRegions = Array.isArray(currentUserData?.regions) ? currentUserData.regions : [];
+    const isAdmin = currentUserRole === 'admin';
+
+    // 管理者または複数地域対応なら「全エリア」を追加
+    if (isAdmin || userRegions.length > 1) {
+        const allOption = document.createElement('option');
+        allOption.value = 'all';
+        allOption.textContent = '全エリア';
+        regionSelector.appendChild(allOption);
+    }
+
+    const regionsToAdd = isAdmin ? ['kansai', 'shikoku'] : userRegions;
+    regionsToAdd.forEach(region => {
+        const option = document.createElement('option');
+        option.value = region;
+        option.textContent = region === 'kansai' ? '関西' : '四国';
+        regionSelector.appendChild(option);
+    });
+
+    regionSelector.value = currentRegionFilter;
+}
+
+function updateRegionSelectorVisibility() {
+    const regionSection = document.getElementById('regionSelectorSection');
+    if (!regionSection) return;
+    
+    if (!currentUser || !currentUserData) {
+        regionSection.style.display = 'none';
+        return;
+    }
+    
+    const userRegions = Array.isArray(currentUserData.regions) ? currentUserData.regions : [];
+    const isAdmin = currentUserRole === 'admin';
+
+    if (isAdmin || userRegions.length > 1) {
+        regionSection.style.display = 'flex';
+        updateRegionSelectorOptions();
+    } else {
+        regionSection.style.display = 'none';
+        if (userRegions.length === 1) {
+            currentRegionFilter = userRegions[0];
+        } else if (currentUserData.defaultRegion) {
+            currentRegionFilter = currentUserData.defaultRegion;
+        } else {
+            currentRegionFilter = 'kansai';
+        }
+    }
+}
+
+function changeRegionFilter() {
+    const regionSelector = document.getElementById('globalRegionSelector');
+    if (!regionSelector) return;
+
+    const selectedRegion = regionSelector.value;
+    let effectiveRegion = selectedRegion;
+
+    // 他人データ閲覧時は対象ユーザーの regions に従う
+    if (currentViewTarget && currentViewTarget !== currentUser?.uid) {
+        const target = availableViewTargets.find(t => t.id === currentViewTarget);
+        const targetRegions = Array.isArray(target?.regions) ? target.regions : [];
+        
+        if (targetRegions.length === 1) {
+            const restrictedRegion = targetRegions[0];
+            if (selectedRegion !== restrictedRegion && selectedRegion !== 'all') {
+                showToast(`この担当者のデータは${restrictedRegion === 'shikoku' ? '四国' : '関西'}のみ閲覧可能です`, 'info');
+                regionSelector.value = restrictedRegion;
+                effectiveRegion = restrictedRegion;
+            } else if (selectedRegion === 'all') {
+                effectiveRegion = restrictedRegion;
+            }
+        }
+    }
+
+    currentRegionFilter = effectiveRegion;
+    progressCache = null;
+    updateDashboard();
+    renderCardsOptimized();
+
+    const labels = { all: '全エリア', kansai: '関西', shikoku: '四国' };
+    showToast(`${labels[currentRegionFilter]}を表示中`, 'info');
+}
 
 async function changeViewTarget() {
     const viewSelector = document.getElementById('viewSelector');
@@ -3241,10 +3365,29 @@ function setupFirebaseAuth() {
             currentUserData = userDoc.data();
             currentUserRole = currentUserData.role;
             currentViewTarget = user.uid; // 必ず自分のデータを表示
-            
-            // 🆕 起動時は必ず現在月を表示
-            const fiscalStructure = getFiscalYearStructure();
-            activeDashboardMonthKey = fiscalStructure.currentMonthKey;
+
+// 🆕 四国専用ユーザーの地域設定
+// 🆕 ユーザーのregions情報に基づく地域設定
+const userRegions = Array.isArray(currentUserData.regions) ? currentUserData.regions : [];
+const isAdmin = currentUserRole === 'admin';
+
+if (isAdmin) {
+    currentRegionFilter = 'all';
+} else if (currentUserData.defaultRegion) {
+    currentRegionFilter = currentUserData.defaultRegion;
+} else if (userRegions.length === 1) {
+    currentRegionFilter = userRegions[0];
+} else if (userRegions.length > 1) {
+    currentRegionFilter = 'all';
+} else {
+    currentRegionFilter = 'kansai'; // フォールバック
+}
+
+
+// 🆕 起動時は必ず現在月を表示
+const fiscalStructure = getFiscalYearStructure();
+activeDashboardMonthKey = fiscalStructure.currentMonthKey;
+
             
             // グローバル月セレクターを現在月に設定
             const globalSelector = document.getElementById('globalMonthSelector');
@@ -3989,11 +4132,11 @@ if (!cardToSave.lastUpdated || typeof cardToSave.lastUpdated === 'string') {
     } catch (error) {
     console.error('Firestore save error:', error);
     
-    // 🆕 ネットワークエラーの自動判定
-    const isNetworkError = error.code === 'unavailable' || 
-                          error.code === 'deadline-exceeded' ||
-                          error.message?.includes('net::ERR_QUIC_PROTOCOL_ERROR') ||
-                          error.message?.includes('400');
+   const isNetworkError = error.code === 'unavailable' || 
+                      error.code === 'deadline-exceeded' ||
+                      error.code === 'network-request-failed' ||
+                      error.message?.includes('net::ERR_QUIC_PROTOCOL_ERROR') ||
+                      error.message?.includes('network-request-failed');
     
     if (isNetworkError) {
         console.log('ネットワークエラーを検出：自動回復を開始');
@@ -4316,9 +4459,16 @@ function migrateToV9Structure() {
         }
 
         if (!cardData.hasOwnProperty('assignedUser')) {
-            cardData.assignedUser = personalSettings.userName;
-            needsMigration = true;
-        }
+    cardData.assignedUser = personalSettings.userName;
+    needsMigration = true;
+}
+
+// 🆕 地域フィールドの追加（既存データは全て関西に設定）
+if (!cardData.hasOwnProperty('region')) {
+    cardData.region = "kansai";
+    needsMigration = true;
+}
+
 
         if (needsMigration) {
             migrationCount++;
@@ -4327,7 +4477,7 @@ function migrateToV9Structure() {
     
     if (migrationCount > 0) {
         saveCardsData();
-        showToast(`${migrationCount}件のデータをv10.0形式に移行しました`, 'info');
+        showToast(`${migrationCount}件のデータを新形式に移行しました`, 'info');
     }
 }
 
@@ -4384,12 +4534,6 @@ function updateAreaFilterOptions() {
     if (sortedMunicipalities.includes(currentValue) || currentValue === 'all') {
         areaFilter.value = currentValue;
     }
-}
-
-
-function updateProbabilityFilterOptions() {
-    // 確率プルダウン削除により無効化
-    console.log('Probability filter removed - function disabled');
 }
 
 function updateGlobalMonthSelector() {
@@ -5334,6 +5478,7 @@ function propagateToFutureMonths(cardId, newForecast, newProbability) {
         }
     });
     
+    cardData.lastUpdated = new Date();
     saveCardsData();
     showToast('将来月のデータを一括更新しました', 'success');
 }
@@ -5677,6 +5822,25 @@ function openNewCardModal() {
     const form = document.getElementById('newCardForm');
     form.reset();
     
+   setTimeout(() => {
+    const regionSelect = document.getElementById('newJukuRegion');
+    const userRegions = Array.isArray(currentUserData?.regions) ? currentUserData.regions : [];
+    const isAdmin = currentUserRole === 'admin';
+
+    if (isAdmin) {
+        regionSelect.value = currentUserData.defaultRegion || 'kansai';
+        regionSelect.disabled = false;
+    } else if (userRegions.length === 1) {
+        regionSelect.value = userRegions[0];
+        regionSelect.disabled = true;
+    } else {
+        regionSelect.value = currentUserData.defaultRegion || 'kansai';
+        regionSelect.disabled = false;
+    }
+}, 0);
+
+
+    
     // 二重送信防止の初期化
     form.dataset.submitting = 'false';
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -5761,7 +5925,10 @@ function clearFilters() {
     document.getElementById('statusFilter').value = 'all';
     activeProbabilityFilter = 'all';
     document.getElementById('areaFilter').value = 'all';
-    document.getElementById('sortSelect').value = 'sales-desc';
+    const sortSelect = document.getElementById('sortSelect');
+if (sortSelect) {
+    sortSelect.value = 'sales-desc';
+}
     renderCardsOptimized();
     showToast('フィルタをクリアしました', 'info');
 }
@@ -5886,6 +6053,7 @@ function editCard(button) {
     document.getElementById('editJukuStatus').value = cardData.status;
     document.getElementById('editAddressInput').value = cardData.address;
     document.getElementById('editAreaInput').value = cardData.area || '';
+    document.getElementById('editJukuRegion').value = cardData.region || 'kansai'; 
     document.getElementById('editProfitActual').value = cardData.annualProfitActual;
     document.getElementById('editSalesActual').value = calculateSalesFromProfit(cardData.annualProfitActual || 0);
     
@@ -5909,7 +6077,19 @@ function openEditCardModal() {
     updateActualSales('edit');
     document.getElementById('editSalesActual').readOnly = true;
     document.getElementById('editSalesActual').style.background = '#f8f9fa';
+    
+    // 🆕 四国専用ユーザーは地域選択を無効化
+    setTimeout(() => {
+        const editRegionSelect = document.getElementById('editJukuRegion');
+        if (['yosioka@chuoh-kyouiku.co.jp', 'komori@chuoh-kyouiku.co.jp'].includes(currentUser?.email)) {
+            editRegionSelect.disabled = true;
+        } else {
+            editRegionSelect.disabled = false;
+        }
+    }, 0);
+    
     openModal('editCardModal');
+
 setTimeout(() => {
     // 確実にスクロール位置をリセット
     const modalContent = document.querySelector('#editCardModal .modal-content');
@@ -6189,15 +6369,15 @@ function editSalesIncreaseForecast(cardId, monthKey, element) {
         }
         
         if (cardData.monthlyData[monthKey].salesIncreaseForecast !== newValue) {
-            cardData.monthlyData[monthKey].salesIncreaseForecast = newValue;
-           cardData.lastUpdated = new Date();
-            
-            if (confirm('将来月のデータも同じ値に更新しますか？\n（キャンセルすると当月のみ更新されます）')) {
-                propagateToFutureMonths(cardId, newValue, cardData.monthlyData[monthKey].probability);
-            } else {
-                saveCardsData();
-                showToast('当月の売上増見込を更新しました', 'success');
-            }
+    cardData.monthlyData[monthKey].salesIncreaseForecast = newValue;
+    cardData.lastUpdated = new Date();
+    
+    if (confirm('将来月のデータも同じ値に更新しますか？\n（キャンセルすると当月のみ更新されます）')) {
+        propagateToFutureMonths(cardId, newValue, cardData.monthlyData[monthKey].probability);
+    } else {
+        saveCardsData();
+        showToast('当月の売上増見込を更新しました', 'success');
+    }
             
             progressCache = null;
             updateDashboard();
@@ -6254,15 +6434,15 @@ function editProbability(cardId, monthKey, element) {
         }
         
         if (cardData.monthlyData[monthKey].probability !== newValue) {
-            cardData.monthlyData[monthKey].probability = newValue;
-           cardData.lastUpdated = new Date();
-            
-            if (confirm('将来月のデータも同じ確率に更新しますか？\n（キャンセルすると当月のみ更新されます）')) {
-                propagateToFutureMonths(cardId, cardData.monthlyData[monthKey].salesIncreaseForecast, newValue);
-            } else {
-                saveCardsData();
-                showToast('当月の確率を更新しました', 'success');
-            }
+    cardData.monthlyData[monthKey].probability = newValue;
+    cardData.lastUpdated = new Date();
+    
+    if (confirm('将来月のデータも同じ確率に更新しますか？\n（キャンセルすると当月のみ更新されます）')) {
+        propagateToFutureMonths(cardId, cardData.monthlyData[monthKey].salesIncreaseForecast, newValue);
+    } else {
+        saveCardsData();
+        showToast('当月の確率を更新しました', 'success');
+    }
             
             progressCache = null;
             updateDashboard();
@@ -6299,34 +6479,51 @@ function renderCards() {
     const areaFilter = document.getElementById('areaFilter').value;
 
         let filteredCards = cardsData.filter(cardData => {
-        const title = cardData.jukuName.toLowerCase();
-        const status = cardData.status;
-        const cardAddress = cardData.address || '';
-        const cardMunicipality = extractMunicipality(cardAddress);
-        
-        // カードの現在表示月の確率を取得
-        const activeKey = getCardActiveMonthKey(cardData);
-        const cardProbability = cardData.monthlyData?.[activeKey]?.probability || 50;
-        
-        let show = true;
-        if (searchTerm && !title.includes(searchTerm)) show = false;
-        if (statusFilter !== 'all' && status !== statusFilter) show = false;
-        if (areaFilter !== 'all' && cardMunicipality !== areaFilter) show = false;
-        if (probabilityFilter !== 'all' && !matchesProbabilityFilter(cardProbability, probabilityFilter)) show = false;
-        return show;
-    });
+    const title = cardData.jukuName.toLowerCase();
+    const status = cardData.status;
+    const cardAddress = cardData.address || '';
+    const cardMunicipality = extractMunicipality(cardAddress);
+    const cardRegion = cardData.region || 'kansai'; // 🆕 デフォルトは関西
+    
+    // カードの現在表示月の確率を取得
+    const activeKey = getCardActiveMonthKey(cardData);
+    const cardProbability = cardData.monthlyData?.[activeKey]?.probability || 50;
+    
+    let show = true;
+    if (searchTerm && !title.includes(searchTerm)) show = false;
+    if (statusFilter !== 'all' && status !== statusFilter) show = false;
+    if (areaFilter !== 'all' && cardMunicipality !== areaFilter) show = false;
+    if (probabilityFilter !== 'all' && !matchesProbabilityFilter(cardProbability, probabilityFilter)) show = false;
+    
+    // 🆕 地域フィルター追加
+    if (currentRegionFilter !== 'all') {
+        const filterRegion = currentRegionFilter === 'kansai' ? 'kansai' : 'shikoku';
+        if (cardRegion !== filterRegion) show = false;
+    }
+    
+    return show;
+});
 
     // 並び替え処理
     filteredCards = getSortedCards(filteredCards);
 
-    // DOM要素への反映
-    filteredCards.forEach((cardData) => {
-        const tableRow = createTableRow(cardData);
-        tb.appendChild(tableRow);
-        
-        const cardElement = createNewCardElement(cardData);
-        mc.appendChild(cardElement);
-    });
+    // DocumentFragmentを使用してDOM操作を最適化
+const tableFragment = document.createDocumentFragment();
+const cardsFragment = document.createDocumentFragment();
+
+filteredCards.forEach((cardData) => {
+    const tableRow = createTableRow(cardData);
+    tableFragment.appendChild(tableRow);
+    
+    const cardElement = createNewCardElement(cardData);
+    cardsFragment.appendChild(cardElement);
+});
+
+// 一度にDOM挿入
+tb.innerHTML = '';
+tb.appendChild(tableFragment);
+mc.innerHTML = '';
+mc.appendChild(cardsFragment);
     
     // 並び替え情報の更新
     updateSortInfo();
@@ -6405,6 +6602,7 @@ function openEditFromTable(cardId) {
     document.getElementById('editJukuStatus').value = cardData.status;
     document.getElementById('editAddressInput').value = cardData.address || '';
     document.getElementById('editAreaInput').value = cardData.area || '';
+    document.getElementById('editJukuRegion').value = cardData.region || 'kansai';
     document.getElementById('editProfitActual').value = cardData.annualProfitActual || 0;
     document.getElementById('editSalesActual').value = calculateSalesFromProfit(cardData.annualProfitActual || 0);
     
@@ -6512,139 +6710,139 @@ if (typeof personalSettings.cumulativeProfitActual === 'undefined') {
     document.getElementById('newCardForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    // 二重送信防止チェック
-    if (this.dataset.submitting === 'true') {
-        showToast('処理中です。少々お待ちください', 'info');
+// 二重送信防止チェック
+if (this.dataset.submitting === 'true') {
+    showToast('処理中です。少々お待ちください', 'info');
+    return;
+}
+
+// ★1. 先に基本バリデーションを実行（ロック前）★
+const jukuName = document.getElementById('newJukuName').value.trim();
+const jukuUrlRaw = (document.getElementById('newJukuUrl')?.value || '').trim();
+
+if (!jukuName) {
+    showToast('塾名を入力してください', 'error');
+    return; // ロック前なので安全
+}
+
+if (jukuUrlRaw && !isValidHttpUrl(jukuUrlRaw)) {
+    showToast('有効なURLを入力してください（http(s)から始まる必要があります）', 'error');
+    return; // ロック前なので安全
+}
+
+// ★2. バリデーション通過後にロック開始★
+this.dataset.submitting = 'true';
+const submitBtn = this.querySelector('button[type="submit"]');
+const cancelBtn = this.querySelector('.btn-secondary');
+
+if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = '登録中...';
+}
+if (cancelBtn) {
+    cancelBtn.disabled = true;
+}
+
+try {
+    // ★3. バリデーション済みの値を使用★
+    const jukuUrl = jukuUrlRaw || '';
+    const status = document.getElementById('newJukuStatus').value;
+    const address = document.getElementById('newAddressInput').value.trim();
+    const area = document.getElementById('newAreaInput').value.trim();
+    const salesIncreaseForecast = parseNumberSafely(document.getElementById('newSalesIncreaseForecast').value);
+    const probability = parseInt(document.getElementById('newProbability').value) || 50;
+    const annualProfitActual = parseNumberSafely(document.getElementById('newProfitActual').value);
+    
+    const fiscalStructure = getFiscalYearStructure();
+    const currentMonthKey = fiscalStructure.currentMonthKey;
+    const currentIndex = fiscalStructure.months.findIndex(m => m.key === currentMonthKey);
+
+    const monthlyData = {};
+    fiscalStructure.months.forEach((monthInfo, index) => {
+        if (index < currentIndex) {
+            monthlyData[monthInfo.key] = {
+                salesIncreaseForecast: 0,
+                probability: 50,
+                memo: ""
+            };
+        } else {
+            monthlyData[monthInfo.key] = {
+                salesIncreaseForecast: salesIncreaseForecast,
+                probability: probability,
+                memo: ""
+            };
+        }
+    });
+
+    const annualMaterials = {
+        yearRound: {
+            hasOrder: document.getElementById('newYearRoundOrder').value === 'true',
+            orderPeriod: document.getElementById('newYearRoundPeriod').value.trim()
+        },
+        seasonalExam: {
+            hasUsage: (value => {
+                if (value === 'unknown') return null;
+                return value === 'true';
+            })(document.getElementById('newSeasonalUsage').value),
+            usagePeriod: document.getElementById('newSeasonalPeriod').value.trim()
+        }
+    };
+
+    // docId生成（ユーザーUID_カードIDで一意性確保）
+    const newDocId = `${currentUser.uid}_${nextCardId}`;
+
+    const cardData = {
+        id: nextCardId++,
+        docId: newDocId,
+        jukuName: jukuName,
+        jukuUrl: jukuUrl,
+        status: status,
+        address: address,
+        area: area,
+        region: document.getElementById('newJukuRegion').value,
+        assignedUserId: currentUser.uid,
+        assignedUserName: currentUserData.name,
+        displayMonth: currentMonthKey,
+        monthlyData: monthlyData,
+        annualProfitActual: annualProfitActual,
+        annualMaterials: annualMaterials,
+        registeredMonth: currentMonthKey,
+        lastUpdated: new Date()
+    };
+
+    const errors = validateCardData(cardData);
+    if (errors.length > 0) {
+        showToast(errors[0], 'error');
         return;
     }
     
-    // 送信状態をロック
-    this.dataset.submitting = 'true';
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const cancelBtn = this.querySelector('.btn-secondary');
+    cardsData.push(cardData);
+    await saveCardsData();
+    progressCache = null;
+    renderCardsOptimized();
+    updateDashboard();
     
+    this.reset();
+    closeNewCardModal();
+    showToast(`新規塾「${cardData.jukuName}」を登録しました！`, 'success');
+    
+} catch (error) {
+    console.error('塾登録エラー:', error);
+    showToast('登録に失敗しました。通信状態をご確認ください。', 'error');
+} finally {
+    // ★4. 必ずロック解除★
+    this.dataset.submitting = 'false';
     if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = '登録中...';
+        submitBtn.disabled = false;
+        submitBtn.textContent = '登録';
     }
     if (cancelBtn) {
-        cancelBtn.disabled = true;
+        cancelBtn.disabled = false;
     }
-    
-    try {
-        const jukuName = document.getElementById('newJukuName').value.trim();
-const jukuUrlRaw = (document.getElementById('newJukuUrl')?.value || '').trim();
-let jukuUrl = '';
-if (jukuUrlRaw) {
-    if (!isValidHttpUrl(jukuUrlRaw)) {
-        showToast('有効なURLを入力してください（http(s)から始まる必要があります）', 'error');
-        return;
-    }
-    jukuUrl = jukuUrlRaw;
 }
-const status = document.getElementById('newJukuStatus').value;
-
-        const address = document.getElementById('newAddressInput').value.trim();
-        const area = document.getElementById('newAreaInput').value.trim();
-        const salesIncreaseForecast = parseNumberSafely(document.getElementById('newSalesIncreaseForecast').value);
-        const probability = parseInt(document.getElementById('newProbability').value) || 50;
-        const annualProfitActual = parseNumberSafely(document.getElementById('newProfitActual').value);
-        
-        if (!jukuName) {
-            showToast('塾名を入力してください', 'error');
-            return;
-        }
-        
-        const fiscalStructure = getFiscalYearStructure();
-        const currentMonthKey = fiscalStructure.currentMonthKey;
-        const currentIndex = fiscalStructure.months.findIndex(m => m.key === currentMonthKey);
-
-        const monthlyData = {};
-        fiscalStructure.months.forEach((monthInfo, index) => {
-            if (index < currentIndex) {
-                monthlyData[monthInfo.key] = {
-                    salesIncreaseForecast: 0,
-                    probability: 50,
-                    memo: ""
-                };
-            } else {
-                monthlyData[monthInfo.key] = {
-                    salesIncreaseForecast: salesIncreaseForecast,
-                    probability: probability,
-                    memo: ""
-                };
-            }
-        });
-
-        const annualMaterials = {
-            yearRound: {
-                hasOrder: document.getElementById('newYearRoundOrder').value === 'true',
-                orderPeriod: document.getElementById('newYearRoundPeriod').value.trim()
-            },
-            seasonalExam: {
-                hasUsage: (value => {
-                    if (value === 'unknown') return null;
-                    return value === 'true';
-                })(document.getElementById('newSeasonalUsage').value),
-                usagePeriod: document.getElementById('newSeasonalPeriod').value.trim()
-            }
-        };
-
-        // docId生成（ユーザーUID_カードIDで一意性確保）
-        const newDocId = `${currentUser.uid}_${nextCardId}`;
-
-        const cardData = {
-    id: nextCardId++,
-    docId: newDocId,
-    jukuName: jukuName,
-    jukuUrl: jukuUrl,
-    status: status,
-    address: address,
-    area: area,
-    assignedUserId: currentUser.uid,
-    assignedUserName: currentUserData.name,
-
-            displayMonth: currentMonthKey,
-            monthlyData: monthlyData,
-            annualProfitActual: annualProfitActual,
-            annualMaterials: annualMaterials,
-            registeredMonth: currentMonthKey,
-             lastUpdated: new Date()
-        };
-
-        const errors = validateCardData(cardData);
-        if (errors.length > 0) {
-            showToast(errors[0], 'error');
-            return;
-        }
-        
-        cardsData.push(cardData);
-        await saveCardsData();
-        progressCache = null;
-        renderCardsOptimized();
-        updateDashboard();
-        
-        this.reset();
-        closeNewCardModal();
-        showToast(`新規塾「${cardData.jukuName}」を登録しました！`, 'success');
-        
-    } catch (error) {
-        console.error('塾登録エラー:', error);
-        showToast('登録に失敗しました。通信状態をご確認ください。', 'error');
-    } finally {
-        // 必ずロック解除とボタン状態復帰
-        this.dataset.submitting = 'false';
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = '登録';
-        }
-        if (cancelBtn) {
-            cancelBtn.disabled = false;
-        }
-    }
-});
-
-    document.getElementById('editCardForm').addEventListener('submit', async function(e) {
+}); 
+    
+       document.getElementById('editCardForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const cardId = parseInt(document.getElementById('editCardId').value);
@@ -6672,7 +6870,9 @@ cardData.jukuUrl = editUrl;
         cardData.status = document.getElementById('editJukuStatus').value;
         cardData.address = document.getElementById('editAddressInput').value.trim();
         cardData.area = document.getElementById('editAreaInput').value.trim();
-        cardData.annualProfitActual = annualProfitActual;
+cardData.region = document.getElementById('editJukuRegion').value;
+cardData.annualProfitActual = annualProfitActual;
+
         
         cardData.annualMaterials = {
             yearRound: {
@@ -6706,17 +6906,15 @@ cardData.jukuUrl = editUrl;
         closeEditCardModal();
     });
 
-    renderCardsOptimized();
-    updateDashboard();
-function handleResponsiveMasterOption() {
-    if (currentUserRole === 'admin') {
-        updateViewSelector();
-        // マスタービュー表示中なら画面幅に関係なく再描画
-        if (currentViewTarget === 'master') {
-            displayMasterView();
+    function handleResponsiveMasterOption() {
+        if (currentUserRole === 'admin') {
+            updateViewSelector();
+            // マスタービュー表示中なら画面幅に関係なく再描画
+            if (currentViewTarget === 'master') {
+                displayMasterView();
+            }
         }
     }
-}
 
     // リサイズイベント登録
     window.addEventListener('resize', handleResponsiveMasterOption);
@@ -6724,9 +6922,11 @@ function handleResponsiveMasterOption() {
     // 初期適用（画面幅チェック）
     handleResponsiveMasterOption();
 
+    // 最後に1回だけ実行
     renderCardsOptimized();
     updateDashboard();
 });
+
         // 🆕 ネットワーク状態の監視機能
 window.addEventListener('offline', () => {
     showToast('オフラインになりました（ローカル保存に切替）', 'info');

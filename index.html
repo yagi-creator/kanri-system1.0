@@ -6047,9 +6047,6 @@ function changeAllCardsDisplayMonth(newMonthKey) {
     renderCardsOptimized();
 }
 
-// グローバル変数追加（既存の変数定義の近くに追加）
-let currentHistoryCardId = null;
-
 function openMonthlyHistoryModal(cardId) {
     const cardData = cardsData.find(card => card.id === cardId);
     if (!cardData) return;
@@ -6108,22 +6105,24 @@ function openMonthlyHistoryModal(cardId) {
     openModal('monthlyHistoryModal');
 }
 
-function deleteFromHistoryModal() {
+async function deleteFromHistoryModal() {
     if (!currentHistoryCardId) {
         showToast('削除対象が特定できません', 'error');
         return;
     }
     
-    // 既存のdeleteCard関数を使用（確認ダイアログ含む）
-    deleteCard(currentHistoryCardId);
+    const targetId = currentHistoryCardId;
     
-    // 削除が実行されたらモーダルを閉じる
-    setTimeout(() => {
-        const modal = document.getElementById('monthlyHistoryModal');
-        if (modal.style.display === 'none') {
-            closeMonthlyHistoryModal();
-        }
-    }, 100);
+    // 既存のdeleteCard関数を使用（確認ダイアログ含む）
+    await deleteCard(targetId);
+    
+    // 削除が実際に実行されたかをcardsDataで判定
+    const stillExists = cardsData.some(card => card.id === targetId);
+    if (!stillExists) {
+        // 削除成功時のみモーダルを閉じる
+        closeMonthlyHistoryModal();
+    }
+    // ユーザーがキャンセルした場合はモーダルを開いたまま
 }
         
 function closeMonthlyHistoryModal() {

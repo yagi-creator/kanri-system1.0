@@ -2234,11 +2234,69 @@
     }
 }
         
-/* 個人設定売上増目標カードの薄い緑色配色 */
+        /* 個人設定売上増目標カードの薄い緑色配色 */
 .personal-sales-target-card {
     background: #E8F5E8 !important;
     border: 1px solid #C8E6C9 !important;
 }
+
+/* === 新規追加開始 === */
+/* 区分別色分けシステム */
+.level-indicator.status-new { background: #2196F3; } /* 新規: 青 */
+.level-indicator.status-existing { background: #4CAF50; } /* 既存: 緑 */
+.level-indicator.status-former { background: #FF9800; } /* 元既存: 黄 */
+
+/* スマホ版カード用（区分別左+上ライン） */
+.mobile-cards-container .card.card-status-new { 
+    border-left: 4px solid #2196F3 !important;
+    border-top: 4px solid #2196F3 !important;
+}
+.mobile-cards-container .card.card-status-existing { 
+    border-left: 4px solid #4CAF50 !important;
+    border-top: 4px solid #4CAF50 !important;
+}
+.mobile-cards-container .card.card-status-former { 
+    border-left: 4px solid #FF9800 !important;
+    border-top: 4px solid #FF9800 !important;
+}
+
+/* 新しい売上見込合計カード */
+.progress-middle-card.total-sales-prospect-card {
+    background: #E0F2F7 !important;
+    border: 1px solid #B2EBF2 !important;
+    color: #006064 !important;
+}
+
+/* 根拠モーダル用スタイル */
+.modal-evidence {
+    max-width: 90vw;
+    max-height: 90vh;
+    width: 800px;
+}
+
+.evidence-textarea {
+    width: 100%;
+    min-height: 300px;
+    padding: 15px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 16px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.evidence-textarea:focus {
+    border-color: #20B2AA;
+    box-shadow: 0 0 0 2px rgba(32, 178, 170, 0.25);
+}
+
+.character-count {
+    text-align: right;
+    margin-top: 5px;
+    font-size: 14px;
+    color: #666;
+}
+/* === 新規追加終了 === */
 
 /* マスタービューの個人設定売上増目標も同色に */
 .master-middle-card.personal-sales-target-card {
@@ -2491,7 +2549,14 @@ window.db = initializeFirestore(app, {
 </div>
 
 <div class="progress-middle-section">
-    <!-- 🆕 個人設定売上増目標を最上段に配置 -->
+    <!-- 新規追加：売上見込合計カード -->
+    <div class="progress-middle-card total-sales-prospect-card full-width">
+        <div class="progress-middle-content" id="totalSalesProspectDisplay">
+            売上見込合計 ¥0
+        </div>
+    </div>
+    
+    <!-- 既存カードはそのまま -->
     <div class="progress-middle-card personal-sales-target-card full-width">
         <div class="progress-middle-content" id="personalIncreaseTargetDisplay">
             個人設定売上増目標 0.0万円 | 粗利率 0.0%
@@ -2509,7 +2574,30 @@ window.db = initializeFirestore(app, {
     </div>
 </div>
 
-
+<!-- 根拠モーダル追加（既存モーダル群の後に） -->
+<div class="modal" id="evidenceModal" role="dialog" aria-modal="true">
+    <div class="modal-content modal-evidence">
+        <div class="modal-header">
+            <div class="modal-title" id="evidenceModalTitle">年間営業根拠</div>
+            <button class="close-btn" onclick="closeEvidenceModal()" aria-label="閉じる">&times;</button>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" id="evidenceCardName">営業戦略・根拠・進捗記録</label>
+            <textarea class="form-input evidence-textarea" id="evidenceContentInput" 
+                      maxlength="1000" placeholder="年間を通した営業戦略、根拠、進捗などを記録してください（1000文字以内）"
+                      style="min-height: 300px; resize: vertical;"></textarea>
+            <div class="character-count">
+                <span id="evidenceCharCount">0</span> / 1000文字
+            </div>
+        </div>
+        
+        <div class="control-buttons">
+            <button type="button" class="btn btn-secondary" onclick="closeEvidenceModal()">キャンセル</button>
+            <button type="button" class="btn btn-primary" onclick="saveEvidenceContent()">保存</button>
+        </div>
+    </div>
+</div>
 
 <div class="funnel-section">
     <div class="funnel-item" onclick="filterByProbability('under50')" aria-label="確率50%未満で絞り込み">
@@ -2772,6 +2860,7 @@ window.db = initializeFirestore(app, {
                     <div class="form-group">
                         <label class="form-label" for="newProbability">成約確率</label>
                         <select class="form-select" id="newProbability">
+                            <option value="0" selected>不明</option>
                             <option value="40">50未満</option>
                             <option value="50">50%</option>
                             <option value="60">60%</option>
@@ -3546,6 +3635,7 @@ let userSettingsCache = {};
         
 const PROBABILITY_CONFIG = {
     options: [
+         { value: 0, label: '不明' },
         { value: 40, label: '50未満' },
         { value: 50, label: '50%' },
         { value: 60, label: '60%' },
@@ -3983,8 +4073,12 @@ function getMonthKeyFromTimestamp(ts, fallbackKey) {
 }
         
 function getProbabilityLabel(value) {
-    if (value === 40) return '50未満';
+    if (value === 0 || value === 40) return '50未満';  // ← この条件を変更
     return `${value}%`;
+}
+
+function isUnknownOrLowProbability(value) {
+    return value === 0 || value < 50;
 }
 
 function getProbabilityFilterGroup(value) {
@@ -4648,7 +4742,7 @@ function calculateQualifiedProspects() {
     const qualifiedProfit = cardsData.reduce((total, card) => {
         const monthData = card.monthlyData?.[currentMonthKey] || { 
             salesIncreaseForecast: 0, 
-            probability: 50 
+            probability: 0 
         };
         
         if (monthData.probability < 80) return total;
@@ -4704,7 +4798,7 @@ function calculateAllProgress() {
     cardsData.forEach(card => {
         const monthData = card.monthlyData?.[monthKey] || { 
             salesIncreaseForecast: 0, 
-            probability: 50 
+            probability: 0 
         };
         
         const profit = (monthData.salesIncreaseForecast || 0) 
@@ -4743,42 +4837,54 @@ function calculateAllProgress() {
 }
 
 function updateMiddleCards() {
+    const elTotal = document.getElementById('totalSalesProspectDisplay'); // === 新規カード追加 ===
     const elSales = document.getElementById('salesProspectDisplay');
     const elProfit = document.getElementById('profitProspectDisplay');
-    const elPersonal = document.getElementById('personalIncreaseTargetDisplay'); // 🆕 3枚目要素取得
-    if (!elSales || !elProfit || !elPersonal) return; // 🆕 3枚目チェック追加
+    const elPersonal = document.getElementById('personalIncreaseTargetDisplay');
+    
+    if (!elTotal || !elSales || !elProfit || !elPersonal) return; // === 新規カードもチェック ===
 
     const settings = getActiveSettings();
     const currentMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
     
-    // 80%以上の確度のみで売上・粗利見込を集計
-    let totalSalesProspect = 0;
-    let totalProfitProspect = 0;
+    // === 50%以上と80%以上の両方を計算 ===
+    let totalSalesProspect50Plus = 0; // 新規カード用
+    let totalSalesProspect80Plus = 0; // 既存ロジック用
+    let totalProfitProspect80Plus = 0;
     
     cardsData.forEach(card => {
         const monthData = card.monthlyData?.[currentMonthKey] || { 
             salesIncreaseForecast: 0, 
-            probability: 50 
+            probability: 0 // === デフォルトを不明に変更 ===
         };
         
-        if (monthData.probability >= 80) {
-            const salesAmount = monthData.salesIncreaseForecast || 0;
-            const profitAmount = salesAmount * ((settings.profitRate || 0) / 100);
-            totalSalesProspect += salesAmount;
-            totalProfitProspect += profitAmount;
+        const salesAmount = monthData.salesIncreaseForecast || 0;
+        const probability = monthData.probability || 0;
+        
+        // 50%以上の合計（新規カード用）
+        if (probability >= 50) {
+            totalSalesProspect50Plus += salesAmount;
+        }
+        
+        // 80%以上の合計（既存ロジック）
+        if (probability >= 80) {
+            totalSalesProspect80Plus += salesAmount;
+            totalProfitProspect80Plus += salesAmount * ((settings.profitRate || 0) / 100);
         }
     });
     
+    // === 新しい売上見込合計カードを更新 ===
+    elTotal.innerHTML = `売上見込合計 <span class="value-emphasis">${formatAmount(totalSalesProspect50Plus)}</span>`;
+    
+    // 既存カードも更新
     const salesTarget = settings.yearlySalesIncreaseTarget || 0;
     const profitTarget = settings.yearlyProfitIncreaseTarget || 0;
-    const salesRate = salesTarget > 0 ? (totalSalesProspect / salesTarget) * 100 : 0;
-    const profitRate = profitTarget > 0 ? (totalProfitProspect / profitTarget) * 100 : 0;
+    const salesRate = salesTarget > 0 ? (totalSalesProspect80Plus / salesTarget) * 100 : 0;
+    const profitRate = profitTarget > 0 ? (totalProfitProspect80Plus / profitTarget) * 100 : 0;
     
-    // 見込み値を強調表示
-    elSales.innerHTML = `売上増見込 <span class="value-emphasis">${formatAmount(totalSalesProspect)}</span>/${formatAmount(salesTarget)} (${salesRate.toFixed(1)}%)`;
-    elProfit.innerHTML = `粗利増見込 <span class="value-emphasis">${formatAmount(totalProfitProspect)}</span>/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)`;
+    elSales.innerHTML = `売上増見込 <span class="value-emphasis">${formatAmount(totalSalesProspect80Plus)}</span>/${formatAmount(salesTarget)} (${salesRate.toFixed(1)}%)`;
+    elProfit.innerHTML = `粗利増見込 <span class="value-emphasis">${formatAmount(totalProfitProspect80Plus)}</span>/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)`;
 
-    // 🆕 3枚目カードの更新処理
     const manualTarget = settings.personalSalesIncreaseTarget || settings.yearlySalesIncreaseTarget || 0;
     const pr = Number(settings.profitRate || 0);
     elPersonal.innerHTML = `個人設定売上増目標 <span class="value-emphasis">${formatManPlain(manualTarget)}</span> | 粗利率 ${pr.toFixed(1)}%`;
@@ -5130,7 +5236,7 @@ function generateMasterMiddleCards(staff, cardsData) {
     let totalSalesProspect = 0;
     let totalProfitProspect = 0;
     cardsData.forEach(card => {
-        const md = card.monthlyData?.[activeMonthKey] || { salesIncreaseForecast: 0, probability: 50 };
+        const md = card.monthlyData?.[activeMonthKey] || { salesIncreaseForecast: 0, probability: 0 };
         if (md.probability >= 80) {
             const salesAmount = md.salesIncreaseForecast || 0;
             const profitAmount = salesAmount * ((s.profitRate || 0) / 100);
@@ -5163,7 +5269,7 @@ function generateMasterFunnel(staff, cardsData) {
     let probUnder50 = 0, prob5060 = 0, prob70 = 0, prob80 = 0, prob90 = 0, prob100 = 0;
     
     cardsData.forEach(card => {
-        const md = card.monthlyData?.[activeMonthKey] || { salesIncreaseForecast: 0, probability: 50 };
+        const md = card.monthlyData?.[activeMonthKey] || { salesIncreaseForecast: 0, probability: 0 };
         const profit = (md.salesIncreaseForecast || 0) * ((s.profitRate || 0) / 100);
         if (md.probability < 50) probUnder50 += profit;
         else if (md.probability <= 60) prob5060 += profit;   // 50/60%のみ
@@ -5214,12 +5320,13 @@ function createTableRow(cardData) {
     const isFirstFiscalMonth = displayMonthInfo && displayMonthInfo.month === 10;
     
     // 2ヶ月分のデータ取得
-    const currentData = cardData.monthlyData?.[displayMonth] || { 
-        salesIncreaseForecast: 0, probability: 50, memo: "" 
-    };
-    const previousData = isFirstFiscalMonth 
-        ? { salesIncreaseForecast: 0, probability: 0, memo: "会計年度開始" }
-        : (cardData.monthlyData?.[previousMonth.key] || { salesIncreaseForecast: 0, probability: 50, memo: "" });
+const currentData = cardData.monthlyData?.[displayMonth] || { 
+    salesIncreaseForecast: 0, probability: 0, memo: "" 
+};
+const previousData = isFirstFiscalMonth 
+    ? { salesIncreaseForecast: 0, probability: 0, memo: "会計年度開始" }
+    : (cardData.monthlyData?.[previousMonth.key] || { salesIncreaseForecast: 0, probability: 0, memo: "" });
+
 
     
     const level = getCardLevel(currentData.salesIncreaseForecast || 0);
@@ -5232,10 +5339,13 @@ function createTableRow(cardData) {
     const row = document.createElement('tr');
     row.dataset.cardId = cardData.id;
     
+        const status = cardData.status || 'new'; // === 区分取得 ===
+    
     row.innerHTML = `
         <td class="col-level">
-            <div class="level-indicator level-${level}"></div>
+            <div class="level-indicator status-${status}"></div>
         </td>
+
         <td class="col-name">
     <div class="juku-name-cell">
         <a href="#" class="juku-name-link" onclick="onJukuNameClick(${cardData.id}); return false;" style="color: #333; text-decoration: none;">
@@ -5288,11 +5398,19 @@ function createTableRow(cardData) {
     `;
     
     // 閲覧専用カードのスタイル適用
+    // === PC版：行クリックで根拠モーダル ===
+    row.addEventListener('click', (e) => {
+        if (e.target.closest('button, a, .editable-cell')) return;
+        openEvidenceModal(cardData.id);
+    });
+    
+    // 閲覧専用カードのスタイル適用
     if (cardData.assignedUserId !== (currentUser?.uid || '')) {
         row.style.cssText = 'opacity: 0.7; background: #fff3cd;';
     }
     
     return row;
+
 }
 
 
@@ -5327,7 +5445,7 @@ function editTableForecast(id, key) {
     if (v !== null) {
         const n = parseNumberSafely(v);
         if (!c.monthlyData) c.monthlyData = {};
-        if (!c.monthlyData[key]) c.monthlyData[key] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+        if (!c.monthlyData[key]) c.monthlyData[key] = { salesIncreaseForecast: 0, probability: 0, memo: "" };
         c.monthlyData[key].salesIncreaseForecast = n;
          c.lastUpdated = new Date();
         if (confirm('将来月も更新?')) propagateToFutureMonths(id, n, c.monthlyData[key].probability);
@@ -5349,8 +5467,8 @@ function editTableProbability(id, key) {
         showToast('当月分のみ編集可能', 'info');
         return;
     }
-    const opts = ['50未満', '50%', '60%', '70%', '80%', '90%', '100%'], vals = [40, 50, 60, 70, 80, 90, 100];
-    const cur = c.monthlyData?.[key] || { probability: 50 };
+      const opts = ['不明', '50未満', '50%', '60%', '70%', '80%', '90%', '100%'], vals = [0, 40, 50, 60, 70, 80, 90, 100];
+    const cur = c.monthlyData?.[key] || { probability: 0 };
     const idx = vals.indexOf(cur.probability);
     const choice = prompt(`確率選択:\n0:${opts[0]}\n1:${opts[1]}\n2:${opts[2]}\n3:${opts[3]}\n4:${opts[4]}\n5:${opts[5]}\n6:${opts[6]}\n現在:${opts[idx >= 0 ? idx : 1]}`, idx >= 0 ? idx : 1);
     if (choice !== null) {
@@ -5358,7 +5476,7 @@ function editTableProbability(id, key) {
         if (i >= 0 && i < vals.length) {
             const nv = vals[i];
             if (!c.monthlyData) c.monthlyData = {};
-            if (!c.monthlyData[key]) c.monthlyData[key] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+            if (!c.monthlyData[key]) c.monthlyData[key] = { salesIncreaseForecast: 0, probability: 0, memo: "" };
             c.monthlyData[key].probability = nv;
              c.lastUpdated = new Date();
             if (confirm('将来月も更新?')) propagateToFutureMonths(id, c.monthlyData[key].salesIncreaseForecast, nv);
@@ -5381,17 +5499,17 @@ function createNewCardElement(cardData) {
     const isFirstFiscalMonth = displayMonthInfo && displayMonthInfo.month === 10;
     
     const currentData = cardData.monthlyData?.[displayMonth] || { 
-        salesIncreaseForecast: 0, probability: 50, memo: "" 
+        salesIncreaseForecast: 0, probability: 0, memo: "" 
     };
     // 🔧 修正：10月の場合は前月データを特別扱い
     const previousData = isFirstFiscalMonth 
         ? { salesIncreaseForecast: 0, probability: 0, memo: "会計年度開始" }
-        : (cardData.monthlyData?.[previousMonth.key] || { salesIncreaseForecast: 0, probability: 50, memo: "" });
+        : (cardData.monthlyData?.[previousMonth.key] || { salesIncreaseForecast: 0, probability: 0, memo: "" });
     
-    const cardLevel = getCardLevel(currentData.salesIncreaseForecast || 0);
+    const status = cardData.status || 'new'; // === 区分取得 ===
     
     const card = document.createElement('div');
-    card.className = `card card-level-${cardLevel}`;
+    card.className = `card card-status-${status}`;
     card.dataset.cardId = cardData.id;
     
     const lastUpdated = formatDateForDisplay(cardData.lastUpdated);
@@ -5510,8 +5628,20 @@ function createNewCardElement(cardData) {
         card.title = `担当者: ${assignedUserName}さんのデータ（閲覧専用）`;
     }
 
+    // === スマホ版：空白部分クリックで根拠モーダル ===
+    card.addEventListener('click', (e) => {
+        const excludedElements = [
+            '.card-title-clickable', '.month-selector', '.editable-field',
+            '.memo-content', '.action-btn', 'button', 'select', 'input', 'a'
+        ].join(',');
+        
+        if (e.target.closest(excludedElements)) return;
+        openEvidenceModal(cardData.id);
+    });
+
     return card;
 }
+
 
 function propagateToFutureMonths(cardId, newForecast, newProbability) {
     const cardData = cardsData.find(card => card.id === cardId);
@@ -5528,7 +5658,7 @@ function propagateToFutureMonths(cardId, newForecast, newProbability) {
         if (index > Math.max(registeredIndex, currentIndex)) {
             if (!cardData.monthlyData[monthInfo.key]) {
                 cardData.monthlyData[monthInfo.key] = { 
-                    salesIncreaseForecast: 0, probability: 50, memo: "" 
+                    salesIncreaseForecast: 0, probability: 0, memo: "" 
                 };
             }
             cardData.monthlyData[monthInfo.key].salesIncreaseForecast = newForecast;
@@ -5823,7 +5953,7 @@ function generateFiscalYearData(graphType) {
                     cardsData.forEach(card => {
                         const md = card.monthlyData?.[key] || { 
                             salesIncreaseForecast: 0, 
-                            probability: 50 
+                            probability: 0 
                         };
                         if (md.probability >= 80) {
                             cumProspectProfit += (md.salesIncreaseForecast || 0) 
@@ -6072,7 +6202,7 @@ function openMonthlyHistoryModal(cardId) {
 
     fiscalStructure.months.forEach(monthInfo => {
         const monthData = cardData.monthlyData?.[monthInfo.key] || { 
-            salesIncreaseForecast: 0, probability: 50, memo: "" 
+            salesIncreaseForecast: 0, probability: 0, memo: "" 
         };
 
         const monthRow = document.createElement('div');
@@ -6300,7 +6430,7 @@ function saveMemoContent() {
     
     if (!cardData.monthlyData) cardData.monthlyData = {};
     if (!cardData.monthlyData[monthKey]) {
-        cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+        cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 0, memo: "" };
     }
 
     cardData.monthlyData[monthKey].memo = newMemoContent;
@@ -6359,6 +6489,31 @@ function getDateMillis(dateValue) {
 
 function getSortedCards(cards) {
     const sortType = document.getElementById('sortSelect').value;
+    
+    // === 上位・下位グループに分離 ===
+    const upperGroup = []; // 50%以上
+    const lowerGroup = []; // 不明・50%未満
+    
+    cards.forEach(card => {
+        const activeKey = getCardActiveMonthKey(card);
+        const probability = card.monthlyData?.[activeKey]?.probability || 0;
+        
+        if (isUnknownOrLowProbability(probability)) {
+            lowerGroup.push(card);
+        } else {
+            upperGroup.push(card);
+        }
+    });
+    
+    // 上位グループは選択された並び順、下位グループは常に売上見込額順
+    const sortedUpper = sortCardGroup(upperGroup, sortType);
+    const sortedLower = sortCardGroup(lowerGroup, 'sales-desc');
+    
+    return [...sortedUpper, ...sortedLower];
+}
+
+// === 新規追加：グループ別ソート関数 ===
+function sortCardGroup(cards, sortType) {
     const sortedCards = [...cards];
     
     switch (sortType) {
@@ -6368,7 +6523,8 @@ function getSortedCards(cards) {
                 const bKey = getCardActiveMonthKey(b);
                 const aForecast = a.monthlyData?.[aKey]?.salesIncreaseForecast || 0;
                 const bForecast = b.monthlyData?.[bKey]?.salesIncreaseForecast || 0;
-                return bForecast - aForecast;
+                const diff = bForecast - aForecast;
+                return diff !== 0 ? diff : (getDateMillis(b.lastUpdated) - getDateMillis(a.lastUpdated));
             });
         case 'sales-asc':
             return sortedCards.sort((a, b) => {
@@ -6376,32 +6532,33 @@ function getSortedCards(cards) {
                 const bKey = getCardActiveMonthKey(b);
                 const aForecast = a.monthlyData?.[aKey]?.salesIncreaseForecast || 0;
                 const bForecast = b.monthlyData?.[bKey]?.salesIncreaseForecast || 0;
-                return aForecast - bForecast;
+                const diff = aForecast - bForecast;
+                return diff !== 0 ? diff : (getDateMillis(a.lastUpdated) - getDateMillis(b.lastUpdated));
             });
         case 'updated-desc':
             return sortedCards.sort((a, b) => {
                 const diff = getDateMillis(b.lastUpdated) - getDateMillis(a.lastUpdated);
-                return diff !== 0 ? diff : (b.id || 0) - (a.id || 0); // タイブレイク
+                return diff !== 0 ? diff : (b.id || 0) - (a.id || 0);
             });
         case 'updated-asc':
             return sortedCards.sort((a, b) => {
                 const diff = getDateMillis(a.lastUpdated) - getDateMillis(b.lastUpdated);
-                return diff !== 0 ? diff : (a.id || 0) - (b.id || 0); // タイブレイク
+                return diff !== 0 ? diff : (a.id || 0) - (b.id || 0);
             });
         case 'probability-desc':
             return sortedCards.sort((a, b) => {
                 const aKey = getCardActiveMonthKey(a);
                 const bKey = getCardActiveMonthKey(b);
-                const aProb = a.monthlyData?.[aKey]?.probability || 50;
-                const bProb = b.monthlyData?.[bKey]?.probability || 50;
+                const aProb = a.monthlyData?.[aKey]?.probability || 0;
+                const bProb = b.monthlyData?.[bKey]?.probability || 0;
                 return bProb - aProb;
             });
         case 'probability-asc':
             return sortedCards.sort((a, b) => {
                 const aKey = getCardActiveMonthKey(a);
                 const bKey = getCardActiveMonthKey(b);
-                const aProb = a.monthlyData?.[aKey]?.probability || 50;
-                const bProb = b.monthlyData?.[bKey]?.probability || 50;
+                const aProb = a.monthlyData?.[aKey]?.probability || 0;
+                const bProb = b.monthlyData?.[bKey]?.probability || 0;
                 return aProb - bProb;
             });
         default:
@@ -6462,7 +6619,7 @@ function editSalesIncreaseForecast(cardId, monthKey, element) {
         const newValue = parseNumberSafely(inputField.value);
         if (!cardData.monthlyData) cardData.monthlyData = {};
         if (!cardData.monthlyData[monthKey]) {
-            cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+            cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 0, memo: "" };
         }
         
         if (cardData.monthlyData[monthKey].salesIncreaseForecast !== newValue) {
@@ -6527,7 +6684,7 @@ function editProbability(cardId, monthKey, element) {
         const newValue = parseInt(selectField.value);
         if (!cardData.monthlyData) cardData.monthlyData = {};
         if (!cardData.monthlyData[monthKey]) {
-            cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 50, memo: "" };
+            cardData.monthlyData[monthKey] = { salesIncreaseForecast: 0, probability: 0, memo: "" };
         }
         
         if (cardData.monthlyData[monthKey].probability !== newValue) {
@@ -7018,10 +7175,19 @@ cardData.annualProfitActual = annualProfitActual;
     // 初期適用（画面幅チェック）
     handleResponsiveMasterOption();
 
+    // === 根拠モーダルの文字数カウント機能初期化 ===
+    setTimeout(() => {
+        const textarea = document.getElementById('evidenceContentInput');
+        if (textarea) {
+            textarea.addEventListener('input', updateCharacterCount);
+        }
+    }, 100);
+
     // 最後に1回だけ実行
     renderCardsOptimized();
     updateDashboard();
 });
+
 
         // 🆕 ネットワーク状態の監視機能
 window.addEventListener('offline', () => {
@@ -7044,8 +7210,81 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// === 根拠モーダル機能追加開始 ===
+let currentEditingEvidence = null;
+
+function openEvidenceModal(cardId) {
+    const cardData = cardsData.find(card => card.id === cardId);
+    if (!cardData) return;
+
+    currentEditingEvidence = cardId;
+    
+    document.getElementById('evidenceModalTitle').textContent = `${cardData.jukuName} - 年間営業根拠`;
+    document.getElementById('evidenceCardName').textContent = `塾名: ${cardData.jukuName}`;
+    
+    const textarea = document.getElementById('evidenceContentInput');
+    const saveBtn = document.querySelector('#evidenceModal .btn-primary');
+    
+    textarea.value = cardData.annualEvidence || '';
+    
+    // 編集権限チェック
+    const canEdit = hasPermission('edit_data', cardData);
+    textarea.readOnly = !canEdit;
+    saveBtn.style.display = canEdit ? 'inline-block' : 'none';
+    
+    if (!canEdit) {
+        textarea.style.backgroundColor = '#f8f9fa';
+        textarea.title = '編集権限がないため閲覧専用です';
+    } else {
+        textarea.style.backgroundColor = '';
+        textarea.title = '';
+    }
+    
+    updateCharacterCount();
+    openModal('evidenceModal');
+}
+
+function closeEvidenceModal() {
+    currentEditingEvidence = null;
+    closeModal('evidenceModal');
+}
+
+async function saveEvidenceContent() {
+    if (!currentEditingEvidence) return;
+
+    const cardData = cardsData.find(card => card.id === currentEditingEvidence);
+    if (!cardData || !hasPermission('edit_data', cardData)) {
+        showToast('編集権限がありません', 'error');
+        return;
+    }
+    
+    const content = document.getElementById('evidenceContentInput').value;
+    if (content.length > 1000) {
+        showToast('1000文字以内で入力してください', 'error');
+        return;
+    }
+
+    cardData.annualEvidence = content;
+    cardData.lastUpdated = new Date();
+    
+    await saveCardsData();
+    showToast('営業根拠を保存しました', 'success');
+    closeEvidenceModal();
+}
+
+function updateCharacterCount() {
+    const textarea = document.getElementById('evidenceContentInput');
+    const countElement = document.getElementById('evidenceCharCount');
+    
+    if (textarea && countElement) {
+        countElement.textContent = textarea.value.length;
+    }
+}
+// === 根拠モーダル機能追加終了 ===
+
     </script>
     <button class="fab-settings" onclick="openPersonalSettingsModal()" title="個人設定" aria-label="個人設定">⚙️</button>
+
 <button class="fab-add" onclick="openNewCardModal()" title="塾登録" aria-label="塾登録">➕</button>
 </body>
 </html>

@@ -2350,16 +2350,6 @@ window.db = initializeFirestore(app, {
     </select>
     <span class="view-permission-info" id="viewPermissionInfo"></span>
 </div>
-
-<!-- 🆕 地域選択セレクター -->
-<div class="view-selector-section" id="regionSelectorSection" style="display: none;">
-    <label class="view-selector-label">地域:</label>
-    <select class="view-selector" id="globalRegionSelector" onchange="changeRegionFilter()">
-        <option value="all">全エリア</option>
-        <option value="kansai">関西</option>
-        <option value="shikoku">四国</option>
-    </select>
-</div>
         </div>
         
         <div class="auth-buttons" id="authButtons">
@@ -3029,60 +3019,171 @@ async function loadAvailableViewTargets() {
         usersCollection.forEach((doc) => {
             const userData = doc.data();
             const userId = doc.id;
+            const userRole = userData.role;
             
-            if (userId === currentUser.uid) {
-   availableViewTargets.push({
-    id: userId,
-    name: userData.name,
-    role: userData.role,
-    email: userData.email || currentUser.email || '',
-    regions: Array.isArray(userData.regions) ? userData.regions : [],
-    canEdit: true
-});
-
-    return;
-}
-
-            
-            if (currentUserRole === 'admin') {
-availableViewTargets.push({
-    id: userId,
-    name: userData.name,
-    role: userData.role,
-    email: userData.email || '',
-    regions: Array.isArray(userData.regions) ? userData.regions : [],
-    canEdit: false
-});
-
-            } else if (currentUserRole === 'manager') {
-                if (currentUserData.subordinates && currentUserData.subordinates.includes(userId)) {
+            // 1. 自分自身の追加（Masterは自分を持たない）
+            if (userId === currentUser.uid && currentUserRole !== 'master') {
+                if (userRole === 'manager') {
+                    // Manager: 関西・四国プロファイルを分離表示
                     availableViewTargets.push({
-    id: userId,
-    name: userData.name,
-    role: userData.role,
-    email: userData.email || '',
-    regions: Array.isArray(userData.regions) ? userData.regions : [],
-    canEdit: false
-});
-
+                        id: generateProfileId(userId, 'kansai'),
+                        uid: userId,
+                        name: userData.name,
+                        role: userRole,
+                        profileType: 'kansai',
+                        region: 'kansai',
+                        canEdit: true
+                    });
+                    availableViewTargets.push({
+                        id: generateProfileId(userId, 'shikoku'),
+                        uid: userId,
+                        name: userData.name,
+                        role: userRole,
+                        profileType: 'shikoku',
+                        region: 'shikoku',
+                        canEdit: true
+                    });
+                } else {
+                    // Admin・Staff: 通常表示
+                    availableViewTargets.push({
+                        id: userId,
+                        uid: userId,
+                        name: userData.name,
+                        role: userRole,
+                        region: userData.region || 'kansai',
+                        canEdit: true
+                    });
+                }
+                return;
+            }
+            
+            // 2. 他人の追加ロジック
+            let shouldAdd = false;
+            
+            // Admin: 全員閲覧可能
+            if (currentUserRole === 'admin') {
+                shouldAdd = true;
+            }
+            // Master: 四国関連のみ閲覧可能
+            else if (currentUserRole === 'master') {
+                if (userData.region === 'shikoku' || userRole === 'manager') {
+                    shouldAdd = true;
+                }
+            }
+            // Manager: 部下のみ閲覧可能
+            else if (currentUserRole === 'manager') {
+                if (currentUserData.subordinates && currentUserData.subordinates.includes(userId)) {
+                    shouldAdd = true;
+                }
+            }
+            
+            if (shouldAdd) {
+                if (userRole === 'manager') {
+                    // 対象がManagerなら、プロファイルを分離表示
+                    const showKansai = currentUserRole !== 'master';
+                    const showShikoku = true;
+                    
+                    if (showKansai) {
+                        availableViewTargets.push({
+                            id: generateProfileId(userId, 'kansai'),
+                            uid: userId,
+                            name: userData.name,
+                            role: userRole,
+                            profileType: 'kansai',
+                            region: 'kansai',
+                            canEdit: false
+                        });
+                    }
+                    if (showShikoku) {
+                        availableViewTargets.push({
+                            id: generateProfileId(userId, 'shikoku'),
+                            uid: userId,
+                            name: userData.name,
+                            role: userRole,
+                            profileType: 'shikoku',
+                            region: 'shikoku',
+                            canEdit: false
+                        });
+                    }
+                } else {
+                    // 通常Staff・Admin
+                    if (currentUserRole === 'master' && userData.region !== 'shikoku') {
+                        return; // Masterは四国Staff以外見えない
+                    }
+                    
+                    availableViewTargets.push({
+                        id: userId,
+                        uid: userId,
+                        name: userData.name,
+                        role: userRole,
+                        region: userData.region || 'kansai',
+                        canEdit: false
+                    });
                 }
             }
         });
         
+        // ソート: 自分→地域順→名前順
         availableViewTargets.sort((a, b) => {
-            if (a.id === currentUser.uid) return -1;
-            if (b.id === currentUser.uid) return 1;
+            const aIsOwn = a.uid === currentUser.uid;
+            const bIsOwn = b.uid === currentUser.uid;
+            
+            if (aIsOwn && !bIsOwn) return -1;
+            if (!aIsOwn && bIsOwn) return 1;
+            
+            // 自分の中では関西→四国順
+            if (aIsOwn && bIsOwn) {
+                if (a.profileType === 'kansai') return -1;
+                if (b.profileType === 'kansai') return 1;
+            }
+            
+            // 地域別ソート
+            const aRegion = a.region || 'kansai';
+            const bRegion = b.region || 'kansai';
+            if (aRegion !== bRegion) {
+                return aRegion === 'kansai' ? -1 : 1;
+            }
+            
             return a.name.localeCompare(b.name);
         });
         
     } catch (error) {
         console.error('Available view targets load error:', error);
-        availableViewTargets = [{
-            id: currentUser.uid,
-            name: currentUserData.name,
-            role: currentUserRole,
-            canEdit: true
-        }];
+        
+        // エラー時フォールバック
+        if (currentUserRole === 'manager') {
+            availableViewTargets = [
+                {
+                    id: generateProfileId(currentUser.uid, 'kansai'),
+                    uid: currentUser.uid,
+                    name: currentUserData.name,
+                    role: currentUserRole,
+                    profileType: 'kansai',
+                    region: 'kansai',
+                    canEdit: true
+                },
+                {
+                    id: generateProfileId(currentUser.uid, 'shikoku'),
+                    uid: currentUser.uid,
+                    name: currentUserData.name,
+                    role: currentUserRole,
+                    profileType: 'shikoku',
+                    region: 'shikoku',
+                    canEdit: true
+                }
+            ];
+        } else if (currentUserRole !== 'master') {
+            availableViewTargets = [{
+                id: currentUser.uid,
+                uid: currentUser.uid,
+                name: currentUserData.name,
+                role: currentUserRole,
+                region: 'kansai',
+                canEdit: true
+            }];
+        } else {
+            availableViewTargets = [];
+        }
     }
 }
 
@@ -3101,15 +3202,13 @@ function updateAuthUI() {
             viewSelectorSection.style.display = 'flex';
         }
         
-        // 🆕 地域セレクター表示更新
-        updateRegionSelectorVisibility();
+        // 地域セレクター機能を削除（updateRegionSelectorVisibility削除）
         
         loginBtn.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
     } else {
         loginUserInfo.textContent = '未ログイン';
         viewSelectorSection.style.display = 'none';
-        document.getElementById('regionSelectorSection').style.display = 'none'; // 🆕
         loginBtn.style.display = 'inline-block';
         logoutBtn.style.display = 'none';
     }
@@ -3119,43 +3218,116 @@ function updateViewSelector() {
     const viewSelector = document.getElementById('viewSelector');
     const viewPermissionInfo = document.getElementById('viewPermissionInfo');
     
+    if (!viewSelector) return;
+    
+    viewSelector.innerHTML = '';
+    
+    // Master用特別メッセージ
+    if (!availableViewTargets.length && currentUserRole === 'master') {
+        viewSelector.innerHTML = '<option value="">四国メンバーを選択してください</option>';
+        if (viewPermissionInfo) viewPermissionInfo.textContent = '';
+        return;
+    }
+    
     if (!availableViewTargets.length) {
         viewSelector.innerHTML = '<option value="">データなし</option>';
         if (viewPermissionInfo) viewPermissionInfo.textContent = '';
         return;
     }
     
-    viewSelector.innerHTML = '';
-    
-    availableViewTargets.forEach(target => {
-        const option = document.createElement('option');
-        option.value = target.id;
+    // Manager用のグループ分け表示
+    if (currentUserRole === 'manager') {
+        // 自分のプロファイル
+        const ownProfiles = availableViewTargets.filter(t => t.uid === currentUser.uid);
         
-        if (target.id === currentUser.uid) {
-            option.textContent = `${target.name}さん (自分)`;
-        } else {
-            const roleLabel = {
-                'admin': '管理者',
-                'manager': 'マネージャー', 
-                'staff': '営業担当'
-            }[target.role] || target.role;
-            option.textContent = `${target.name}さん (${roleLabel})`;
+        ownProfiles.forEach(target => {
+            const option = document.createElement('option');
+            option.value = target.id;
+            const regionLabel = target.profileType === 'kansai' ? '関西' : '四国';
+            option.textContent = `${target.name}さん（${regionLabel}）`;
+            if (target.id === currentViewTarget) option.selected = true;
+            viewSelector.appendChild(option);
+        });
+        
+        // 部下がいる場合の区切り線
+        const subordinates = availableViewTargets.filter(t => t.uid !== currentUser.uid);
+        
+        if (subordinates.length > 0) {
+            const separator = document.createElement('option');
+            separator.disabled = true;
+            separator.textContent = '──────────';
+            viewSelector.appendChild(separator);
+            
+            subordinates.forEach(target => {
+                const option = document.createElement('option');
+                option.value = target.id;
+                
+                const roleLabel = {
+                    'admin': '管理者',
+                    'manager': 'マネージャー',
+                    'staff': '営業担当'
+                }[target.role] || target.role;
+                
+                const regionLabel = target.profileType 
+                    ? `（${target.profileType === 'kansai' ? '関西' : '四国'}）`
+                    : `（${target.region === 'shikoku' ? '四国' : '関西'}）`;
+                
+                option.textContent = `[部下] ${target.name}さん${regionLabel}`;
+                if (target.id === currentViewTarget) option.selected = true;
+                viewSelector.appendChild(option);
+            });
         }
-        
-        if (target.id === currentViewTarget) option.selected = true;
-        viewSelector.appendChild(option);
-    });
+    } else {
+        // Admin・Master・Staffの通常表示
+        availableViewTargets.forEach(target => {
+            const option = document.createElement('option');
+            option.value = target.id;
+            
+            const isOwn = target.uid === currentUser.uid;
+            
+            if (isOwn) {
+                if (target.profileType) {
+                    const regionLabel = target.profileType === 'kansai' ? '関西' : '四国';
+                    option.textContent = `${target.name}さん（${regionLabel}・自分）`;
+                } else {
+                    option.textContent = `${target.name}さん（自分）`;
+                }
+            } else {
+                const roleLabel = {
+                    'admin': '管理者',
+                    'manager': 'マネージャー',
+                    'staff': '営業担当',
+                    'master': '監査'
+                }[target.role] || target.role;
+                
+                const regionLabel = target.profileType 
+                    ? `（${target.profileType === 'kansai' ? '関西' : '四国'}）`
+                    : (target.region ? `（${target.region === 'shikoku' ? '四国' : '関西'}）` : '');
+                
+                option.textContent = `${target.name}さん ${roleLabel}${regionLabel}`;
+            }
+            
+            if (target.id === currentViewTarget) option.selected = true;
+            viewSelector.appendChild(option);
+        });
+    }
     
-// Admin権限があれば画面幅に関係なく「マスター」を追加
-if (currentUserRole === 'admin') {
-    const masterOption = document.createElement('option');
-    masterOption.value = 'master';
-    masterOption.textContent = 'マスター';
-    masterOption.className = 'master-view-option';
-    if (currentViewTarget === 'master') masterOption.selected = true;
-    viewSelector.appendChild(masterOption);
-}
-
+    // マスタービューオプション追加
+    if (currentUserRole === 'admin') {
+        const masterOption = document.createElement('option');
+        masterOption.value = 'master';
+        masterOption.textContent = 'マスタービュー（全地域統括）';
+        if (currentViewTarget === 'master') masterOption.selected = true;
+        viewSelector.appendChild(masterOption);
+    } else if (currentUserRole === 'master') {
+        const masterOption = document.createElement('option');
+        masterOption.value = 'master-shikoku';
+        masterOption.textContent = 'マスタービュー（四国統括）';
+        if (currentViewTarget === 'master-shikoku') masterOption.selected = true;
+        viewSelector.appendChild(masterOption);
+    }
+    
+    // 権限表示の更新
     const currentTarget = availableViewTargets.find(t => t.id === currentViewTarget);
     if (viewPermissionInfo) {
         if (currentTarget) {
@@ -3167,8 +3339,11 @@ if (currentUserRole === 'admin') {
                 viewPermissionInfo.className = 'view-permission-info permission-view';
             }
         } else if (currentViewTarget === 'master') {
-            viewPermissionInfo.textContent = '👑 管理者ビュー';
+            viewPermissionInfo.textContent = '👑 全地域統括';
             viewPermissionInfo.className = 'view-permission-info permission-edit';
+        } else if (currentViewTarget === 'master-shikoku') {
+            viewPermissionInfo.textContent = '🔍 四国監査';
+            viewPermissionInfo.className = 'view-permission-info permission-view';
         } else {
             viewPermissionInfo.textContent = '';
         }
@@ -3204,114 +3379,70 @@ function updateRegionSelectorOptions() {
 }
 
 function updateRegionSelectorVisibility() {
-    const regionSection = document.getElementById('regionSelectorSection');
-    if (!regionSection) return;
-    
-    if (!currentUser || !currentUserData) {
-        regionSection.style.display = 'none';
-        return;
-    }
-    
-    const userRegions = Array.isArray(currentUserData.regions) ? currentUserData.regions : [];
-    const isAdmin = currentUserRole === 'admin';
-
-    if (isAdmin || userRegions.length > 1) {
-        regionSection.style.display = 'flex';
-        updateRegionSelectorOptions();
-    } else {
-        regionSection.style.display = 'none';
-        if (userRegions.length === 1) {
-            currentRegionFilter = userRegions[0];
-        } else if (currentUserData.defaultRegion) {
-            currentRegionFilter = currentUserData.defaultRegion;
-        } else {
-            currentRegionFilter = 'kansai';
-        }
-    }
+    // 地域セレクター機能を無効化
+    // 現在のプロファイル地域は parseViewTarget で自動設定
+    return;
 }
 
 function changeRegionFilter() {
-    const regionSelector = document.getElementById('globalRegionSelector');
-    if (!regionSelector) return;
-
-    const selectedRegion = regionSelector.value;
-    let effectiveRegion = selectedRegion;
-
-    // 他人データ閲覧時は対象ユーザーの regions に従う
-    if (currentViewTarget && currentViewTarget !== currentUser?.uid) {
-        const target = availableViewTargets.find(t => t.id === currentViewTarget);
-        const targetRegions = Array.isArray(target?.regions) ? target.regions : [];
-        
-        if (targetRegions.length === 1) {
-            const restrictedRegion = targetRegions[0];
-            if (selectedRegion !== restrictedRegion && selectedRegion !== 'all') {
-                showToast(`この担当者のデータは${restrictedRegion === 'shikoku' ? '四国' : '関西'}のみ閲覧可能です`, 'info');
-                regionSelector.value = restrictedRegion;
-                effectiveRegion = restrictedRegion;
-            } else if (selectedRegion === 'all') {
-                effectiveRegion = restrictedRegion;
-            }
-        }
-    }
-
-    currentRegionFilter = effectiveRegion;
-    progressCache = null;
-    updateDashboard();
-    renderCardsOptimized();
-
-    const labels = { all: '全エリア', kansai: '関西', shikoku: '四国' };
-    showToast(`${labels[currentRegionFilter]}を表示中`, 'info');
+    // 地域セレクター機能を無効化
+    // 地域切替はプロファイル選択で自動実行
+    return;
 }
 
 async function changeViewTarget() {
     const viewSelector = document.getElementById('viewSelector');
     const newTargetId = viewSelector.value;
     
-    // コンテンツ表示領域のDOM要素を取得
     const normalContent = document.getElementById('normalDashboardContent');
     const masterContent = document.getElementById('masterViewContent');
     
-    // 「マスター」ビューへの切り替え
-    if (newTargetId === 'master') {
-        currentViewTarget = 'master';
+    // マスタービュー切り替え
+    if (newTargetId === 'master' || newTargetId === 'master-shikoku') {
+        currentViewTarget = newTargetId;
+        currentProfileRegion = newTargetId === 'master' ? 'all' : 'shikoku';
         updateViewSelector();
         
-        // ヘッダーを維持したまま、通常コンテンツを非表示にしてマスターコンテンツを表示
         normalContent.style.display = 'none';
         masterContent.style.display = 'block';
         
         await displayMasterView();
-        showToast('マスター管理画面を表示中', 'info');
+        const label = newTargetId === 'master' ? '全地域統括' : '四国統括';
+        showToast(`マスター管理画面（${label}）を表示中`, 'info');
         return;
     }
     
-    // 通常ビューへの切り替え（自分または他のスタッフのデータ表示）
+    // 通常ビューへの切り替え
     if (newTargetId && newTargetId !== currentViewTarget) {
         currentViewTarget = newTargetId;
+        
+        // IDから地域情報を解析
+        const { uid, region } = parseViewTarget(newTargetId);
+        currentProfileRegion = region;
+        
         updateViewSelector();
         
-        // マスタービューから戻る場合のコンテンツ切り替え
+        // マスタービューから戻る場合
         if (masterContent.style.display === 'block') {
             masterContent.style.display = 'none';
             normalContent.style.display = 'block';
         }
         
-        // 選択されたユーザーの個人設定とカードデータを読み込み
-        await loadSettingsForTarget(newTargetId);
-        await loadCardsDataForTarget(newTargetId);
+        // 解析したUIDでデータ読み込み
+        await loadSettingsForTarget(uid);
+        await loadCardsDataForTarget(uid);
         
-        // キャッシュをクリアしてダッシュボードを更新
         progressCache = null;
         renderCardsOptimized();
         updateDashboard();
         
         const targetUser = availableViewTargets.find(t => t.id === newTargetId);
         if (targetUser) {
-            showToast(`${targetUser.name}さんのデータを表示中`, 'info');
+            const profileLabel = targetUser.profileType ? `（${targetUser.profileType === 'kansai' ? '関西' : '四国'}）` : '';
+            showToast(`${targetUser.name}さん${profileLabel}のデータを表示中`, 'info');
         }
     }
 }
-
 
 function restoreNormalDashboard() {
     // マスタービュー表示後に通常画面へ戻す最短手段：リロード
@@ -3378,22 +3509,78 @@ async function loadCardsDataForTarget(targetUserId) {
 function hasPermission(action, targetData = null) {
     if (!currentUserRole || !currentUser) return false;
     
-    switch (action) {
-        case 'view_data':
-            return targetData ? targetData.assignedUserId === currentViewTarget : false;
-        case 'edit_data':
-            return targetData ? targetData.assignedUserId === currentUser.uid : false;
-        case 'delete_data':
-            return targetData ? targetData.assignedUserId === currentUser.uid : false;
-        case 'create_data':
-            return currentViewTarget === currentUser.uid;
-        case 'edit_own_settings':
-            return true;
-        case 'edit_any_settings':
-            return currentUserRole === 'admin';
-        default:
-            return false;
+    // Master Role: 四国データの閲覧のみ可能
+    if (currentUserRole === 'master') {
+        if (action === 'view_data') {
+            if (targetData) return targetData.region === 'shikoku';
+            return currentProfileRegion === 'shikoku';
+        }
+        return false; // 編集・削除・作成すべて不可
     }
+    
+    // 現在表示中のユーザーID取得
+    const { uid: currentUid } = parseViewTarget(currentViewTarget);
+    
+    // Admin: 自分（関西）のみ編集可、全員閲覧可
+    if (currentUserRole === 'admin') {
+        switch (action) {
+            case 'view_data':
+                return true; // 全データ閲覧可
+            case 'edit_data':
+            case 'delete_data':
+                return targetData && targetData.assignedUserId === currentUser.uid;
+            case 'create_data':
+                return currentUid === currentUser.uid;
+            case 'edit_own_settings':
+                return true;
+            case 'edit_any_settings':
+                return true;
+            default:
+                return false;
+        }
+    }
+    
+    // Manager: 自分のプロファイルのみ編集可、部下は閲覧のみ
+    if (currentUserRole === 'manager') {
+        const isSelfProfile = currentUid === currentUser.uid;
+        
+        switch (action) {
+            case 'view_data':
+                return true; // 自分・部下のデータ閲覧可
+            case 'edit_data':
+            case 'delete_data':
+                return targetData && targetData.assignedUserId === currentUser.uid && isSelfProfile;
+            case 'create_data':
+                return isSelfProfile;
+            case 'edit_own_settings':
+                return isSelfProfile;
+            case 'edit_any_settings':
+                return false;
+            default:
+                return false;
+        }
+    }
+    
+    // Staff: 自分のデータのみ
+    if (currentUserRole === 'staff') {
+        switch (action) {
+            case 'view_data':
+                return targetData && targetData.assignedUserId === currentUser.uid;
+            case 'edit_data':
+            case 'delete_data':
+                return targetData && targetData.assignedUserId === currentUser.uid;
+            case 'create_data':
+                return currentUid === currentUser.uid;
+            case 'edit_own_settings':
+                return true;
+            case 'edit_any_settings':
+                return false;
+            default:
+                return false;
+        }
+    }
+    
+    return false;
 }
 
 function setupFirebaseAuth() {
@@ -3409,34 +3596,29 @@ function setupFirebaseAuth() {
             window.firebaseImports.doc(window.db, 'users', user.uid)
         );
         
-        if (userDoc.exists()) {
-            currentUserData = userDoc.data();
-            currentUserRole = currentUserData.role;
-            currentViewTarget = user.uid; // 必ず自分のデータを表示
-
-// 🆕 四国専用ユーザーの地域設定
-// 🆕 ユーザーのregions情報に基づく地域設定
-const userRegions = Array.isArray(currentUserData.regions) ? currentUserData.regions : [];
-const isAdmin = currentUserRole === 'admin';
-
-if (isAdmin) {
-    currentRegionFilter = 'all';
-} else if (currentUserData.defaultRegion) {
-    currentRegionFilter = currentUserData.defaultRegion;
-} else if (userRegions.length === 1) {
-    currentRegionFilter = userRegions[0];
-} else if (userRegions.length > 1) {
-    currentRegionFilter = 'all';
-} else {
-    currentRegionFilter = 'kansai'; // フォールバック
-}
-
+if (userDoc.exists()) {
+    currentUserData = userDoc.data();
+    currentUserRole = currentUserData.role;
+    
+    // 初期ビューターゲット設定
+    if (currentUserRole === 'master') {
+        // Masterは自分を持たないので、マスタービューを初期表示
+        currentViewTarget = 'master-shikoku';
+        currentProfileRegion = 'shikoku';
+    } else if (currentUserRole === 'manager') {
+        // Managerはデフォルト関西プロファイル
+        currentViewTarget = generateProfileId(user.uid, 'kansai');
+        currentProfileRegion = 'kansai';
+    } else {
+        // Admin・Staff
+        currentViewTarget = user.uid;
+        currentProfileRegion = currentUserData.region || 'kansai';
+    }
 
 // 🆕 起動時は必ず現在月を表示
 const fiscalStructure = getFiscalYearStructure();
 activeDashboardMonthKey = fiscalStructure.currentMonthKey;
 
-            
             // グローバル月セレクターを現在月に設定
             const globalSelector = document.getElementById('globalMonthSelector');
             if (globalSelector) {
@@ -3530,9 +3712,46 @@ let personalSettings = {
     }
 };
 
-
 let activeProbabilityFilter = 'all';
 let userSettingsCache = {};
+
+        let currentProfileRegion = 'kansai';
+
+// ターゲットIDからUIDと地域を分離
+function parseViewTarget(targetId) {
+    if (!targetId) return { uid: null, region: 'kansai' };
+    
+    // マスタービュー特別対応
+    if (targetId === 'master') return { uid: 'master', region: 'all' };
+    if (targetId === 'master-shikoku') return { uid: 'master', region: 'shikoku' };
+    
+    // Manager分裂プロファイル対応
+    if (targetId.includes('_kansai')) {
+        return { uid: targetId.replace('_kansai', ''), region: 'kansai' };
+    }
+    if (targetId.includes('_shikoku')) {
+        return { uid: targetId.replace('_shikoku', ''), region: 'shikoku' };
+    }
+    
+    // 通常ID（Admin・Staff）
+    return { uid: targetId, region: 'kansai' };
+}
+
+// プロファイルIDの生成
+function generateProfileId(userId, profileType) {
+    return `${userId}_${profileType}`;
+}
+
+// 現在のプロファイル判定
+function getCurrentProfile() {
+    return currentProfileRegion;
+}
+
+// 自分のプロファイル表示中か判定
+function isViewingOwnProfile() {
+    const { uid } = parseViewTarget(currentViewTarget);
+    return uid === currentUser?.uid;
+}
         
 const PROBABILITY_CONFIG = {
     options: [
@@ -3586,18 +3805,28 @@ function getCurrentMonth() {
     };
 }
 
-// アクティブな個人設定を取得する関数
 function getActiveSettings() {
-    const selfId = currentUser?.uid || null;
-    const targetId = currentViewTarget || selfId;
-    // 自分のデータを表示しているときは常に最新の personalSettings を使う
-    if (selfId && targetId === selfId) {
-        return personalSettings;
+    // ターゲットIDからUIDと地域を取得
+    const { uid, region } = parseViewTarget(currentViewTarget || currentUser?.uid);
+    
+    if (!uid) return getDefaultSettings();
+    
+    // 設定ソースの特定
+    let settingsSource;
+    if (currentUser && uid === currentUser.uid) {
+        settingsSource = personalSettings;
+    } else {
+        settingsSource = userSettingsCache[uid] || getDefaultSettings();
     }
-    // 他人表示時のみキャッシュを参照（なければデフォルト）
-    return (targetId && userSettingsCache[targetId]) 
-        ? userSettingsCache[targetId] 
-        : getDefaultSettings();
+    
+    // Managerの地域別設定対応
+    if (settingsSource && (settingsSource.kansai || settingsSource.shikoku)) {
+        // Manager用の地域別設定から該当地域を返す
+        return settingsSource[region] || getDefaultSettings();
+    }
+    
+    // Admin・Staff・Masterは従来通り
+    return settingsSource;
 }
 
 
@@ -4871,35 +5100,78 @@ async function displayMasterView() {
         masterContainer.className = 'master-view-container';
         masterContainer.innerHTML = '<h2>👑 マスター管理画面（全スタッフ一覧）</h2>';
         
-        // 各スタッフのセクション生成
-        for (const staff of staffList) {
-            console.log(`マスタービュー: ${staff.name}さんのデータ処理中`);
-            const staffSection = document.createElement('div');
-            staffSection.className = 'master-staff-section';
-            
-            try {
-                const staffCardsQuery = window.firebaseImports.query(
-                    window.firebaseImports.collection(window.db, 'juku_cards'),
-                    window.firebaseImports.where('assignedUserId', '==', staff.id)
-                );
-                const staffCards = await window.firebaseImports.getDocs(staffCardsQuery);
-                
-                const staffCardsData = [];
-                staffCards.forEach((doc) => staffCardsData.push(doc.data()));
-                console.log(`マスタービュー: ${staff.name}さんの塾データ ${staffCardsData.length}件`);
-                
-                staffSection.innerHTML = `
-                    <div class="master-staff-name">担当: ${staff.name}（${staff.role === 'admin' ? '管理者' : staff.role === 'manager' ? 'マネージャー' : '営業担当'}）</div>
-                    <div class="master-main-cards">
-                        ${generateMasterMainCards(staff, staffCardsData)}
-                    </div>
-                    <div class="master-middle-cards">
-                        ${generateMasterMiddleCards(staff, staffCardsData)}
-                    </div>
-                    <div class="master-funnel">
-                        ${generateMasterFunnel(staff, staffCardsData)}
-                    </div>
-                `;
+for (const staff of staffList) {
+    // Master Role: 四国関連のみ表示
+    if (currentUserRole === 'master') {
+        const userRegion = staff.rawUserData?.region || 'kansai';
+        if (userRegion !== 'shikoku' && staff.role !== 'manager') {
+            continue; // 四国Staff・Manager以外はスキップ
+        }
+    }
+    
+    console.log(`マスタービュー: ${staff.name}さんのデータ処理中`);
+    const staffSection = document.createElement('div');
+    staffSection.className = 'master-staff-section';
+    
+    try {
+        // カード取得クエリ
+        let cardsQuery = window.firebaseImports.query(
+            window.firebaseImports.collection(window.db, 'juku_cards'),
+            window.firebaseImports.where('assignedUserId', '==', staff.id)
+        );
+        
+        // Master Role: 四国カードのみ取得
+        if (currentUserRole === 'master') {
+            cardsQuery = window.firebaseImports.query(
+                window.firebaseImports.collection(window.db, 'juku_cards'),
+                window.firebaseImports.where('assignedUserId', '==', staff.id),
+                window.firebaseImports.where('region', '==', 'shikoku')
+            );
+        }
+        
+        const staffCards = await window.firebaseImports.getDocs(cardsQuery);
+        
+        const staffCardsData = [];
+        staffCards.forEach((doc) => staffCardsData.push(doc.data()));
+        
+        // Manager用設定の地域別対応
+        let effectiveSettings = staff.settings;
+        if (staff.role === 'manager') {
+            if (currentUserRole === 'master') {
+                // Masterが見る場合は四国設定のみ
+                effectiveSettings = staff.settings.shikoku || getDefaultSettings();
+            } else {
+                // Adminが見る場合は関西設定（または合算表示）
+                effectiveSettings = staff.settings.kansai || staff.settings;
+            }
+        }
+        
+        const staffWithEffectiveSettings = {
+            ...staff,
+            settings: effectiveSettings
+        };
+        
+        const roleLabel = {
+            'admin': '管理者',
+            'manager': 'マネージャー',
+            'staff': '営業担当',
+            'master': '監査'
+        }[staff.role] || staff.role;
+        
+        const regionLabel = currentUserRole === 'master' ? '（四国）' : '';
+        
+        staffSection.innerHTML = `
+            <div class="master-staff-name">担当: ${staff.name}${regionLabel}（${roleLabel}）</div>
+            <div class="master-main-cards">
+                ${generateMasterMainCards(staffWithEffectiveSettings, staffCardsData)}
+            </div>
+            <div class="master-middle-cards">
+                ${generateMasterMiddleCards(staffWithEffectiveSettings, staffCardsData)}
+            </div>
+            <div class="master-funnel">
+                ${generateMasterFunnel(staffWithEffectiveSettings, staffCardsData)}
+            </div>
+        `;
                 
             } catch (staffError) {
                 console.error(`${staff.name}さんのデータ取得エラー:`, staffError);
@@ -5574,25 +5846,20 @@ function openNewCardModal() {
     const form = document.getElementById('newCardForm');
     form.reset();
     
-   setTimeout(() => {
+setTimeout(() => {
     const regionSelect = document.getElementById('newJukuRegion');
-    const userRegions = Array.isArray(currentUserData?.regions) ? currentUserData.regions : [];
-    const isAdmin = currentUserRole === 'admin';
-
-    if (isAdmin) {
-        regionSelect.value = currentUserData.defaultRegion || 'kansai';
-        regionSelect.disabled = false;
-    } else if (userRegions.length === 1) {
-        regionSelect.value = userRegions[0];
-        regionSelect.disabled = true;
-    } else {
-        regionSelect.value = currentUserData.defaultRegion || 'kansai';
-        regionSelect.disabled = false;
+    
+    // 現在のプロファイル地域を自動設定
+    regionSelect.value = currentProfileRegion;
+    regionSelect.disabled = true; // 常に無効化（自動設定）
+    
+    // UI上で非表示にする
+    const regionGroup = regionSelect.closest('.form-group');
+    if (regionGroup) {
+        regionGroup.style.display = 'none';
     }
 }, 0);
 
-
-    
     // 二重送信防止の初期化
     form.dataset.submitting = 'false';
     const submitBtn = form.querySelector('button[type="submit"]');
@@ -6295,13 +6562,12 @@ function renderCards() {
     const statusFilter = document.getElementById('statusFilter').value;
     const probabilityFilter = activeProbabilityFilter || 'all';
     const areaFilter = document.getElementById('areaFilter').value;
-
-        let filteredCards = cardsData.filter(cardData => {
+let filteredCards = cardsData.filter(cardData => {
     const title = cardData.jukuName.toLowerCase();
     const status = cardData.status;
     const cardAddress = cardData.address || '';
     const cardMunicipality = extractMunicipality(cardAddress);
-    const cardRegion = cardData.region || 'kansai'; // 🆕 デフォルトは関西
+    const cardRegion = cardData.region || 'kansai';
     
     // カードの現在表示月の確率を取得
     const activeKey = getCardActiveMonthKey(cardData);
@@ -6313,10 +6579,9 @@ function renderCards() {
     if (areaFilter !== 'all' && cardMunicipality !== areaFilter) show = false;
     if (probabilityFilter !== 'all' && !matchesProbabilityFilter(cardProbability, probabilityFilter)) show = false;
     
-    // 🆕 地域フィルター追加
-    if (currentRegionFilter !== 'all') {
-        const filterRegion = currentRegionFilter === 'kansai' ? 'kansai' : 'shikoku';
-        if (cardRegion !== filterRegion) show = false;
+    // 🆕 プロファイル地域による自動フィルタリング
+    if (currentProfileRegion && currentProfileRegion !== 'all') {
+        if (cardRegion !== currentProfileRegion) show = false;
     }
     
     return show;

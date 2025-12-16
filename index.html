@@ -2310,10 +2310,16 @@ try {
   console.log('Firestore初期化成功');
 } catch (error) {
   console.error('Firestore初期化エラー:', error);
-  // フォールバック: 通常のFirestore初期化を試行
-  const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
-  window.db = getFirestore(app);
+  try {
+    const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    window.db = getFirestore(app);
+    console.log('フォールバック: 通常のFirestore初期化成功');
+  } catch (fallbackError) {
+    console.error('Firestore初期化完全失敗:', fallbackError);
+    alert('データベース接続に失敗しました。ページを再読み込みしてください。');
+  }
 }
+
 
   window.firebaseImports = {
     signInWithEmailAndPassword,
@@ -3376,34 +3382,6 @@ if (currentUserRole === 'admin') {
 }
 
     }
-}
-
-function updateRegionSelectorOptions() {
-    const regionSelector = document.getElementById('globalRegionSelector');
-    if (!regionSelector) return;
-    
-    regionSelector.innerHTML = '';
-    
-    const userRegions = Array.isArray(currentUserData?.regions) ? currentUserData.regions : [];
-    const isAdmin = currentUserRole === 'admin';
-
-    // 管理者または複数地域対応なら「全エリア」を追加
-    if (isAdmin || userRegions.length > 1) {
-        const allOption = document.createElement('option');
-        allOption.value = 'all';
-        allOption.textContent = '全エリア';
-        regionSelector.appendChild(allOption);
-    }
-
-    const regionsToAdd = isAdmin ? ['kansai', 'shikoku'] : userRegions;
-    regionsToAdd.forEach(region => {
-        const option = document.createElement('option');
-        option.value = region;
-        option.textContent = region === 'kansai' ? '関西' : '四国';
-        regionSelector.appendChild(option);
-    });
-
-    regionSelector.value = currentRegionFilter;
 }
 
 function updateRegionSelectorVisibility() {
@@ -5362,58 +5340,59 @@ async function displayMasterView() {
         
         masterContainer.innerHTML = `<h2>${title}</h2>`;
         
-        // 🆕 表示対象リストの構築（プロファイル分離対応）
-        const displayTargets = [];
+// 🆕 表示対象リストの構築（修正版）
+const displayTargets = [];
 
-        for (const staff of staffList) {
-            const isManager = staff.role === 'manager';
-            const userRegion = staff.rawUserData?.region || 'kansai';
+for (const staff of staffList) {
+    const isManager = staff.role === 'manager';
+    const userRegion = staff.rawUserData?.region || 'kansai';
 
-            if (isManager) {
-                // Managerは地域別に分割表示
-                const hasKansaiData = staff.settings?.kansai && 
-                    (Object.values(staff.settings.kansai.monthlyProfitTargets || {}).some(v => v > 0) ||
-                     Object.values(staff.settings.kansai.monthlyProfitActuals || {}).some(v => v > 0));
-                
-                const hasShikokuData = staff.settings?.shikoku && 
-                    (Object.values(staff.settings.shikoku.monthlyProfitTargets || {}).some(v => v > 0) ||
-                     Object.values(staff.settings.shikoku.monthlyProfitActuals || {}).some(v => v > 0));
-
-                // 関西プロファイル
-                if ((viewMode === 'all' || viewMode === 'kansai') && hasKansaiData) {
-                    displayTargets.push({
-                        ...staff,
-                        displayName: `${staff.name}（関西）`,
-                        displayRegion: 'kansai',
-                        effectiveSettings: staff.settings.kansai,
-                        queryUserId: `${staff.id}_kansai`
-                    });
-                }
-
-                // 四国プロファイル
-                if ((viewMode === 'all' || viewMode === 'shikoku') && hasShikokuData) {
-                    displayTargets.push({
-                        ...staff,
-                        displayName: `${staff.name}（四国）`,
-                        displayRegion: 'shikoku',
-                        effectiveSettings: staff.settings.shikoku,
-                        queryUserId: `${staff.id}_shikoku`
-                    });
-                }
-            } else {
-                // 通常Staff：地域で判定
-                if (viewMode === 'all' || userRegion === viewMode) {
-                    const regionLabel = userRegion === 'shikoku' ? '四国' : '関西';
-                    displayTargets.push({
-                        ...staff,
-                        displayName: `${staff.name}（${regionLabel}）`,
-                        displayRegion: userRegion,
-                        effectiveSettings: staff.settings,
-                        queryUserId: staff.id
-                    });
-                }
-            }
+    if (isManager) {
+        // 🔧 重要な修正：数値チェックを削除し、マネージャーは無条件で地域別表示
+        
+        // 関西プロファイル
+        if (viewMode === 'all' || viewMode === 'kansai') {
+            const kansaiSettings = (staff.settings && staff.settings.kansai) 
+                ? staff.settings.kansai 
+                : getDefaultSettings();
+            
+            displayTargets.push({
+                ...staff,
+                displayName: `${staff.name}（関西）`,
+                displayRegion: 'kansai',
+                effectiveSettings: kansaiSettings,
+                queryUserId: staff.id  // 実ユーザーIDを使用
+            });
         }
+
+        // 四国プロファイル
+        if (viewMode === 'all' || viewMode === 'shikoku') {
+            const shikokuSettings = (staff.settings && staff.settings.shikoku) 
+                ? staff.settings.shikoku 
+                : getDefaultSettings();
+
+            displayTargets.push({
+                ...staff,
+                displayName: `${staff.name}（四国）`,
+                displayRegion: 'shikoku',
+                effectiveSettings: shikokuSettings,
+                queryUserId: staff.id  // 実ユーザーIDを使用
+            });
+        }
+    } else {
+        // 一般Staff：既存ロジック維持
+        if (viewMode === 'all' || userRegion === viewMode) {
+            const regionLabel = userRegion === 'shikoku' ? '四国' : '関西';
+            displayTargets.push({
+                ...staff,
+                displayName: `${staff.name}（${regionLabel}）`,
+                displayRegion: userRegion,
+                effectiveSettings: staff.settings || getDefaultSettings(),
+                queryUserId: staff.id
+            });
+        }
+    }
+}
 
         // ソート: 地域→名前順
         displayTargets.sort((a, b) => {
@@ -6480,22 +6459,38 @@ async function deleteCard(cardId) {
     
     const cardName = cardData ? cardData.jukuName : 'この塾';
     
-    if (confirm(`『${cardName}』を削除します。この操作は元に戻せません。よろしいですか？`)) {
-        cardsData = cardsData.filter(card => card.id !== cardId);
-        
-        if (currentUser && window.firebaseImports && window.db) {
-            try {
-                const docId = cardData.docId || `${cardData.assignedUserId || currentUser.uid}_${cardData.id}`;
-                const cardRef = window.firebaseImports.doc(window.db, 'juku_cards', docId);
-                await window.firebaseImports.deleteDoc(cardRef);
-                console.log('Firestoreから削除完了:', docId);
-            } catch (error) {
+if (confirm(`『${cardName}』を削除します。この操作は元に戻せません。よろしいですか？`)) {
+    
+    if (currentUser && window.firebaseImports && window.db) {
+        try {
+            const docId = cardData.docId || `${cardData.assignedUserId || currentUser.uid}_${cardData.id}`;
+            const cardRef = window.firebaseImports.doc(window.db, 'juku_cards', docId);
+            
+            // 先にクラウド削除を実行
+            await window.firebaseImports.deleteDoc(cardRef);
+            console.log('Firestoreから削除完了:', docId);
 
-                console.error('Firestore delete error:', error);
-                showToast('クラウド削除でエラーが発生しました', 'error');
-            }
+            // 成功確認後に画面データを削除
+            cardsData = cardsData.filter(card => card.id !== cardId);
+
+        } catch (error) {
+            console.error('Firestore delete error:', error);
+            showToast('クラウド削除でエラーが発生しました。データは削除されていません。', 'error');
+            return; // 処理中断（画面データは残す）
         }
-        
+    } else {
+        // オフライン時はそのまま削除
+        cardsData = cardsData.filter(card => card.id !== cardId);
+    }
+    
+    // 削除後の処理
+    await saveCardsData();
+    progressCache = null;
+    updateDashboard();
+    renderCardsOptimized();
+    showToast('データを削除しました', 'success');
+}
+
         await saveCardsData();
         progressCache = null;
         updateDashboard();
@@ -6579,12 +6574,6 @@ function saveMemoContent() {
     renderCardsOptimized();
     showToast('メモを保存しました', 'success');
     closeMemoDetailModal();
-}
-
-function updateActualSales(prefix) {
-    const profitActual = parseNumberSafely(document.getElementById(`${prefix}ProfitActual`).value);
-    const salesActual = calculateSalesFromProfit(profitActual);
-    document.getElementById(`${prefix}SalesActual`).value = salesActual;
 }
 
 function setupMonthlyInputHandlers(containerId) {

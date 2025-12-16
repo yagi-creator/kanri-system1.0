@@ -5180,13 +5180,17 @@ function calculateQualifiedProspects() {
     
     return qualifiedProfit;
 }
-
-
 function calculateAllProgress() {
+    // 🆕 最優先：地域情報を最初に取得
+    const { region: displayRegion } = parseViewTarget(currentViewTarget);
+    const targetRegion = displayRegion || 'kansai';
+    
     const settings = getActiveSettings();
     const now = Date.now();
     const monthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
     const cacheKey = `${cardsData.length}-${settings.yearlyProfitIncreaseTarget}-${monthKey}-${currentViewTarget || ''}`;
+    
+    console.log(`🔍 進捗計算開始: 地域=${targetRegion}, 月=${monthKey}, カード数=${cardsData.length}`);
     
     if (progressCache && 
         progressCache.cacheKey === cacheKey && 
@@ -5207,8 +5211,9 @@ function calculateAllProgress() {
     const yearlyRate = yearlyTarget > 0 ? (yearlyActual / yearlyTarget) * 100 : 0;
     
     const salesIncreaseTarget = settings.yearlySalesIncreaseTarget || 0;
-        const totalSalesProspect = cardsData.reduce((sum, card) => {
-        // 🆕 地域フィルタリング追加
+    
+    // ✅ 地域フィルタリング付きの売上見込合計計算（targetRegionが使用可能）
+    const totalSalesProspect = cardsData.reduce((sum, card) => {
         const cardRegion = card.region || 'kansai';
         if (targetRegion !== 'all' && cardRegion !== targetRegion) {
             return sum;
@@ -5224,23 +5229,16 @@ function calculateAllProgress() {
     const prospectRate = (settings.yearlyProfitIncreaseTarget || 0) > 0 ? 
         (prospectTotal / settings.yearlyProfitIncreaseTarget) * 100 : 0;
     
-    // 6段階ファネル
+    // 6段階ファネル（地域フィルタリング付き）
     let probUnder50 = 0, prob5060 = 0, prob70 = 0, prob80 = 0, prob90 = 0, prob100 = 0;
 
-    // 🆕 現在表示中の地域を取得
-    const { region: displayRegion } = parseViewTarget(currentViewTarget);
-    const targetRegion = displayRegion || 'kansai';
-    
-    console.log(`🔍 中段カード計算開始: 地域=${targetRegion}, カード数=${cardsData.length}`);
-    
     cardsData.forEach(card => {
-        // 🆕 地域フィルタリング：対象地域以外のカードは除外
         const cardRegion = card.region || 'kansai';
         if (targetRegion !== 'all' && cardRegion !== targetRegion) {
-            return; // 地域不一致のカードはスキップ
+            return;
         }
         
-        const monthData = card.monthlyData?.[currentMonthKey] || { 
+        const monthData = card.monthlyData?.[monthKey] || { 
             salesIncreaseForecast: 0, 
             probability: 0 
         };

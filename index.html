@@ -3434,6 +3434,52 @@ async function reloadOwnManagerSettings(targetRegion) {
     }
 }
 
+// 🆕 ダッシュボード表示値を即座にリセットする関数
+function resetDashboardUI() {
+    // 4枚カードのリセット
+    const resetIds = [
+        'monthlyProfitTarget', 'monthlyProfitActual', 'monthlyProfitDiff', 'monthlyProfitRate',
+        'monthlySalesTarget', 'monthlySalesActual', 'monthlySalesDiff', 'monthlySalesRate',
+        'cumulativeProfitTarget', 'cumulativeProfitActual', 'cumulativeProfitDiff', 'cumulativeProfitRate',
+        'cumulativeSalesTarget', 'cumulativeSalesActual', 'cumulativeSalesDiff', 'cumulativeSalesRate'
+    ];
+    
+    resetIds.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = id.includes('Rate') ? '0.0%' : '¥0';
+            element.classList.remove('positive', 'negative', 'neutral');
+        }
+    });
+
+    // 中段カードのリセット
+    const elTotal = document.getElementById('totalSalesProspectDisplay');
+    if (elTotal) elTotal.innerHTML = '売上見込合計 <span class="value-emphasis">¥0</span>';
+    
+    const elSales = document.getElementById('salesProspectDisplay');
+    if (elSales) elSales.innerHTML = '売上増見込 <span class="value-emphasis">¥0</span>/¥0 (0.0%)';
+
+    const elProfit = document.getElementById('profitProspectDisplay');
+    if (elProfit) elProfit.innerHTML = '粗利増見込 <span class="value-emphasis">¥0</span>/¥0 (0.0%)';
+
+    const elPersonal = document.getElementById('personalIncreaseTargetDisplay');
+    if (elPersonal) elPersonal.innerHTML = '個人設定売上増目標 <span class="value-emphasis">0.0万円</span> | 粗利率 0.0%';
+
+    // ファネルのリセット
+    ['probUnder50', 'prob5060', 'prob70', 'prob80', 'prob90', 'prob100'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = '¥0万';
+    });
+    
+    // テーブルとカード一覧のクリア
+    const tableBody = document.getElementById('jukuTableBody');
+    const cardsContainer = document.getElementById('cardsContainer');
+    if (tableBody) tableBody.innerHTML = '';
+    if (cardsContainer) cardsContainer.innerHTML = '';
+    
+    console.log('✅ ダッシュボード表示をリセットしました');
+}
+        
 async function changeViewTarget() {
     const viewSelector = document.getElementById('viewSelector');
     const newTargetId = viewSelector.value;
@@ -3471,12 +3517,22 @@ if (newTargetId === 'master-kansai' || newTargetId === 'master-shikoku' || newTa
     
     // 通常ビューへの切り替え
     if (newTargetId && newTargetId !== currentViewTarget) {
+        // 🆕 プロファイル切り替え前に完全クリア
+        console.log(`🔄 プロファイル切り替え: ${currentViewTarget} → ${newTargetId}`);
+        
+        // データとキャッシュの完全クリア
+        cardsData = [];
+        progressCache = null;
+        
+        // UI表示の即座リセット
+        resetDashboardUI();
+        
         currentViewTarget = newTargetId;
         
         // IDから地域情報を解析
         const { uid, region } = parseViewTarget(newTargetId);
         currentProfileRegion = region;
-        
+
         updateViewSelector();
         
         // マスタービューから戻る場合
@@ -3978,10 +4034,19 @@ function getActiveSettings() {
     // ★重要：キャッシュには処理済み設定が入っているのでそのまま返す
     return cachedSettings;
 }
-
 async function loadSettingsForTarget(uid) {
     if (!uid || !window.firebaseImports || !window.db) return;
-    if (userSettingsCache[uid]) return; // 既にキャッシュ済み
+    
+    // 🆕 キャッシュキーに地域情報を含めて、関西・四国の混同を防ぐ
+    const { region } = parseViewTarget(currentViewTarget);
+    const cacheKey = `${uid}_${region || 'kansai'}`;
+    
+    if (userSettingsCache[cacheKey]) {
+        // キャッシュから設定を復元
+        personalSettings = { ...userSettingsCache[cacheKey] };
+        console.log(`📋 キャッシュから設定を取得: ${cacheKey}`);
+        return;
+    }
     
     try {
         const userDoc = await window.firebaseImports.getDoc(
@@ -4024,8 +4089,9 @@ async function loadSettingsForTarget(uid) {
             console.log(`${uid}の通常設定を読み込みました`);
         }
 
-        // 🆕 重要：必ずキャッシュに保存
-        userSettingsCache[uid] = effectiveSettings;
+        // 🆕 重要：地域別キーでキャッシュに保存
+        userSettingsCache[cacheKey] = effectiveSettings;
+        console.log(`💾 設定をキャッシュに保存: ${cacheKey}`);
         
         // 現在表示中のターゲットなら personalSettings も同期
         const { uid: viewingUid } = parseViewTarget(currentViewTarget || '');
@@ -4705,9 +4771,14 @@ async function savePersonalSettingsComplete() {
     savePersonalSettings();
 
     // キャッシュ即時更新（自分表示中の反映遅延を解消）
+    // キャッシュ即時更新（地域別キーで保存）
     if (currentUser?.uid) {
-        userSettingsCache[currentUser.uid] = { ...personalSettings };
+        const { region } = parseViewTarget(currentViewTarget);
+        const cacheKey = `${currentUser.uid}_${region || 'kansai'}`;
+        userSettingsCache[cacheKey] = { ...personalSettings };
+        console.log(`💾 設定保存時にキャッシュを更新: ${cacheKey}`);
     }
+
     
     // Firebase保存
     if (currentUser && window.db && window.firebaseImports) {
@@ -5149,8 +5220,20 @@ function calculateAllProgress() {
     // 6段階ファネル
     let probUnder50 = 0, prob5060 = 0, prob70 = 0, prob80 = 0, prob90 = 0, prob100 = 0;
 
+    // 🆕 現在表示中の地域を取得
+    const { region: displayRegion } = parseViewTarget(currentViewTarget);
+    const targetRegion = displayRegion || 'kansai';
+    
+    console.log(`🔍 中段カード計算開始: 地域=${targetRegion}, カード数=${cardsData.length}`);
+    
     cardsData.forEach(card => {
-        const monthData = card.monthlyData?.[monthKey] || { 
+        // 🆕 地域フィルタリング：対象地域以外のカードは除外
+        const cardRegion = card.region || 'kansai';
+        if (targetRegion !== 'all' && cardRegion !== targetRegion) {
+            return; // 地域不一致のカードはスキップ
+        }
+        
+        const monthData = card.monthlyData?.[currentMonthKey] || { 
             salesIncreaseForecast: 0, 
             probability: 0 
         };

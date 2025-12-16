@@ -3311,7 +3311,7 @@ function updateViewSelector() {
                     ? `（${target.profileType === 'kansai' ? '関西' : '四国'}）`
                     : (target.region ? `（${target.region === 'shikoku' ? '四国' : '関西'}）` : '');
                 
-                option.textContent = `${target.name}さん ${roleLabel}${regionLabel}`;
+                option.textContent = `${target.name} ${roleLabel}${regionLabel}`;
             }
             
             if (target.id === currentViewTarget) option.selected = true;
@@ -3497,8 +3497,8 @@ if (newTargetId === 'master-kansai' || newTargetId === 'master-shikoku') {
         await loadSettingsForTarget(uid);
     }
     
-    const { uid: targetUid } = parseViewTarget(newTargetId);
-    await loadCardsDataForTarget(targetUid);
+// 修正：すでに取得済みのuidを再利用
+await loadCardsDataForTarget(uid);
         
         progressCache = null;
         renderCardsOptimized();
@@ -6012,16 +6012,20 @@ function openNewCardModal() {
 setTimeout(() => {
     const regionSelect = document.getElementById('newJukuRegion');
     
-    // 現在のプロファイル地域を自動設定
-    regionSelect.value = currentProfileRegion;
-    regionSelect.disabled = true; // 常に無効化（自動設定）
+    // ユーザーの所属地域を強制適用（データ混在防止）
+    const userRegion = currentUserData?.region || currentProfileRegion || 'kansai';
+    regionSelect.value = userRegion;
+    regionSelect.disabled = true; // 変更不可
     
     // UI上で非表示にする
     const regionGroup = regionSelect.closest('.form-group');
     if (regionGroup) {
         regionGroup.style.display = 'none';
     }
+    
+    console.log(`新規登録：地域を${userRegion}に固定しました`);
 }, 0);
+
 
     // 二重送信防止の初期化
     form.dataset.submitting = 'false';
@@ -7155,7 +7159,6 @@ function handleResponsiveMasterOption() {
         }
     }
 }
-
 
     // リサイズイベント登録
     window.addEventListener('resize', handleResponsiveMasterOption);

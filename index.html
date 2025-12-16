@@ -2302,11 +2302,18 @@
   window.firebaseAuth = getAuth(app);
   
  // 🆕 企業ネットワーク対応：HTTP 400エラー解消（修正版）
-window.db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,       // 企業ネットワーク対応（これだけで十分）
-  useFetchStreams: false                    // プロキシ環境対応
-});
-
+try {
+  window.db = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+    useFetchStreams: false
+  });
+  console.log('Firestore初期化成功');
+} catch (error) {
+  console.error('Firestore初期化エラー:', error);
+  // フォールバック: 通常のFirestore初期化を試行
+  const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+  window.db = getFirestore(app);
+}
 
   window.firebaseImports = {
     signInWithEmailAndPassword,
@@ -3288,9 +3295,9 @@ function updateViewSelector() {
             if (isOwn) {
                 if (target.profileType) {
                     const regionLabel = target.profileType === 'kansai' ? '関西' : '四国';
-                    option.textContent = `${target.name}さん（${regionLabel}・自分）`;
+                    option.textContent = `${target.name}（${regionLabel}・自分）`;
                 } else {
-                    option.textContent = `${target.name}さん（自分）`;
+                    option.textContent = `${target.name}（自分）`;
                 }
             } else {
                 const roleLabel = {
@@ -3313,14 +3320,23 @@ function updateViewSelector() {
     }
     
     // マスタービューオプション追加
-    if (currentUserRole === 'admin') {
-        const masterOption = document.createElement('option');
-        masterOption.value = 'master';
-        masterOption.textContent = 'マスタービュー（全地域統括）';
-        if (currentViewTarget === 'master') masterOption.selected = true;
-        viewSelector.appendChild(masterOption);
-    } else if (currentUserRole === 'master') {
-        const masterOption = document.createElement('option');
+if (currentUserRole === 'admin') {
+    // 関西マスタービュー
+    const masterKansai = document.createElement('option');
+    masterKansai.value = 'master-kansai';
+    masterKansai.textContent = 'マスタービュー（関西統括）';
+    if (currentViewTarget === 'master-kansai') masterKansai.selected = true;
+    viewSelector.appendChild(masterKansai);
+
+    // 四国マスタービュー  
+    const masterShikoku = document.createElement('option');
+    masterShikoku.value = 'master-shikoku';
+    masterShikoku.textContent = 'マスタービュー（四国統括）';
+    if (currentViewTarget === 'master-shikoku') masterShikoku.selected = true;
+    viewSelector.appendChild(masterShikoku);
+    
+} else if (currentUserRole === 'master') {
+    const masterOption = document.createElement('option');
         masterOption.value = 'master-shikoku';
         masterOption.textContent = 'マスタービュー（四国統括）';
         if (currentViewTarget === 'master-shikoku') masterOption.selected = true;
@@ -3338,12 +3354,18 @@ function updateViewSelector() {
                 viewPermissionInfo.textContent = '👁️ 閲覧専用';
                 viewPermissionInfo.className = 'view-permission-info permission-view';
             }
-        } else if (currentViewTarget === 'master') {
-            viewPermissionInfo.textContent = '👑 全地域統括';
-            viewPermissionInfo.className = 'view-permission-info permission-edit';
-        } else if (currentViewTarget === 'master-shikoku') {
-            viewPermissionInfo.textContent = '🔍 四国監査';
-            viewPermissionInfo.className = 'view-permission-info permission-view';
+        } else if (currentViewTarget === 'master-kansai') {
+    viewPermissionInfo.textContent = '👑 関西統括';
+    viewPermissionInfo.className = 'view-permission-info permission-edit';
+} else if (currentViewTarget === 'master-shikoku') {
+    if (currentUserRole === 'admin') {
+        viewPermissionInfo.textContent = '👑 四国統括';
+        viewPermissionInfo.className = 'view-permission-info permission-edit';
+    } else {
+        viewPermissionInfo.textContent = '🔍 四国監査';
+        viewPermissionInfo.className = 'view-permission-info permission-view';
+    }
+
         } else {
             viewPermissionInfo.textContent = '';
         }
@@ -3390,6 +3412,44 @@ function changeRegionFilter() {
     return;
 }
 
+// Manager用：自分の地域別設定を再読み込み
+async function reloadOwnManagerSettings(targetRegion) {
+    if (!currentUser || !window.db) return;
+    
+    try {
+        const userDoc = await window.firebaseImports.getDoc(
+            window.firebaseImports.doc(window.db, 'users', currentUser.uid)
+        );
+        
+        if (userDoc.exists() && userDoc.data().personalSettings) {
+            const cloudSettings = userDoc.data().personalSettings;
+            
+            // 地域別設定の存在確認
+            if (cloudSettings.kansai || cloudSettings.shikoku) {
+                personalSettings = { 
+                    ...getDefaultSettings(),
+                    ...(cloudSettings[targetRegion] || {})
+                };
+                
+                console.log(`${targetRegion}設定に切り替えました:`, personalSettings);
+                
+                // 即座にUI反映
+                updatePersonalSalesTarget();
+                progressCache = null;
+                updateDashboard();
+                
+                showToast(`${targetRegion === 'kansai' ? '関西' : '四国'}設定を読み込みました`, 'info');
+            } else {
+                console.warn('地域別設定が未構築です');
+                showToast('地域別設定が未登録です。個人設定から登録してください', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Manager設定再読み込みエラー:', error);
+        showToast('設定の読み込みに失敗しました', 'error');
+    }
+}
+
 async function changeViewTarget() {
     const viewSelector = document.getElementById('viewSelector');
     const newTargetId = viewSelector.value;
@@ -3398,19 +3458,21 @@ async function changeViewTarget() {
     const masterContent = document.getElementById('masterViewContent');
     
     // マスタービュー切り替え
-    if (newTargetId === 'master' || newTargetId === 'master-shikoku') {
-        currentViewTarget = newTargetId;
-        currentProfileRegion = newTargetId === 'master' ? 'all' : 'shikoku';
-        updateViewSelector();
-        
-        normalContent.style.display = 'none';
-        masterContent.style.display = 'block';
-        
-        await displayMasterView();
-        const label = newTargetId === 'master' ? '全地域統括' : '四国統括';
-        showToast(`マスター管理画面（${label}）を表示中`, 'info');
-        return;
-    }
+// マスタービュー切り替え
+if (newTargetId === 'master-kansai' || newTargetId === 'master-shikoku') {
+    currentViewTarget = newTargetId;
+    currentProfileRegion = newTargetId === 'master-kansai' ? 'kansai' : 'shikoku';
+    updateViewSelector();
+    
+    normalContent.style.display = 'none';
+    masterContent.style.display = 'block';
+    
+    await displayMasterView();
+    const label = newTargetId === 'master-kansai' ? '関西統括' : '四国統括';
+    showToast(`マスター管理画面（${label}）を表示中`, 'info');
+    return;
+}
+
     
     // 通常ビューへの切り替え
     if (newTargetId && newTargetId !== currentViewTarget) {
@@ -3428,9 +3490,15 @@ async function changeViewTarget() {
             normalContent.style.display = 'block';
         }
         
-        // 解析したUIDでデータ読み込み
+    // ★重要：自分のプロファイル切替時は personalSettings を再読み込み★
+    if (uid === currentUser.uid && currentUserRole === 'manager') {
+        await reloadOwnManagerSettings(region);
+    } else {
         await loadSettingsForTarget(uid);
-        await loadCardsDataForTarget(uid);
+    }
+    
+    const { uid: targetUid } = parseViewTarget(newTargetId);
+    await loadCardsDataForTarget(targetUid);
         
         progressCache = null;
         renderCardsOptimized();
@@ -3639,7 +3707,10 @@ activeDashboardMonthKey = fiscalStructure.currentMonthKey;
             updateAuthUI();
             updateViewSelector();
             
-            await loadCardsDataForTarget(currentViewTarget);
+// currentViewTargetからUIDを取り出してカードを読込む
+const { uid: targetUid } = parseViewTarget(currentViewTarget || user.uid);
+await loadCardsDataForTarget(targetUid);
+
             await syncPersonalSettingsOnLogin();
 
             // 自分の設定をキャッシュに保存（必須）
@@ -3651,7 +3722,14 @@ activeDashboardMonthKey = fiscalStructure.currentMonthKey;
             renderCardsOptimized();
             updateDashboard();
             
-            showToast(`${currentUserData.name}さん（${currentUserRole}）として認識されました`, 'success');
+            const roleDisplayName = {
+    'admin': '管理者',
+    'manager': 'マネージャー', 
+    'staff': '営業',
+    'master': '監査'
+}[currentUserRole] || currentUserRole;
+showToast(`${currentUserData.name}（${roleDisplayName}）としてログインしました`, 'success');
+
         }else {
                         showToast('ユーザー情報が未登録です（Step 4を確認）', 'error');
                     }
@@ -3721,10 +3799,10 @@ let userSettingsCache = {};
 function parseViewTarget(targetId) {
     if (!targetId) return { uid: null, region: 'kansai' };
     
-    // マスタービュー特別対応
-    if (targetId === 'master') return { uid: 'master', region: 'all' };
-    if (targetId === 'master-shikoku') return { uid: 'master', region: 'shikoku' };
-    
+// マスタービュー特別対応
+if (targetId === 'master-kansai') return { uid: 'master', region: 'kansai' };
+if (targetId === 'master-shikoku') return { uid: 'master', region: 'shikoku' };
+
     // Manager分裂プロファイル対応
     if (targetId.includes('_kansai')) {
         return { uid: targetId.replace('_kansai', ''), region: 'kansai' };
@@ -3840,11 +3918,36 @@ async function loadSettingsForTarget(uid) {
             window.firebaseImports.doc(window.db, 'users', uid)
         );
         
-        if (userDoc.exists() && userDoc.data().personalSettings) {
-            userSettingsCache[uid] = { 
-                ...getDefaultSettings(), 
-                ...userDoc.data().personalSettings 
+if (userDoc.exists() && userDoc.data().personalSettings) {
+    const cloudSettings = userDoc.data().personalSettings;
+    
+    // Manager用地域別設定の読み込み
+    if (currentUserRole === 'manager') {
+        const { region } = parseViewTarget(currentViewTarget);
+        
+        // 地域別設定が存在するか確認
+        if (cloudSettings.kansai || cloudSettings.shikoku) {
+            personalSettings = { 
+                ...getDefaultSettings(),
+                ...(cloudSettings[region] || {})
             };
+            console.log(`Manager用${region}設定を読み込みました`);
+        } else {
+            // 旧形式の場合は関西に移行
+            personalSettings = { 
+                ...getDefaultSettings(),
+                ...cloudSettings 
+            };
+            console.warn('旧形式のデータを検出。関西設定として読み込みました');
+        }
+    } else {
+        // 通常ユーザー
+        personalSettings = { 
+            ...getDefaultSettings(),
+            ...cloudSettings 
+        };
+    }
+
             console.log(`${uid}の個人設定を読み込みました`);
         } else {
             userSettingsCache[uid] = getDefaultSettings();
@@ -4267,11 +4370,22 @@ function getCardLevel(v) {
 }
 
 function updatePersonalSalesTarget() {
-    const p = personalSettings.profitRate / 100;
-    personalSettings.yearlySalesIncreaseTarget = p > 0 ? Math.round(personalSettings.yearlyProfitIncreaseTarget / p) : 0;
+    // フォーム入力中の値を直接取得（リアルタイム計算）
+    const profitRateInput = document.getElementById('profitRate');
+    const profitIncreaseInput = document.getElementById('yearlyProfitIncreaseTarget');
+    
+    const currentRate = profitRateInput ? parseFloat(profitRateInput.value) : personalSettings.profitRate;
+    const currentIncreaseTarget = profitIncreaseInput ? parseNumberSafely(profitIncreaseInput.value) : personalSettings.yearlyProfitIncreaseTarget;
+
+    const p = currentRate / 100;
+    const calculatedTarget = p > 0 ? Math.round(currentIncreaseTarget / p) : 0;
+    
     const el = document.getElementById('yearlySalesIncreaseTarget');
-    if (el) el.value = personalSettings.yearlySalesIncreaseTarget;
+    if (el) {
+        el.value = formatWithCommas(calculatedTarget);
+    }
 }
+
 
 function validateCardData(cardData) {
     const errors = [];
@@ -4473,11 +4587,45 @@ async function savePersonalSettingsComplete() {
     // Firebase保存
     if (currentUser && window.db && window.firebaseImports) {
         try {
-            await window.firebaseImports.setDoc(
-                window.firebaseImports.doc(window.db, 'users', currentUser.uid),
-                { personalSettings },
-                { merge: true }
-            );
+let dataToSave = {};
+
+// Manager用地域別保存
+if (currentUserRole === 'manager') {
+    const { region } = parseViewTarget(currentViewTarget);
+    
+    // 既存の地域別設定を取得
+    const userDoc = await window.firebaseImports.getDoc(
+        window.firebaseImports.doc(window.db, 'users', currentUser.uid)
+    );
+    
+    let existingSettings = {};
+    if (userDoc.exists() && userDoc.data().personalSettings) {
+        const cloudData = userDoc.data().personalSettings;
+        if (cloudData.kansai || cloudData.shikoku) {
+            existingSettings = cloudData;
+        }
+    }
+    
+    // 現在の地域の設定のみ更新
+    dataToSave = {
+        personalSettings: {
+            ...existingSettings,
+            [region]: personalSettings
+        }
+    };
+    
+    console.log(`${region}設定を保存:`, dataToSave);
+} else {
+    // 通常ユーザー
+    dataToSave = { personalSettings };
+}
+
+await window.firebaseImports.setDoc(
+    window.firebaseImports.doc(window.db, 'users', currentUser.uid),
+    dataToSave,
+    { merge: true }
+);
+
             showToast('個人設定をクラウドに保存しました', 'success');
         } catch (error) {
             console.error('Firebase個人設定保存エラー:', error);
@@ -5119,16 +5267,30 @@ for (const staff of staffList) {
             window.firebaseImports.collection(window.db, 'juku_cards'),
             window.firebaseImports.where('assignedUserId', '==', staff.id)
         );
-        
-        // Master Role: 四国カードのみ取得
-        if (currentUserRole === 'master') {
-            cardsQuery = window.firebaseImports.query(
-                window.firebaseImports.collection(window.db, 'juku_cards'),
-                window.firebaseImports.where('assignedUserId', '==', staff.id),
-                window.firebaseImports.where('region', '==', 'shikoku')
-            );
-        }
-        
+      
+// Admin用地域別マスタービュー
+if (currentUserRole === 'admin' && (currentViewTarget === 'master-kansai' || currentViewTarget === 'master-shikoku')) {
+    const targetRegion = currentViewTarget === 'master-kansai' ? 'kansai' : 'shikoku';
+    cardsQuery = window.firebaseImports.query(
+        window.firebaseImports.collection(window.db, 'juku_cards'),
+        window.firebaseImports.where('assignedUserId', '==', staff.id),
+        window.firebaseImports.where('region', '==', targetRegion)
+    );
+} else if (currentUserRole === 'master') {
+    // 監査ユーザーは四国のみ
+    cardsQuery = window.firebaseImports.query(
+        window.firebaseImports.collection(window.db, 'juku_cards'),
+        window.firebaseImports.where('assignedUserId', '==', staff.id),
+        window.firebaseImports.where('region', '==', 'shikoku')
+    );
+} else {
+    // 通常クエリ
+    cardsQuery = window.firebaseImports.query(
+        window.firebaseImports.collection(window.db, 'juku_cards'),
+        window.firebaseImports.where('assignedUserId', '==', staff.id)
+    );
+}
+
         const staffCards = await window.firebaseImports.getDocs(cardsQuery);
         
         const staffCardsData = [];
@@ -5161,7 +5323,8 @@ for (const staff of staffList) {
         const regionLabel = currentUserRole === 'master' ? '（四国）' : '';
         
         staffSection.innerHTML = `
-            <div class="master-staff-name">担当: ${staff.name}${regionLabel}（${roleLabel}）</div>
+    <div class="master-staff-name">${staff.name}${regionLabel}</div>
+
             <div class="master-main-cards">
                 ${generateMasterMainCards(staffWithEffectiveSettings, staffCardsData)}
             </div>
@@ -5998,9 +6161,9 @@ function changeAllCardsDisplayMonth(newMonthKey) {
     }
 
     // マスタービュー表示中なら再描画
-    if (currentViewTarget === 'master') {
-        displayMasterView();
-    }
+if (currentViewTarget === 'master-kansai' || currentViewTarget === 'master-shikoku') {
+    displayMasterView();
+}
 
     // 再計算と描画は常に実行
     progressCache = null;
@@ -6983,15 +7146,16 @@ cardData.annualProfitActual = annualProfitActual;
         closeEditCardModal();
     });
 
-    function handleResponsiveMasterOption() {
-        if (currentUserRole === 'admin') {
-            updateViewSelector();
-            // マスタービュー表示中なら画面幅に関係なく再描画
-            if (currentViewTarget === 'master') {
-                displayMasterView();
-            }
+function handleResponsiveMasterOption() {
+    if (currentUserRole === 'admin') {
+        updateViewSelector();
+        // マスタービュー表示中なら画面幅に関係なく再描画
+        if (currentViewTarget === 'master-kansai' || currentViewTarget === 'master-shikoku') {
+            displayMasterView();
         }
     }
+}
+
 
     // リサイズイベント登録
     window.addEventListener('resize', handleResponsiveMasterOption);

@@ -5230,16 +5230,15 @@ if (targetRegion !== 'all' && cardRegion !== targetRegion) {
     
     const salesIncreaseTarget = settings.yearlySalesIncreaseTarget || 0;
     
-    // ✅ 地域フィルタリング付きの売上見込合計計算（targetRegionが使用可能）
-    const totalSalesProspect = cardsData.reduce((sum, card) => {
-        const cardRegion = card.region || 'kansai';
-        if (targetRegion !== 'all' && cardRegion !== targetRegion) {
-            return sum;
-        }
-        
-        const monthData = card.monthlyData?.[monthKey] || { salesIncreaseForecast: 0 };
-        return sum + (monthData.salesIncreaseForecast || 0);
-    }, 0);
+const totalSalesProspect = cardsData.reduce((sum, card) => {  // ← 'c' を 'card' に変更
+    const cardRegion = card.region || 'kansai';
+    if (targetRegion !== 'all' && cardRegion !== targetRegion) {
+        return sum;
+    }
+    const monthData = card.monthlyData?.[monthKey] || { salesIncreaseForecast: 0 };
+    return sum + (monthData.salesIncreaseForecast || 0);
+}, 0);
+
 
     const salesTargetRate = salesIncreaseTarget > 0 ? (totalSalesProspect / salesIncreaseTarget) * 100 : 0;
     

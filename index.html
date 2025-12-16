@@ -3905,31 +3905,31 @@ function getCurrentMonth() {
 }
 
 function getActiveSettings() {
-    // ターゲットIDからUIDと地域を取得
     const { uid, region } = parseViewTarget(currentViewTarget || currentUser?.uid);
     
     if (!uid) return getDefaultSettings();
     
-    // 設定ソースの特定
-    let settingsSource;
+    // 自分自身を見ている場合
     if (currentUser && uid === currentUser.uid) {
-        settingsSource = personalSettings;
-    } else {
-        settingsSource = userSettingsCache[uid] || getDefaultSettings();
+        // 自分がManagerで地域別設定を持つ場合
+        if (currentUserRole === 'manager' && (personalSettings.kansai || personalSettings.shikoku)) {
+            return personalSettings[region] || getDefaultSettings();
+        }
+        return personalSettings;
     }
     
-    // Managerの地域別設定対応
-    if (settingsSource && (settingsSource.kansai || settingsSource.shikoku)) {
-        // Manager用の地域別設定から該当地域を返す
-        return settingsSource[region] || getDefaultSettings();
+    // 🆕 他人を見ている場合（キャッシュから直接取得）
+    const cachedSettings = userSettingsCache[uid];
+    
+    if (!cachedSettings) {
+        console.warn(`${uid}の設定がキャッシュにありません`);
+        return getDefaultSettings();
     }
     
-    // Admin・Staff・Masterは従来通り
-    return settingsSource;
+    // ★重要：キャッシュには処理済み設定が入っているのでそのまま返す
+    return cachedSettings;
 }
 
-
-// 指定ユーザーの個人設定を読み込む関数
 async function loadSettingsForTarget(uid) {
     if (!uid || !window.firebaseImports || !window.db) return;
     if (userSettingsCache[uid]) return; // 既にキャッシュ済み
@@ -3939,48 +3939,57 @@ async function loadSettingsForTarget(uid) {
             window.firebaseImports.doc(window.db, 'users', uid)
         );
         
-if (userDoc.exists() && userDoc.data().personalSettings) {
-    const cloudSettings = userDoc.data().personalSettings;
-    
-    // Manager用地域別設定の読み込み
-    if (currentUserRole === 'manager') {
-        const { region } = parseViewTarget(currentViewTarget);
+        if (!userDoc.exists()) {
+            console.warn(`${uid}のユーザーデータが存在しません`);
+            userSettingsCache[uid] = getDefaultSettings();
+            return;
+        }
+
+        const userData = userDoc.data();
+        const cloudSettings = userData.personalSettings;
         
-        // 地域別設定が存在するか確認
+        if (!cloudSettings || typeof cloudSettings !== 'object') {
+            console.warn(`${uid}のpersonalSettingsが未設定`);
+            userSettingsCache[uid] = getDefaultSettings();
+            return;
+        }
+
+        // 🆕 重要修正：データの構造で判定（役職ではなく）
+        let effectiveSettings;
+        
+        // Manager型データ構造の場合（kansai/shikokuフォルダが存在）
         if (cloudSettings.kansai || cloudSettings.shikoku) {
-            personalSettings = { 
+            const { region } = parseViewTarget(currentViewTarget);
+            effectiveSettings = { 
                 ...getDefaultSettings(),
-                ...(cloudSettings[region] || {})
+                ...(cloudSettings[region] || cloudSettings.kansai || {})
             };
-            console.log(`Manager用${region}設定を読み込みました`);
+            console.log(`${uid}の地域別設定(${region})を読み込みました`);
+            
         } else {
-            // 旧形式の場合は関西に移行
-            personalSettings = { 
+            // Staff型データ構造の場合（フラット構造）
+            effectiveSettings = { 
                 ...getDefaultSettings(),
                 ...cloudSettings 
             };
-            console.warn('旧形式のデータを検出。関西設定として読み込みました');
+            console.log(`${uid}の通常設定を読み込みました`);
         }
-    } else {
-        // 通常ユーザー
-        personalSettings = { 
-            ...getDefaultSettings(),
-            ...cloudSettings 
-        };
-    }
 
-            console.log(`${uid}の個人設定を読み込みました`);
-        } else {
-            userSettingsCache[uid] = getDefaultSettings();
-            console.warn(`${uid}の個人設定が未設定のためデフォルト値を使用`);
+        // 🆕 重要：必ずキャッシュに保存
+        userSettingsCache[uid] = effectiveSettings;
+        
+        // 現在表示中のターゲットなら personalSettings も同期
+        const { uid: viewingUid } = parseViewTarget(currentViewTarget || '');
+        if (viewingUid === uid) {
+            personalSettings = effectiveSettings;
         }
+        
     } catch (error) {
-        console.error('個人設定読み込みエラー:', error);
+        console.error(`${uid}の個人設定読み込みエラー:`, error);
         userSettingsCache[uid] = getDefaultSettings();
         showToast('個人設定の読み込みに失敗しました', 'error');
     }
 }
-
 
 function formatManYen(amount, decimals = 1) {
     const absAmount = Math.abs(amount || 0);

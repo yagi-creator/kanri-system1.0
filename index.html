@@ -5295,10 +5295,7 @@ async function displayMasterView() {
             window.firebaseImports.collection(window.db, 'users')
         );
         
-        // 🆕 除外対象を明示的に定義
-        const EXCLUDED_EMAILS = [
-            'yosioka@chuoh-kyouiku.co.jp'
-        ];
+        const EXCLUDED_EMAILS = ['yosioka@chuoh-kyouiku.co.jp'];
         
         const staffList = [];
         usersCollection.forEach((doc) => {
@@ -5306,7 +5303,6 @@ async function displayMasterView() {
             const userEmail = userData.email || '';
             const userRole = (userData.role || '').toLowerCase();
             
-            // 除外判定（メール・役職の両方）
             if (EXCLUDED_EMAILS.includes(userEmail)) return;
             if (userRole === 'master') return;
             
@@ -5340,59 +5336,59 @@ async function displayMasterView() {
         
         masterContainer.innerHTML = `<h2>${title}</h2>`;
         
-// 🆕 表示対象リストの構築（修正版）
-const displayTargets = [];
+        // 🔧 修正：表示対象リストの構築（無条件表示ロジック）
+        const displayTargets = [];
 
-for (const staff of staffList) {
-    const isManager = staff.role === 'manager';
-    const userRegion = staff.rawUserData?.region || 'kansai';
+        for (const staff of staffList) {
+            const isManager = staff.role === 'manager';
+            const userRegion = staff.rawUserData?.region || 'kansai';
 
-    if (isManager) {
-        // 🔧 重要な修正：数値チェックを削除し、マネージャーは無条件で地域別表示
-        
-        // 関西プロファイル
-        if (viewMode === 'all' || viewMode === 'kansai') {
-            const kansaiSettings = (staff.settings && staff.settings.kansai) 
-                ? staff.settings.kansai 
-                : getDefaultSettings();
-            
-            displayTargets.push({
-                ...staff,
-                displayName: `${staff.name}（関西）`,
-                displayRegion: 'kansai',
-                effectiveSettings: kansaiSettings,
-                queryUserId: staff.id  // 実ユーザーIDを使用
-            });
+            if (isManager) {
+                // 🔧 重要修正：マネージャーは数値の有無に関わらず地域別プロファイルを強制表示
+                
+                // 関西プロファイル
+                if (viewMode === 'all' || viewMode === 'kansai') {
+                    const kansaiSettings = (staff.settings && staff.settings.kansai) 
+                        ? staff.settings.kansai 
+                        : getDefaultSettings();
+                    
+                    displayTargets.push({
+                        ...staff,
+                        displayName: `${staff.name}（関西）`,
+                        displayRegion: 'kansai',
+                        effectiveSettings: kansaiSettings,
+                        queryUserId: staff.id  // 🔧 修正：実ユーザーIDを使用
+                    });
+                }
+
+                // 四国プロファイル
+                if (viewMode === 'all' || viewMode === 'shikoku') {
+                    const shikokuSettings = (staff.settings && staff.settings.shikoku) 
+                        ? staff.settings.shikoku 
+                        : getDefaultSettings();
+
+                    displayTargets.push({
+                        ...staff,
+                        displayName: `${staff.name}（四国）`,
+                        displayRegion: 'shikoku',
+                        effectiveSettings: shikokuSettings,
+                        queryUserId: staff.id  // 🔧 修正：実ユーザーIDを使用
+                    });
+                }
+            } else {
+                // 一般Staff：既存ロジック維持
+                if (viewMode === 'all' || userRegion === viewMode) {
+                    const regionLabel = userRegion === 'shikoku' ? '四国' : '関西';
+                    displayTargets.push({
+                        ...staff,
+                        displayName: `${staff.name}（${regionLabel}）`,
+                        displayRegion: userRegion,
+                        effectiveSettings: staff.settings || getDefaultSettings(),
+                        queryUserId: staff.id
+                    });
+                }
+            }
         }
-
-        // 四国プロファイル
-        if (viewMode === 'all' || viewMode === 'shikoku') {
-            const shikokuSettings = (staff.settings && staff.settings.shikoku) 
-                ? staff.settings.shikoku 
-                : getDefaultSettings();
-
-            displayTargets.push({
-                ...staff,
-                displayName: `${staff.name}（四国）`,
-                displayRegion: 'shikoku',
-                effectiveSettings: shikokuSettings,
-                queryUserId: staff.id  // 実ユーザーIDを使用
-            });
-        }
-    } else {
-        // 一般Staff：既存ロジック維持
-        if (viewMode === 'all' || userRegion === viewMode) {
-            const regionLabel = userRegion === 'shikoku' ? '四国' : '関西';
-            displayTargets.push({
-                ...staff,
-                displayName: `${staff.name}（${regionLabel}）`,
-                displayRegion: userRegion,
-                effectiveSettings: staff.settings || getDefaultSettings(),
-                queryUserId: staff.id
-            });
-        }
-    }
-}
 
         // ソート: 地域→名前順
         displayTargets.sort((a, b) => {
@@ -5402,28 +5398,36 @@ for (const staff of staffList) {
             return a.name.localeCompare(b.name, 'ja');
         });
 
-        // 各プロファイルの表示処理
+        // 🔧 修正：各プロファイルの表示処理（デバッグログ付き）
         for (const target of displayTargets) {
             const staffSection = document.createElement('div');
             staffSection.className = 'master-staff-section';
             
             try {
-                // 🆕 厳密なカード取得クエリ
+                const actualUserId = target.queryUserId || target.id;
+                
+                console.log(`🔍 ${target.displayName} カード取得:`, {
+                    ユーザーID: actualUserId,
+                    対象地域: target.displayRegion
+                });
+                
                 const cardsQuery = window.firebaseImports.query(
                     window.firebaseImports.collection(window.db, 'juku_cards'),
-                    window.firebaseImports.where('assignedUserId', '==', target.id),
+                    window.firebaseImports.where('assignedUserId', '==', actualUserId),
                     window.firebaseImports.where('region', '==', target.displayRegion)
                 );
 
                 const staffCards = await window.firebaseImports.getDocs(cardsQuery);
                 const staffCardsData = [];
+                
                 staffCards.forEach((doc) => {
                     const cardData = doc.data();
-                    // 念押しフィルタリング
                     if (cardData.region === target.displayRegion) {
                         staffCardsData.push(cardData);
                     }
                 });
+                
+                console.log(`✅ ${target.displayName} 最終カード数: ${staffCardsData.length}件`);
                 
                 const staffWithSettings = {
                     ...target,
@@ -5456,7 +5460,6 @@ for (const staff of staffList) {
             masterContainer.appendChild(staffSection);
         }
         
-        // 表示件数が0の場合のメッセージ
         if (displayTargets.length === 0) {
             masterContainer.innerHTML += `
                 <div style="text-align: center; padding: 50px; color: #666;">
@@ -6497,7 +6500,6 @@ if (confirm(`『${cardName}』を削除します。この操作は元に戻せ�
         renderCardsOptimized();
         showToast('データを削除しました', 'success');
     }
-}
 
 function openMemoDetailModal(cardId, monthKey) {
     const cardData = cardsData.find(card => card.id === cardId);

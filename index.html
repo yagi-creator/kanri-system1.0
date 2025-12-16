@@ -3631,22 +3631,25 @@ function hasPermission(action, targetData = null) {
             if (targetData) return targetData.region === 'shikoku';
             return currentProfileRegion === 'shikoku';
         }
-        return false; // 編集・削除・作成すべて不可
+        return false; // Masterは編集・削除・作成すべて不可
     }
     
-    // 現在表示中のユーザーID取得
+    // 🔧 修正：プロファイルIDから実UIDを抽出して比較
     const { uid: currentUid } = parseViewTarget(currentViewTarget);
+    const isOwnProfile = currentUid === currentUser.uid;
     
-    // Admin: 自分（関西）のみ編集可、全員閲覧可
+    // Admin: 自分のデータのみ編集可、全員閲覧可
     if (currentUserRole === 'admin') {
         switch (action) {
             case 'view_data':
                 return true; // 全データ閲覧可
             case 'edit_data':
             case 'delete_data':
-                return targetData && targetData.assignedUserId === currentUser.uid;
+                return targetData && 
+                       targetData.assignedUserId === currentUser.uid &&
+                       isOwnProfile;
             case 'create_data':
-                return currentUid === currentUser.uid;
+                return isOwnProfile; // 🔧 修正：プロファイル判定を使用
             case 'edit_own_settings':
                 return true;
             case 'edit_any_settings':
@@ -3656,20 +3659,20 @@ function hasPermission(action, targetData = null) {
         }
     }
     
-    // Manager: 自分のプロファイルのみ編集可、部下は閲覧のみ
+    // Manager: 自分のプロファイル（関西・四国両方）のみ編集可
     if (currentUserRole === 'manager') {
-        const isSelfProfile = currentUid === currentUser.uid;
-        
         switch (action) {
             case 'view_data':
                 return true; // 自分・部下のデータ閲覧可
             case 'edit_data':
             case 'delete_data':
-                return targetData && targetData.assignedUserId === currentUser.uid && isSelfProfile;
+                return targetData && 
+                       targetData.assignedUserId === currentUser.uid && 
+                       isOwnProfile; // 🔧 修正：プロファイル判定を使用
             case 'create_data':
-                return isSelfProfile;
+                return isOwnProfile; // 🔧 修正：関西・四国どちらでも作成可能
             case 'edit_own_settings':
-                return isSelfProfile;
+                return isOwnProfile; // 🔧 修正：自分のプロファイル表示中のみ
             case 'edit_any_settings':
                 return false;
             default:
@@ -3686,7 +3689,7 @@ function hasPermission(action, targetData = null) {
             case 'delete_data':
                 return targetData && targetData.assignedUserId === currentUser.uid;
             case 'create_data':
-                return currentUid === currentUser.uid;
+                return isOwnProfile; // 🔧 修正：プロファイル判定を使用
             case 'edit_own_settings':
                 return true;
             case 'edit_any_settings':
@@ -3848,27 +3851,34 @@ let activeProbabilityFilter = 'all';
 let userSettingsCache = {};
 
         let currentProfileRegion = 'kansai';
-
-// ターゲットIDからUIDと地域を分離
+        
 function parseViewTarget(targetId) {
     if (!targetId) return { uid: null, region: 'kansai' };
     
-// マスタービュー特別対応
-if (targetId === 'master-kansai') return { uid: 'master', region: 'kansai' };
-if (targetId === 'master-shikoku') return { uid: 'master', region: 'shikoku' };
-if (targetId === 'master-all') return { uid: 'master', region: 'all' }; // ★追加
+    // マスタービュー特別対応
+    if (targetId === 'master-kansai') return { uid: 'master', region: 'kansai' };
+    if (targetId === 'master-shikoku') return { uid: 'master', region: 'shikoku' };
+    if (targetId === 'master-all') return { uid: 'master', region: 'all' };
 
+    // 🔧 修正：文字列変換を確実に実行
+    const strId = String(targetId || '');
 
     // Manager分裂プロファイル対応
-    if (targetId.includes('_kansai')) {
-        return { uid: targetId.replace('_kansai', ''), region: 'kansai' };
+    if (strId.endsWith('_kansai')) {
+        return { 
+            uid: strId.replace('_kansai', ''), 
+            region: 'kansai' 
+        };
     }
-    if (targetId.includes('_shikoku')) {
-        return { uid: targetId.replace('_shikoku', ''), region: 'shikoku' };
+    if (strId.endsWith('_shikoku')) {
+        return { 
+            uid: strId.replace('_shikoku', ''), 
+            region: 'shikoku' 
+        };
     }
     
     // 通常ID（Admin・Staff）
-    return { uid: targetId, region: 'kansai' };
+    return { uid: strId, region: 'kansai' };
 }
 
 // プロファイルIDの生成
@@ -4327,6 +4337,30 @@ function setupNumberFormatting() {
     });
 }
 
+// 粗利から売上を自動計算する関数
+function updateActualSales(prefix) {
+    const profitInput = document.getElementById(prefix + 'ProfitActual');
+    const salesInput = document.getElementById(prefix + 'SalesActual');
+    
+    if (!profitInput || !salesInput) return;
+    
+    // 入力された粗利額を取得
+    const profit = parseNumberSafely(profitInput.value);
+    
+    // 個人設定から粗利率を取得
+    const settings = getActiveSettings();
+    const profitRate = (settings.profitRate || 0) / 100;
+    
+    let calculatedSales = 0;
+    if (profitRate > 0) {
+        // 売上 = 粗利 ÷ 粗利率で逆算
+        calculatedSales = Math.round(profit / profitRate);
+    }
+    
+    // 計算結果を売上欄に自動入力（カンマ区切り表示）
+    salesInput.value = formatWithCommas(calculatedSales);
+}
+        
 function parseNumberSafely(value) {
     if (value == null || value === '') return 0;
     
@@ -4571,10 +4605,26 @@ if (!cardToSave.lastUpdated || typeof cardToSave.lastUpdated === 'string') {
             showToast('ネットワーク不安定：ローカルに保存しました（5秒後に自動再試行）', 'info');
             
             // 🆕 5秒後に自動でもう一度保存を試す
-            setTimeout(() => {
-                console.log('自動リトライを実行中...');
-                saveCardsData();
-            }, 5000);
+            // グローバル変数として追加
+let saveRetryCount = 0;
+const MAX_RETRY_COUNT = 3;
+
+// エラーハンドリング内で使用
+if (saveRetryCount < MAX_RETRY_COUNT) {
+    saveRetryCount++;
+    setTimeout(() => {
+        saveCardsData().then(() => {
+            saveRetryCount = 0; // 成功時リセット
+        }).catch(() => {
+            if (saveRetryCount >= MAX_RETRY_COUNT) {
+                showToast('自動保存に失敗しました。手動で保存してください', 'error');
+            }
+        });
+    }, 5000);
+} else {
+    showToast('保存の試行回数が上限に達しました', 'error');
+}
+
             
         } catch (backupError) {
             console.error('バックアップ保存失敗:', backupError);
@@ -6118,35 +6168,54 @@ function filterByProbability(probability) {
     showToast(`確率${probability === 'all' ? '全体' : probability}で絞り込みました`, 'info');
 }
 
-
 function openNewCardModal() {
+    // 🔧 修正：権限チェックを先に実行（デバッグ情報付き）
     if (!hasPermission('create_data')) {
-        showToast('自分のデータ表示中のみ新規登録できます', 'error');
+        const { uid } = parseViewTarget(currentViewTarget);
+        const isOwn = uid === currentUser?.uid;
+        
+        console.error('🐛 新規登録権限エラー:', {
+            currentViewTarget,
+            extractedUid: uid,
+            currentUserUid: currentUser?.uid,
+            isOwn,
+            role: currentUserRole
+        });
+        
+        if (isOwn) {
+            showToast('システムエラー：権限判定に問題があります', 'error');
+        } else {
+            showToast('自分のデータ表示中のみ新規登録できます', 'error');
+        }
         return;
     }
     
     const form = document.getElementById('newCardForm');
     form.reset();
     
-setTimeout(() => {
-    const regionSelect = document.getElementById('newJukuRegion');
+    setTimeout(() => {
+        const regionSelect = document.getElementById('newJukuRegion');
+        
+        // 🔧 修正：現在表示中のプロファイル地域を自動設定
+        const displayRegion = currentProfileRegion || 'kansai';
+        
+        console.log('🆕 新規登録:', {
+            表示地域: displayRegion,
+            ビューターゲット: currentViewTarget,
+            ロール: currentUserRole
+        });
+        
+        regionSelect.value = displayRegion;
+        regionSelect.disabled = true;
+        
+        // UI上で非表示
+        const regionGroup = regionSelect.closest('.form-group');
+        if (regionGroup) {
+            regionGroup.style.display = 'none';
+        }
+    }, 0);
     
-    // ユーザーの所属地域を強制適用（データ混在防止）
-    const userRegion = currentUserData?.region || currentProfileRegion || 'kansai';
-    regionSelect.value = userRegion;
-    regionSelect.disabled = true; // 変更不可
-    
-    // UI上で非表示にする
-    const regionGroup = regionSelect.closest('.form-group');
-    if (regionGroup) {
-        regionGroup.style.display = 'none';
-    }
-    
-    console.log(`新規登録：地域を${userRegion}に固定しました`);
-}, 0);
-
-
-    // 二重送信防止の初期化
+    // 以下は既存コード...
     form.dataset.submitting = 'false';
     const submitBtn = form.querySelector('button[type="submit"]');
     const cancelBtn = form.querySelector('.btn-secondary');
@@ -6162,15 +6231,13 @@ setTimeout(() => {
     document.getElementById('newSalesActual').readOnly = true;
     document.getElementById('newSalesActual').style.background = '#f8f9fa';
     openModal('newCardModal');
-setTimeout(() => {
-    // 確実にスクロール位置をリセット
-    const modalContent = document.querySelector('#newCardModal .modal-content');
-    if (modalContent) modalContent.scrollTop = 0;
-    setupNumberFormatting();
-}, 100);
-
+    
+    setTimeout(() => {
+        const modalContent = document.querySelector('#newCardModal .modal-content');
+        if (modalContent) modalContent.scrollTop = 0;
+        setupNumberFormatting();
+    }, 100);
 }
-
 
 function closeNewCardModal() {
     document.getElementById('newCardForm').reset();
@@ -6493,13 +6560,6 @@ if (confirm(`『${cardName}』を削除します。この操作は元に戻せ�
     renderCardsOptimized();
     showToast('データを削除しました', 'success');
 }
-
-        await saveCardsData();
-        progressCache = null;
-        updateDashboard();
-        renderCardsOptimized();
-        showToast('データを削除しました', 'success');
-    }
 
 function openMemoDetailModal(cardId, monthKey) {
     const cardData = cardsData.find(card => card.id === cardId);

@@ -2301,7 +2301,6 @@
   const app = initializeApp(firebaseConfig);
   window.firebaseAuth = getAuth(app);
   
- // 🆕 企業ネットワーク対応：HTTP 400エラー解消（修正版）
 try {
   window.db = initializeFirestore(app, {
     experimentalForceLongPolling: true,
@@ -2311,15 +2310,16 @@ try {
 } catch (error) {
   console.error('Firestore初期化エラー:', error);
   try {
-    const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
-    window.db = getFirestore(app);
-    console.log('フォールバック: 通常のFirestore初期化成功');
+    // await を使わない形式に変更
+    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js').then(({ getFirestore }) => {
+      window.db = getFirestore(app);
+      console.log('フォールバック: 通常のFirestore初期化成功');
+    });
   } catch (fallbackError) {
     console.error('Firestore初期化完全失敗:', fallbackError);
     alert('データベース接続に失敗しました。ページを再読み込みしてください。');
   }
 }
-
 
   window.firebaseImports = {
     signInWithEmailAndPassword,
@@ -6560,7 +6560,8 @@ if (confirm(`『${cardName}』を削除します。この操作は元に戻せ�
     renderCardsOptimized();
     showToast('データを削除しました', 'success');
 }
-
+}
+        
 function openMemoDetailModal(cardId, monthKey) {
     const cardData = cardsData.find(card => card.id === cardId);
     if (!cardData) return;
@@ -7465,7 +7466,6 @@ function updateCharacterCount() {
         countElement.textContent = textarea.value.length;
     }
 }
- }   
 // === 根拠モーダル機能追加終了 ===
 
     </script>

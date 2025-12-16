@@ -3554,58 +3554,31 @@ async function loadCardsDataForTarget(targetUserId) {
             actualUserId = targetUserId.replace('_shikoku', '');
             targetRegion = 'shikoku';
         } else {
-            // 通常IDの場合は parseViewTarget から地域を取得
-            const { region } = parseViewTarget(targetUserId);
-            targetRegion = region;
-        }
-
-        // 🆕 安全な方式：Firestoreでは地域フィルタを使わず、全カードを取得
-        // 理由：既存カード（region未設定）を消失させないため
-        async function loadCardsDataForTarget(targetUserId) {
-    if (!currentUser || !targetUserId) {
-        cardsData = [];
-        return;
-    }
-    
-    try {
-        // プロファイルIDから実ユーザーIDと地域を特定
-        let actualUserId = targetUserId;
-        let targetRegion = null;
-
-        if (targetUserId.endsWith('_kansai')) {
-            actualUserId = targetUserId.replace('_kansai', '');
-            targetRegion = 'kansai';
-        } else if (targetUserId.endsWith('_shikoku')) {
-            actualUserId = targetUserId.replace('_shikoku', '');
-            targetRegion = 'shikoku';
-        } else {
-            const { region } = parseViewTarget(targetUserId);
-            targetRegion = region;
+            const parsed = parseViewTarget(targetUserId);
+            actualUserId = parsed.uid || targetUserId;
+            targetRegion = parsed.region || 'kansai';
         }
 
         let cardsQuery;
-        
-        // 🆕 Masterロール用の安全なクエリ戦略
+
+        // Masterロールは四国限定でFirestore側フィルタ（セキュリティルール対策）
         if (currentUserRole === 'master') {
-            // Masterは四国データのみ閲覧可能、セキュリティルール準拠のため地域を明示
-            const queryRegion = targetRegion === 'shikoku' ? 'shikoku' : 'shikoku';
-            
+            const queryRegion = 'shikoku'; // Masterは四国のみ
             cardsQuery = window.firebaseImports.query(
                 window.firebaseImports.collection(window.db, 'juku_cards'),
                 window.firebaseImports.where('assignedUserId', '==', actualUserId),
                 window.firebaseImports.where('region', '==', queryRegion)
             );
             console.log(`🔒 Master権限: ${actualUserId} の ${queryRegion} 限定取得`);
-            
         } else {
-            // 他のロール：既存データ救済のため全件取得してJS側フィルタ
+            // それ以外（Admin/Manager/Staff）は全カード取得してJS側でregionを判定
             cardsQuery = window.firebaseImports.query(
                 window.firebaseImports.collection(window.db, 'juku_cards'),
                 window.firebaseImports.where('assignedUserId', '==', actualUserId)
             );
-            console.log(`📋 通常権限: ${actualUserId} の全カード取得`);
+            console.log(`📋 通常権限: ${actualUserId} の全カード取得（表示地域: ${targetRegion || 'all'}）`);
         }
-        
+
         const cardsCollection = await window.firebaseImports.getDocs(cardsQuery);
         
         cardsData = [];
@@ -3623,6 +3596,7 @@ async function loadCardsDataForTarget(targetUserId) {
                 const lastPart = parts[parts.length - 1];
                 numericId = parseInt(lastPart, 10);
                 if (!Number.isFinite(numericId)) {
+                    console.warn(`docID解析失敗: ${docId}, raw.idを使用`);
                     numericId = raw.id || 0;
                 }
             } else {
@@ -3639,7 +3613,7 @@ async function loadCardsDataForTarget(targetUserId) {
                 region: effectiveRegion
             };
             
-            // JavaScript側フィルタリング（Master以外）
+            // Master以外：JS側で地域フィルタリング
             if (currentUserRole !== 'master' && targetRegion && targetRegion !== 'all') {
                 if (effectiveRegion === targetRegion) {
                     cardsData.push(cardData);
@@ -3647,7 +3621,6 @@ async function loadCardsDataForTarget(targetUserId) {
                     filteredCount++;
                 }
             } else {
-                // Master用またはフィルタなし
                 cardsData.push(cardData);
             }
 
@@ -3657,83 +3630,15 @@ async function loadCardsDataForTarget(targetUserId) {
         });
 
         nextCardId = maxId + 1;
-        console.log(`✅ 読み込み完了: ${cardsData.length}件 (${filteredCount}件除外)`);
+        console.log(`✅ 読み込み完了: ${cardsData.length}件（除外: ${filteredCount}件, 対象地域: ${targetRegion || 'all'}）`);
         
     } catch (error) {
         console.error('Cards load error for target:', error);
         
-        // 🆕 権限エラーの場合の適切な処理
         if (error.code === 'permission-denied') {
-            console.warn('Firestore権限エラー: セキュリティルールを確認してください');
-            showToast('データの閲覧権限がありません', 'error');
+            showToast('このデータを閲覧する権限がありません（Firestoreルール）', 'error');
         }
         
-        cardsData = [];
-        nextCardId = 1;
-    }
-}
-       
-        console.log(`📋 カード全取得開始: ${actualUserId} (対象地域: ${targetRegion || '全地域'})`);
-        
-        const cardsCollection = await window.firebaseImports.getDocs(cardsQuery);
-        
-        cardsData = [];
-        let maxId = 0;
-        let filteredCount = 0;
-        
-        cardsCollection.forEach((doc) => {
-            const raw = doc.data();
-            const docId = doc.id;
-            
-            // docId解析（エラーハンドリング強化）
-            let numericId = NaN;
-            if (docId.includes('_')) {
-                const parts = docId.split('_');
-                const lastPart = parts[parts.length - 1];
-                numericId = parseInt(lastPart, 10);
-                
-                if (!Number.isFinite(numericId)) {
-                    console.warn(`docID解析失敗: ${docId}, raw.idを使用`);
-                    numericId = raw.id || 0;
-                }
-            } else {
-                numericId = parseInt(docId, 10);
-            }
-            
-            // 🆕 重要：region未設定カードは関西として扱う（既存データ救済）
-            const effectiveRegion = raw.region || 'kansai';
-            
-            const cardData = { 
-                id: Number.isFinite(numericId) ? numericId : (raw.id || 0),
-                docId,
-                ...raw,
-                region: effectiveRegion // 正規化した地域をセット
-            };
-            
-            // 🆕 JavaScript側での地域フィルタリング（安全）
-            if (targetRegion && targetRegion !== 'all') {
-                if (effectiveRegion === targetRegion) {
-                    cardsData.push(cardData);
-                } else {
-                    filteredCount++;
-                    console.log(`地域フィルタ除外: ${cardData.jukuName} (${effectiveRegion} ≠ ${targetRegion})`);
-                }
-            } else {
-                // 全表示モード（管理者など）
-                cardsData.push(cardData);
-            }
-
-            if (Number.isFinite(cardData.id) && cardData.id > maxId) {
-                maxId = cardData.id;
-            }
-        });
-
-        nextCardId = maxId + 1;
-        
-        console.log(`✅ 読み込み完了: ${cardsData.length}件表示 (${filteredCount}件除外, 対象: ${targetRegion || '全地域'})`);
-        
-    } catch (error) {
-        console.error('Cards load error for target:', error);
         cardsData = [];
         nextCardId = 1;
     }

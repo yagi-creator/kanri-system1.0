@@ -5165,7 +5165,7 @@ function calculateQualifiedProspects() {
     const currentMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
     
     const qualifiedProfit = cardsData.reduce((total, card) => {
-        const monthData = card.monthlyData?.[currentMonthKey] || { 
+        const monthData = card.monthlyData?.[monthKey] || { 
             salesIncreaseForecast: 0, 
             probability: 0 
         };
@@ -5207,10 +5207,17 @@ function calculateAllProgress() {
     const yearlyRate = yearlyTarget > 0 ? (yearlyActual / yearlyTarget) * 100 : 0;
     
     const salesIncreaseTarget = settings.yearlySalesIncreaseTarget || 0;
-    const totalSalesProspect = cardsData.reduce((sum, card) => {
+        const totalSalesProspect = cardsData.reduce((sum, card) => {
+        // 🆕 地域フィルタリング追加
+        const cardRegion = card.region || 'kansai';
+        if (targetRegion !== 'all' && cardRegion !== targetRegion) {
+            return sum;
+        }
+        
         const monthData = card.monthlyData?.[monthKey] || { salesIncreaseForecast: 0 };
         return sum + (monthData.salesIncreaseForecast || 0);
     }, 0);
+
     const salesTargetRate = salesIncreaseTarget > 0 ? (totalSalesProspect / salesIncreaseTarget) * 100 : 0;
     
     const prospectTotal = calculateQualifiedProspects();
@@ -5274,12 +5281,12 @@ function calculateAllProgress() {
 }
 
 function updateMiddleCards() {
-    const elTotal = document.getElementById('totalSalesProspectDisplay'); // === 新規カード追加 ===
+    const elTotal = document.getElementById('totalSalesProspectDisplay');
     const elSales = document.getElementById('salesProspectDisplay');
     const elProfit = document.getElementById('profitProspectDisplay');
     const elPersonal = document.getElementById('personalIncreaseTargetDisplay');
     
-    if (!elTotal || !elSales || !elProfit || !elPersonal) return; // === 新規カードもチェック ===
+    if (!elTotal || !elSales || !elProfit || !elPersonal) return;
 
     const settings = getActiveSettings();
     const currentMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
@@ -5288,11 +5295,23 @@ function updateMiddleCards() {
     let totalSalesProspect50Plus = 0; // 新規カード用
     let totalSalesProspect80Plus = 0; // 既存ロジック用
     let totalProfitProspect80Plus = 0;
+
+    // 🆕 地域フィルタリング追加（データ混在防止）
+    const { region: displayRegion } = parseViewTarget(currentViewTarget);
+    const targetRegion = displayRegion || 'kansai';
+    
+    console.log(`🔍 中段カード計算: 地域=${targetRegion}, 月=${currentMonthKey}, カード数=${cardsData.length}`);
     
     cardsData.forEach(card => {
+        // 🆕 対象地域以外のカードは除外
+        const cardRegion = card.region || 'kansai';
+        if (targetRegion !== 'all' && cardRegion !== targetRegion) {
+            return; // 地域不一致のカードはスキップ
+        }
+
         const monthData = card.monthlyData?.[currentMonthKey] || { 
             salesIncreaseForecast: 0, 
-            probability: 0 // === デフォルトを不明に変更 ===
+            probability: 0 
         };
         
         const salesAmount = monthData.salesIncreaseForecast || 0;

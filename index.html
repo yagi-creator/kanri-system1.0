@@ -3251,7 +3251,7 @@ function updateViewSelector() {
             const option = document.createElement('option');
             option.value = target.id;
             const regionLabel = target.profileType === 'kansai' ? '関西' : '四国';
-            option.textContent = `${target.name}さん（${regionLabel}）`;
+            option.textContent = `${target.name}（${regionLabel}）`;
             if (target.id === currentViewTarget) option.selected = true;
             viewSelector.appendChild(option);
         });
@@ -3279,7 +3279,7 @@ function updateViewSelector() {
                     ? `（${target.profileType === 'kansai' ? '関西' : '四国'}）`
                     : `（${target.region === 'shikoku' ? '四国' : '関西'}）`;
                 
-                option.textContent = `[部下] ${target.name}さん${regionLabel}`;
+                option.textContent = `[部下] ${target.name}${regionLabel}`;
                 if (target.id === currentViewTarget) option.selected = true;
                 viewSelector.appendChild(option);
             });
@@ -3319,8 +3319,14 @@ function updateViewSelector() {
         });
     }
     
-    // マスタービューオプション追加
+   // マスタービューオプション追加 
 if (currentUserRole === 'admin') {
+        // ★新規追加：全統括を最上位に配置
+    const masterAll = document.createElement('option');
+    masterAll.value = 'master-all';
+    masterAll.textContent = 'マスタービュー（全統括）';
+    if (currentViewTarget === 'master-all') masterAll.selected = true;
+    viewSelector.appendChild(masterAll);
     // 関西マスタービュー
     const masterKansai = document.createElement('option');
     masterKansai.value = 'master-kansai';
@@ -3365,10 +3371,14 @@ if (currentUserRole === 'admin') {
         viewPermissionInfo.textContent = '🔍 四国監査';
         viewPermissionInfo.className = 'view-permission-info permission-view';
     }
+} else if (currentViewTarget === 'master-all') {
+    // ★新規追加：全統括の権限表示
+    viewPermissionInfo.textContent = '🌎 全統括';
+    viewPermissionInfo.className = 'view-permission-info permission-edit';
+} else {
+    viewPermissionInfo.textContent = '';
+}
 
-        } else {
-            viewPermissionInfo.textContent = '';
-        }
     }
 }
 
@@ -3458,20 +3468,33 @@ async function changeViewTarget() {
     const masterContent = document.getElementById('masterViewContent');
     
     // マスタービュー切り替え
-// マスタービュー切り替え
-if (newTargetId === 'master-kansai' || newTargetId === 'master-shikoku') {
+if (newTargetId === 'master-kansai' || newTargetId === 'master-shikoku' || newTargetId === 'master-all') {
     currentViewTarget = newTargetId;
-    currentProfileRegion = newTargetId === 'master-kansai' ? 'kansai' : 'shikoku';
+    
+    // ★修正：全統括の場合は地域フィルタなし
+    if (newTargetId === 'master-all') {
+        currentProfileRegion = 'all';
+    } else {
+        currentProfileRegion = newTargetId === 'master-kansai' ? 'kansai' : 'shikoku';
+    }
+    
     updateViewSelector();
     
     normalContent.style.display = 'none';
     masterContent.style.display = 'block';
     
     await displayMasterView();
-    const label = newTargetId === 'master-kansai' ? '関西統括' : '四国統括';
-    showToast(`マスター管理画面（${label}）を表示中`, 'info');
+    
+    // ★修正：ラベル表示の拡張
+    const labelMap = {
+        'master-kansai': '関西統括',
+        'master-shikoku': '四国統括',
+        'master-all': '全統括'
+    };
+    showToast(`マスター管理画面（${labelMap[newTargetId]}）を表示中`, 'info');
     return;
 }
+
 
     
     // 通常ビューへの切り替え
@@ -3507,7 +3530,7 @@ await loadCardsDataForTarget(uid);
         const targetUser = availableViewTargets.find(t => t.id === newTargetId);
         if (targetUser) {
             const profileLabel = targetUser.profileType ? `（${targetUser.profileType === 'kansai' ? '関西' : '四国'}）` : '';
-            showToast(`${targetUser.name}さん${profileLabel}のデータを表示中`, 'info');
+            showToast(`${targetUser.name}${profileLabel}のデータを表示中`, 'info');
         }
     }
 }
@@ -3543,14 +3566,16 @@ async function loadCardsDataForTarget(targetUserId) {
             const raw = doc.data();
             const docId = doc.id;
             
-            // docIdが "uid_123" 形式の場合に数値idを抽出
-            let numericId = NaN;
-            if (docId.includes('_')) {
-                const parts = docId.split('_');
-                numericId = parseInt(parts[1], 10);
-            } else {
-                numericId = parseInt(docId, 10);
-            }
+// docIdが "uid_123" 形式の場合に数値idを抽出
+let numericId = NaN;
+if (docId.includes('_')) {
+    const parts = docId.split('_');
+    // 末尾の部分をIDとして取得（ユーザーIDに_が含まれるケースに対応）
+    numericId = parseInt(parts[parts.length - 1], 10);
+} else {
+    numericId = parseInt(docId, 10);
+}
+
             
             const cardData = { 
                 id: Number.isFinite(numericId) ? numericId : (raw.id || 0),
@@ -3802,6 +3827,8 @@ function parseViewTarget(targetId) {
 // マスタービュー特別対応
 if (targetId === 'master-kansai') return { uid: 'master', region: 'kansai' };
 if (targetId === 'master-shikoku') return { uid: 'master', region: 'shikoku' };
+if (targetId === 'master-all') return { uid: 'master', region: 'all' }; // ★追加
+
 
     // Manager分裂プロファイル対応
     if (targetId.includes('_kansai')) {
@@ -5211,135 +5238,166 @@ const cumulativeProfitActual = (monthCumulativeValue !== undefined && monthCumul
 
     updateMiddleCards();
 }
-
+        
 async function displayMasterView() {
-    if (currentUserRole !== 'admin') {
-        showToast('管理者権限が必要です', 'error');
+    if (currentUserRole !== 'admin' && currentUserRole !== 'master') {
+        showToast('権限がありません', 'error');
         return;
     }
-
     
     const masterViewContentDiv = document.getElementById('masterViewContent');
-    // ローディング表示
     masterViewContentDiv.innerHTML = '<div style="text-align: center; padding: 50px;"><p>📊 データ読み込み中...</p></div>';
 
     try {
-        console.log('マスタービュー: ユーザーデータ読み込み開始');
         const usersCollection = await window.firebaseImports.getDocs(
             window.firebaseImports.collection(window.db, 'users')
         );
-        console.log('マスタービュー: ユーザーデータ読み込み完了', usersCollection.size, '件');
         
         const staffList = [];
         usersCollection.forEach((doc) => {
             const userData = doc.data();
-            const userId = doc.id;
             staffList.push({
-                id: userId,
+                id: doc.id,
                 name: userData.name,
                 role: userData.role,
-                settings: userData.personalSettings || getDefaultSettings()
+                settings: userData.personalSettings || getDefaultSettings(),
+                rawUserData: userData
             });
         });
         
-        // コンテンツ初期化
         masterViewContentDiv.innerHTML = '';
         const masterContainer = document.createElement('div');
         masterContainer.className = 'master-view-container';
-        masterContainer.innerHTML = '<h2>👑 マスター管理画面（全スタッフ一覧）</h2>';
         
-for (const staff of staffList) {
-    // Master Role: 四国関連のみ表示
-    if (currentUserRole === 'master') {
-        const userRegion = staff.rawUserData?.region || 'kansai';
-        if (userRegion !== 'shikoku' && staff.role !== 'manager') {
-            continue; // 四国Staff・Manager以外はスキップ
-        }
-    }
-    
-    console.log(`マスタービュー: ${staff.name}さんのデータ処理中`);
-    const staffSection = document.createElement('div');
-    staffSection.className = 'master-staff-section';
-    
-    try {
-        // カード取得クエリ
-        let cardsQuery = window.firebaseImports.query(
-            window.firebaseImports.collection(window.db, 'juku_cards'),
-            window.firebaseImports.where('assignedUserId', '==', staff.id)
-        );
-      
-// Admin用地域別マスタービュー
-if (currentUserRole === 'admin' && (currentViewTarget === 'master-kansai' || currentViewTarget === 'master-shikoku')) {
-    const targetRegion = currentViewTarget === 'master-kansai' ? 'kansai' : 'shikoku';
-    cardsQuery = window.firebaseImports.query(
-        window.firebaseImports.collection(window.db, 'juku_cards'),
-        window.firebaseImports.where('assignedUserId', '==', staff.id),
-        window.firebaseImports.where('region', '==', targetRegion)
-    );
-} else if (currentUserRole === 'master') {
-    // 監査ユーザーは四国のみ
-    cardsQuery = window.firebaseImports.query(
-        window.firebaseImports.collection(window.db, 'juku_cards'),
-        window.firebaseImports.where('assignedUserId', '==', staff.id),
-        window.firebaseImports.where('region', '==', 'shikoku')
-    );
-} else {
-    // 通常クエリ
-    cardsQuery = window.firebaseImports.query(
-        window.firebaseImports.collection(window.db, 'juku_cards'),
-        window.firebaseImports.where('assignedUserId', '==', staff.id)
-    );
-}
+        // ★修正：タイトル決定ロジック
+        let title = '👑 マスター管理画面';
+        if (currentViewTarget === 'master-kansai') title += '（関西統括）';
+        else if (currentViewTarget === 'master-shikoku') title += '（四国統括）';
+        else if (currentViewTarget === 'master-all') title += '（全統括）';
+        
+        masterContainer.innerHTML = `<h2>${title}</h2>`;
+        
+        for (const staff of staffList) {
+            // Masterユーザー（吉岡）は表示しない
+            if (staff.role === 'master') continue;
 
-        const staffCards = await window.firebaseImports.getDocs(cardsQuery);
-        
-        const staffCardsData = [];
-        staffCards.forEach((doc) => staffCardsData.push(doc.data()));
-        
-        // Manager用設定の地域別対応
-        let effectiveSettings = staff.settings;
-        if (staff.role === 'manager') {
+            // Master Role時の四国フィルタリング
             if (currentUserRole === 'master') {
-                // Masterが見る場合は四国設定のみ
-                effectiveSettings = staff.settings.shikoku || getDefaultSettings();
-            } else {
-                // Adminが見る場合は関西設定（または合算表示）
-                effectiveSettings = staff.settings.kansai || staff.settings;
+                const userRegion = staff.rawUserData?.region || 'kansai';
+                if (userRegion !== 'shikoku' && staff.role !== 'manager') {
+                    continue;
+                }
             }
-        }
-        
-        const staffWithEffectiveSettings = {
-            ...staff,
-            settings: effectiveSettings
-        };
-        
-        const roleLabel = {
-            'admin': '管理者',
-            'manager': 'マネージャー',
-            'staff': '営業担当',
-            'master': '監査'
-        }[staff.role] || staff.role;
-        
-        const regionLabel = currentUserRole === 'master' ? '（四国）' : '';
-        
-        staffSection.innerHTML = `
-    <div class="master-staff-name">${staff.name}${regionLabel}</div>
+            
+            // ★新規：Admin地域別フィルタリング（全統括時はスキップ）
+            if (currentUserRole === 'admin' && currentViewTarget !== 'master-all') {
+                const targetRegion = currentViewTarget === 'master-kansai' ? 'kansai' : 'shikoku';
+                if (staff.role !== 'manager') {
+                    const userRegion = staff.rawUserData?.region || 'kansai';
+                    if (userRegion !== targetRegion) continue;
+                }
+            }
 
-            <div class="master-main-cards">
-                ${generateMasterMainCards(staffWithEffectiveSettings, staffCardsData)}
-            </div>
-            <div class="master-middle-cards">
-                ${generateMasterMiddleCards(staffWithEffectiveSettings, staffCardsData)}
-            </div>
-            <div class="master-funnel">
-                ${generateMasterFunnel(staffWithEffectiveSettings, staffCardsData)}
-            </div>
-        `;
+            const staffSection = document.createElement('div');
+            staffSection.className = 'master-staff-section';
+            
+            try {
+                // ★修正：カード取得クエリの構築
+                let cardsQuery;
+                
+                if (currentViewTarget === 'master-all') {
+                    // 全統括: 地域フィルタなし
+                    cardsQuery = window.firebaseImports.query(
+                        window.firebaseImports.collection(window.db, 'juku_cards'),
+                        window.firebaseImports.where('assignedUserId', '==', staff.id)
+                    );
+                } else if (currentUserRole === 'admin') {
+                    // 地域別統括
+                    const targetRegion = currentViewTarget === 'master-kansai' ? 'kansai' : 'shikoku';
+                    cardsQuery = window.firebaseImports.query(
+                        window.firebaseImports.collection(window.db, 'juku_cards'),
+                        window.firebaseImports.where('assignedUserId', '==', staff.id),
+                        window.firebaseImports.where('region', '==', targetRegion)
+                    );
+                } else {
+                    // Master: 四国のみ
+                    cardsQuery = window.firebaseImports.query(
+                        window.firebaseImports.collection(window.db, 'juku_cards'),
+                        window.firebaseImports.where('assignedUserId', '==', staff.id),
+                        window.firebaseImports.where('region', '==', 'shikoku')
+                    );
+                }
+
+                const staffCards = await window.firebaseImports.getDocs(cardsQuery);
+                const staffCardsData = [];
+                staffCards.forEach((doc) => staffCardsData.push(doc.data()));
+                
+                // ★重要：Manager設定の地域別対応
+                let effectiveSettings = staff.settings;
+                
+                if (staff.role === 'manager') {
+                    if (currentViewTarget === 'master-all') {
+                        // 全統括: 関西+四国の合算
+                        const kansai = staff.settings.kansai || getDefaultSettings();
+                        const shikoku = staff.settings.shikoku || getDefaultSettings();
+                        
+                        // 月別データ合算ヘルパー
+                        const mergeMonthly = (data1, data2) => {
+                            const result = {};
+                            for (let i = 1; i <= 12; i++) {
+                                result[i] = (data1?.[i] || 0) + (data2?.[i] || 0);
+                            }
+                            return result;
+                        };
+
+                        effectiveSettings = {
+                            ...kansai,
+                            profitRate: kansai.profitRate || 0, // 関西ベース
+                            yearlyProfitTarget: (kansai.yearlyProfitTarget || 0) + (shikoku.yearlyProfitTarget || 0),
+                            yearlyProfitIncreaseTarget: (kansai.yearlyProfitIncreaseTarget || 0) + (shikoku.yearlyProfitIncreaseTarget || 0),
+                            yearlySalesIncreaseTarget: (kansai.yearlySalesIncreaseTarget || 0) + (shikoku.yearlySalesIncreaseTarget || 0),
+                            personalSalesIncreaseTarget: (kansai.personalSalesIncreaseTarget || 0) + (shikoku.personalSalesIncreaseTarget || 0),
+                            cumulativeProfitActual: (kansai.cumulativeProfitActual || 0) + (shikoku.cumulativeProfitActual || 0),
+                            monthlyProfitTargets: mergeMonthly(kansai.monthlyProfitTargets, shikoku.monthlyProfitTargets),
+                            monthlyProfitActuals: mergeMonthly(kansai.monthlyProfitActuals, shikoku.monthlyProfitActuals),
+                            monthlyCumulativeProfitActuals: mergeMonthly(kansai.monthlyCumulativeProfitActuals, shikoku.monthlyCumulativeProfitActuals)
+                        };
+                    } else if (currentUserRole === 'master' || currentViewTarget === 'master-shikoku') {
+                        effectiveSettings = staff.settings.shikoku || getDefaultSettings();
+                    } else {
+                        // master-kansai
+                        effectiveSettings = staff.settings.kansai || staff.settings;
+                    }
+                }
+                
+                const staffWithEffectiveSettings = {
+                    ...staff,
+                    settings: effectiveSettings
+                };
+                
+                // ★修正：地域ラベル表示
+                const regionLabel = 
+                    currentViewTarget === 'master-all' ? '（全体）' :
+                    currentViewTarget === 'master-shikoku' ? '（四国）' : 
+                    '（関西）';
+                
+                staffSection.innerHTML = `
+                    <div class="master-staff-name">${staff.name}${regionLabel}</div>
+                    <div class="master-main-cards">
+                        ${generateMasterMainCards(staffWithEffectiveSettings, staffCardsData)}
+                    </div>
+                    <div class="master-middle-cards">
+                        ${generateMasterMiddleCards(staffWithEffectiveSettings, staffCardsData)}
+                    </div>
+                    <div class="master-funnel">
+                        ${generateMasterFunnel(staffWithEffectiveSettings, staffCardsData)}
+                    </div>
+                `;
                 
             } catch (staffError) {
-                console.error(`${staff.name}さんのデータ取得エラー:`, staffError);
+                console.error(`${staff.name}のデータ取得エラー:`, staffError);
                 staffSection.innerHTML = `
-                    <div class="master-staff-name">担当: ${staff.name} - データ取得エラー</div>
+                    <div class="master-staff-name">${staff.name} - データ取得エラー</div>
                     <div style="color: red; padding: 20px; text-align: center;">このスタッフのデータを読み込めませんでした</div>
                 `;
             }
@@ -5348,7 +5406,6 @@ if (currentUserRole === 'admin' && (currentViewTarget === 'master-kansai' || cur
         }
         
         masterViewContentDiv.appendChild(masterContainer);
-        console.log('マスタービュー表示完了');
 
     } catch (error) {
         console.error('マスタービューエラー:', error);
@@ -5356,13 +5413,11 @@ if (currentUserRole === 'admin' && (currentViewTarget === 'master-kansai' || cur
             <div style="text-align: center; padding: 50px; color: #D32F2F;">
                 <h3>⚠️ マスタービューの読み込みに失敗しました</h3>
                 <p><strong>エラー:</strong> ${error.message}</p>
-                <p style="margin-top: 15px;">Firestoreの読み取り権限を確認してください</p>
-                <button onclick="location.reload()" style="padding: 12px 24px; margin-top: 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">ページを再読み込み</button>
             </div>
         `;
-        showToast('マスタービューの読み込みに失敗しました。権限設定を確認してください。', 'error');
     }
 }
+
 
 function generateMasterMainCards(staff, cardsData) {
     const s = staff.settings;
@@ -5912,7 +5967,7 @@ function createNewCardElement(cardData) {
         card.appendChild(readOnlyBadge);
         
         const assignedUserName = cardData.assignedUserName || '不明';
-        card.title = `担当者: ${assignedUserName}さんのデータ（閲覧専用）`;
+        card.title = `担当者: ${assignedUserName}のデータ（閲覧専用）`;
     }
 
     // === スマホ版：空白部分クリックで根拠モーダル ===
@@ -6282,12 +6337,23 @@ function editCard(button) {
     document.getElementById('editProfitActual').value = cardData.annualProfitActual;
     document.getElementById('editSalesActual').value = calculateSalesFromProfit(cardData.annualProfitActual || 0);
     
-    const materials = cardData.annualMaterials || {
-        yearRound: { hasOrder: false, orderPeriod: "" },
-        seasonalExam: { hasUsage: null, usagePeriod: "" }
-    };
-    document.getElementById('editYearRoundOrder').value = String(materials.yearRound.hasOrder);
-    document.getElementById('editYearRoundPeriod').value = materials.yearRound.orderPeriod || '';
+const materials = cardData.annualMaterials || {
+    yearRound: { hasOrder: false, orderPeriod: "" },
+    seasonalExam: { hasUsage: null, usagePeriod: "" }
+};
+
+// 安全にアクセスするためにオプショナルチェーン(?.)を使用
+document.getElementById('editYearRoundOrder').value = String(materials.yearRound?.hasOrder ?? false);
+document.getElementById('editYearRoundPeriod').value = materials.yearRound?.orderPeriod || '';
+
+const hasUsageVal = materials.seasonalExam?.hasUsage;
+const seasonalValue = (hasUsageVal === null || typeof hasUsageVal === 'undefined')
+    ? 'unknown'
+    : String(hasUsageVal);
+    
+document.getElementById('editSeasonalUsage').value = seasonalValue;
+document.getElementById('editSeasonalPeriod').value = materials.seasonalExam?.usagePeriod || '';
+
     const seasonalValue = (materials.seasonalExam.hasUsage === null || typeof materials.seasonalExam.hasUsage === 'undefined')
     ? 'unknown'
     : String(materials.seasonalExam.hasUsage);
@@ -6645,16 +6711,18 @@ function editSalesIncreaseForecast(cardId, monthKey, element) {
         displaySpan.style.display = 'block';
     };
 
-    inputField.onblur = saveChanges;
-    inputField.onkeydown = (event) => {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            saveChanges();
-        } else if (event.key === 'Escape') {
-            event.preventDefault();
-            cancelEdit();
-        }
-    };
+inputField.onblur = saveChanges;
+inputField.onkeydown = (event) => {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        // 直接保存関数を呼ばず、フォーカスを外すことでonblurを発火させる（二重実行防止）
+        inputField.blur();
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        cancelEdit();
+    }
+};
+
 }
 
 function editProbability(cardId, monthKey, element) {

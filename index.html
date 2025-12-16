@@ -5159,12 +5159,23 @@ function showToast(message, type = 'success') {
         }, 2500);
     });
 }
-
 function calculateQualifiedProspects() {
     const settings = getActiveSettings();
-    const currentMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
+    const monthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
+    
+    // 🆕 地域フィルタリング追加（データ混在防止）
+    const { region: displayRegion } = parseViewTarget(currentViewTarget);
+    const targetRegion = displayRegion || 'kansai';
+    
+    console.log(`🔍 適格見込計算: 地域=${targetRegion}, 月=${monthKey}`);
     
     const qualifiedProfit = cardsData.reduce((total, card) => {
+        // 🆕 対象地域以外のカードは除外
+        const cardRegion = card.region || 'kansai';
+        if (targetRegion !== 'all' && cardRegion !== targetRegion) {
+            return total;
+        }
+        
         const monthData = card.monthlyData?.[monthKey] || { 
             salesIncreaseForecast: 0, 
             probability: 0 
@@ -5180,10 +5191,17 @@ function calculateQualifiedProspects() {
     
     return qualifiedProfit;
 }
+
 function calculateAllProgress() {
     // 🆕 最優先：地域情報を最初に取得
     const { region: displayRegion } = parseViewTarget(currentViewTarget);
     const targetRegion = displayRegion || 'kansai';
+
+// カードごとの地域チェック
+const cardRegion = card.region || 'kansai';
+if (targetRegion !== 'all' && cardRegion !== targetRegion) {
+    return total; // 地域不一致のカードはスキップ
+}
     
     const settings = getActiveSettings();
     const now = Date.now();

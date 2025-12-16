@@ -3880,6 +3880,8 @@ let currentHistoryCardId = null; // PC版詳細モーダル用：削除対象カ
 let currentEditingMemo = null;
 let isComposing = false;
 let activeDashboardMonthKey = null; // 追加：ダッシュボードのアクティブ月
+let saveRetryCount = 0; // 保存再試行回数カウンター（グローバル）
+const MAX_RETRY_COUNT = 3; // 最大再試行回数
 
 let personalSettings = {
     userName: '担当者',
@@ -4677,26 +4679,25 @@ if (!cardToSave.lastUpdated || typeof cardToSave.lastUpdated === 'string') {
             showToast('ネットワーク不安定：ローカルに保存しました（5秒後に自動再試行）', 'info');
             
             // 🆕 5秒後に自動でもう一度保存を試す
-            // グローバル変数として追加
-let saveRetryCount = 0;
-const MAX_RETRY_COUNT = 3;
-
-// エラーハンドリング内で使用
-if (saveRetryCount < MAX_RETRY_COUNT) {
-    saveRetryCount++;
-    setTimeout(() => {
-        saveCardsData().then(() => {
-            saveRetryCount = 0; // 成功時リセット
-        }).catch(() => {
-            if (saveRetryCount >= MAX_RETRY_COUNT) {
-                showToast('自動保存に失敗しました。手動で保存してください', 'error');
+            // （変数はグローバルスコープで定義済み）
+            
+            if (saveRetryCount < MAX_RETRY_COUNT) {
+                saveRetryCount++;
+                console.log(`自動再試行を開始します (${saveRetryCount}/${MAX_RETRY_COUNT})`);
+                
+                setTimeout(() => {
+                    saveCardsData().then(() => {
+                        saveRetryCount = 0; // 成功時リセット
+                        console.log('自動再試行で保存に成功しました');
+                        showToast('ネットワーク復旧：データを保存しました', 'success');
+                    }).catch(() => {
+                        // 再帰的に再試行判定が行われる
+                    });
+                }, 5000);
+            } else {
+                showToast('通信エラーが継続しています。ネットワーク環境を確認して手動で保存してください', 'error');
+                saveRetryCount = 0; // カウンターをリセット
             }
-        });
-    }, 5000);
-} else {
-    showToast('保存の試行回数が上限に達しました', 'error');
-}
-
             
         } catch (backupError) {
             console.error('バックアップ保存失敗:', backupError);
@@ -5196,12 +5197,6 @@ function calculateAllProgress() {
     // 🆕 最優先：地域情報を最初に取得
     const { region: displayRegion } = parseViewTarget(currentViewTarget);
     const targetRegion = displayRegion || 'kansai';
-
-// カードごとの地域チェック
-const cardRegion = card.region || 'kansai';
-if (targetRegion !== 'all' && cardRegion !== targetRegion) {
-    return total; // 地域不一致のカードはスキップ
-}
     
     const settings = getActiveSettings();
     const now = Date.now();
@@ -5230,7 +5225,7 @@ if (targetRegion !== 'all' && cardRegion !== targetRegion) {
     
     const salesIncreaseTarget = settings.yearlySalesIncreaseTarget || 0;
     
-const totalSalesProspect = cardsData.reduce((sum, card) => {  // ← 'c' を 'card' に変更
+const totalSalesProspect = cardsData.reduce((sum, card) => {
     const cardRegion = card.region || 'kansai';
     if (targetRegion !== 'all' && cardRegion !== targetRegion) {
         return sum;
@@ -5318,11 +5313,6 @@ function updateMiddleCards() {
     console.log(`🔍 中段カード計算: 地域=${targetRegion}, 月=${currentMonthKey}, カード数=${cardsData.length}`);
     
     cardsData.forEach(card => {
-        // 🆕 対象地域以外のカードは除外
-        const cardRegion = card.region || 'kansai';
-        if (targetRegion !== 'all' && cardRegion !== targetRegion) {
-            return; // 地域不一致のカードはスキップ
-        }
 
         const monthData = card.monthlyData?.[currentMonthKey] || { 
             salesIncreaseForecast: 0, 

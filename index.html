@@ -3396,9 +3396,10 @@ function changeRegionFilter() {
     return;
 }
 
-// Manager用：自分の地域別設定を再読み込み
 async function reloadOwnManagerSettings(targetRegion) {
     if (!currentUser || !window.db) return;
+    
+    console.log(`🔄 Manager設定再読み込み: 地域=${targetRegion}`);
     
     try {
         const userDoc = await window.firebaseImports.getDoc(
@@ -3408,24 +3409,26 @@ async function reloadOwnManagerSettings(targetRegion) {
         if (userDoc.exists() && userDoc.data().personalSettings) {
             const cloudSettings = userDoc.data().personalSettings;
             
-            // 地域別設定の存在確認
             if (cloudSettings.kansai || cloudSettings.shikoku) {
-                personalSettings = { 
-                    ...getDefaultSettings(),
-                    ...(cloudSettings[targetRegion] || {})
+                // 🆕 地域別設定構造全体を保持
+                personalSettings = {
+                    kansai: cloudSettings.kansai || getDefaultSettings(),
+                    shikoku: cloudSettings.shikoku || getDefaultSettings()
                 };
                 
-                console.log(`${targetRegion}設定に切り替えました:`, personalSettings);
+                // キャッシュも更新
+                const cacheKey = `${currentUser.uid}_${targetRegion}`;
+                userSettingsCache[cacheKey] = cloudSettings[targetRegion] || getDefaultSettings();
                 
-                // 即座にUI反映
-                updatePersonalSalesTarget();
+                console.log(`✅ ${targetRegion}設定切り替え完了`);
+                
                 progressCache = null;
                 updateDashboard();
                 
-                showToast(`${targetRegion === 'kansai' ? '関西' : '四国'}設定を読み込みました`, 'info');
+                showToast(`${targetRegion === 'kansai' ? '関西' : '四国'}設定を読み込みました`, 'success');
             } else {
                 console.warn('地域別設定が未構築です');
-                showToast('地域別設定が未登録です。個人設定から登録してください', 'error');
+                showToast('地域別設定が未登録です', 'error');
             }
         }
     } catch (error) {
@@ -4008,45 +4011,59 @@ function getCurrentMonth() {
 }
 
 function getActiveSettings() {
-        // 🆕 Masterは設定を持たないため、常にデフォルトを返す
     if (currentUserRole === 'master') {
         return getDefaultSettings();
     }
+    
     const { uid, region } = parseViewTarget(currentViewTarget || currentUser?.uid);
     
     if (!uid) return getDefaultSettings();
+    
+    console.log(`🔍 getActiveSettings: uid=${uid}, region=${region}, role=${currentUserRole}`);
     
     // 自分自身を見ている場合
     if (currentUser && uid === currentUser.uid) {
         // 自分がManagerで地域別設定を持つ場合
         if (currentUserRole === 'manager' && (personalSettings.kansai || personalSettings.shikoku)) {
-            return personalSettings[region] || getDefaultSettings();
+            const regionSettings = personalSettings[region];
+            
+            if (!regionSettings) {
+                console.warn(`⚠️ ${region}設定が存在しません`);
+                return getDefaultSettings();
+            }
+            
+            console.log(`✅ Manager自分の${region}設定を返します:`, regionSettings);
+            return regionSettings;
         }
         return personalSettings;
     }
     
-    // 🆕 他人を見ている場合（キャッシュから直接取得）
-    const cachedSettings = userSettingsCache[uid];
+    // 🆕 他人を見ている場合：地域込みキャッシュキーを使用
+    const cacheKey = `${uid}_${region}`;
+    const cachedSettings = userSettingsCache[cacheKey];
     
     if (!cachedSettings) {
-        console.warn(`${uid}の設定がキャッシュにありません`);
+        console.warn(`⚠️ ${cacheKey}の設定がキャッシュにありません`);
         return getDefaultSettings();
     }
     
-    // ★重要：キャッシュには処理済み設定が入っているのでそのまま返す
+    console.log(`✅ キャッシュから${cacheKey}の設定を返します`);
     return cachedSettings;
 }
+
 async function loadSettingsForTarget(uid) {
     if (!uid || !window.firebaseImports || !window.db) return;
     
-    // 🆕 キャッシュキーに地域情報を含めて、関西・四国の混同を防ぐ
-    const { region } = parseViewTarget(currentViewTarget);
-    const cacheKey = `${uid}_${region || 'kansai'}`;
+    // 🆕 地域を確実に特定
+    const { region: targetRegion } = parseViewTarget(currentViewTarget);
+    const effectiveRegion = targetRegion || 'kansai';
+    const cacheKey = `${uid}_${effectiveRegion}`;
+    
+    console.log(`📥 設定読み込み: ユーザー=${uid}, 地域=${effectiveRegion}`);
     
     if (userSettingsCache[cacheKey]) {
-        // キャッシュから設定を復元
         personalSettings = { ...userSettingsCache[cacheKey] };
-        console.log(`📋 キャッシュから設定を取得: ${cacheKey}`);
+        console.log(`📋 キャッシュから復元: ${cacheKey}`);
         return;
     }
     
@@ -4056,55 +4073,54 @@ async function loadSettingsForTarget(uid) {
         );
         
         if (!userDoc.exists()) {
-            console.warn(`${uid}のユーザーデータが存在しません`);
-            userSettingsCache[uid] = getDefaultSettings();
+            userSettingsCache[cacheKey] = getDefaultSettings();
             return;
         }
 
         const userData = userDoc.data();
         const cloudSettings = userData.personalSettings;
         
-        if (!cloudSettings || typeof cloudSettings !== 'object') {
-            console.warn(`${uid}のpersonalSettingsが未設定`);
-            userSettingsCache[uid] = getDefaultSettings();
+        if (!cloudSettings) {
+            userSettingsCache[cacheKey] = getDefaultSettings();
             return;
         }
 
-        // 🆕 重要修正：データの構造で判定（役職ではなく）
         let effectiveSettings;
         
-        // Manager型データ構造の場合（kansai/shikokuフォルダが存在）
+        // Manager型データ構造の場合
         if (cloudSettings.kansai || cloudSettings.shikoku) {
-            const { region } = parseViewTarget(currentViewTarget);
-            effectiveSettings = { 
-                ...getDefaultSettings(),
-                ...(cloudSettings[region] || cloudSettings.kansai || {})
-            };
-            console.log(`${uid}の地域別設定(${region})を読み込みました`);
+            const regionSettings = cloudSettings[effectiveRegion];
             
+            if (regionSettings) {
+                effectiveSettings = { 
+                    ...getDefaultSettings(),
+                    ...regionSettings 
+                };
+                console.log(`✅ ${effectiveRegion}設定読み込み完了（売上目標: ${effectiveSettings.personalSalesIncreaseTarget}）`);
+            } else {
+                console.warn(`⚠️ ${effectiveRegion}設定が存在しません`);
+                effectiveSettings = getDefaultSettings();
+            }
         } else {
-            // Staff型データ構造の場合（フラット構造）
+            // Staff型データ構造
             effectiveSettings = { 
                 ...getDefaultSettings(),
                 ...cloudSettings 
             };
-            console.log(`${uid}の通常設定を読み込みました`);
         }
 
-        // 🆕 重要：地域別キーでキャッシュに保存
+        // 🆕 地域込みキーでキャッシュに保存
         userSettingsCache[cacheKey] = effectiveSettings;
-        console.log(`💾 設定をキャッシュに保存: ${cacheKey}`);
         
-        // 現在表示中のターゲットなら personalSettings も同期
-        const { uid: viewingUid } = parseViewTarget(currentViewTarget || '');
-        if (viewingUid === uid) {
+        // 現在表示中のターゲットと一致する場合のみ更新
+        const { uid: currentUid } = parseViewTarget(currentViewTarget);
+        if (currentUid === uid) {
             personalSettings = effectiveSettings;
         }
         
     } catch (error) {
-        console.error(`${uid}の個人設定読み込みエラー:`, error);
-        userSettingsCache[uid] = getDefaultSettings();
-        showToast('個人設定の読み込みに失敗しました', 'error');
+        console.error(`${uid}の設定読み込みエラー:`, error);
+        userSettingsCache[cacheKey] = getDefaultSettings();
     }
 }
 

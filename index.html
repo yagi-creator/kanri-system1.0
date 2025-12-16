@@ -4011,28 +4011,28 @@ function getCurrentMonth() {
 }
 
 function getActiveSettings() {
-    if (currentUserRole === 'master') {
-        return getDefaultSettings();
-    }
-    
     const { uid, region } = parseViewTarget(currentViewTarget || currentUser?.uid);
     
     if (!uid) return getDefaultSettings();
+    
+    // 🆕 masterが「自分自身」を見ているときだけデフォルトを返す
+    if (currentUserRole === 'master' && uid === currentUser?.uid) {
+        return getDefaultSettings();
+    }
     
     console.log(`🔍 getActiveSettings: uid=${uid}, region=${region}, role=${currentUserRole}`);
     
     // 自分自身を見ている場合
     if (currentUser && uid === currentUser.uid) {
-        // 自分がManagerで地域別設定を持つ場合
         if (currentUserRole === 'manager' && (personalSettings.kansai || personalSettings.shikoku)) {
             const regionSettings = personalSettings[region];
             
             if (!regionSettings) {
-                console.warn(`⚠️ ${region}設定が存在しません`);
+                console.warn(`⚠️ Manager自分の${region}設定が存在しません`);
                 return getDefaultSettings();
             }
             
-            console.log(`✅ Manager自分の${region}設定を返します:`, regionSettings);
+            console.log(`✅ Manager自分の${region}設定を返します`);
             return regionSettings;
         }
         return personalSettings;
@@ -4050,6 +4050,7 @@ function getActiveSettings() {
     console.log(`✅ キャッシュから${cacheKey}の設定を返します`);
     return cachedSettings;
 }
+
 
 async function loadSettingsForTarget(uid) {
     if (!uid || !window.firebaseImports || !window.db) return;

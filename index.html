@@ -4154,7 +4154,9 @@ function updateCardDifference(elementId, amount, formatter = formatAmount) {
 }
 
 function editMonthlyProfitInline(element) {
-    if (!currentUser || currentViewTarget !== currentUser.uid) {
+    // 修正：サフィックスを除去して本人確認
+    const { uid: targetUid } = parseViewTarget(currentViewTarget);
+    if (!currentUser || targetUid !== currentUser.uid) {
         showToast('自分のデータ表示中のみ編集可能です', 'error');
         return;
     }
@@ -4184,7 +4186,9 @@ function editMonthlyProfitInline(element) {
 }
 
 function editCumulativeProfitInline(element) {
-    if (!currentUser || currentViewTarget !== currentUser.uid) {
+    // 修正：サフィックスを除去して本人確認
+    const { uid: targetUid } = parseViewTarget(currentViewTarget);
+    if (!currentUser || targetUid !== currentUser.uid) {
         showToast('自分のデータ表示中のみ編集可能です', 'error');
         return;
     }
@@ -4538,7 +4542,9 @@ async function saveCardsData() {
     }
 
     // 他人表示中は保存しない（権限エラー防止）
-    if (currentViewTarget && currentViewTarget !== currentUser.uid) {
+    // 修正：マネージャーの _kansai / _shikoku サフィックスを除去して判定
+    const { uid: targetUid } = parseViewTarget(currentViewTarget);
+    if (targetUid && targetUid !== currentUser.uid) {
         console.log('他人データ表示中のため、Firestore保存をスキップしました');
         return;
     }

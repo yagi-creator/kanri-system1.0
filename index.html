@@ -4246,62 +4246,79 @@ function updateCardDifference(elementId, amount, formatter = formatAmount) {
         console.warn(`Element with id '${elementId}' not found`);
     }
 }
-
 function editMonthlyProfitInline(element) {
-    // 修正：サフィックスを除去して本人確認
-    const { uid: targetUid } = parseViewTarget(currentViewTarget);
+    // ✅ 権限チェック：現在表示中プロファイルが自分かどうか
+    const { uid: targetUid, region } = parseViewTarget(currentViewTarget || '');
     if (!currentUser || targetUid !== currentUser.uid) {
         showToast('自分のデータ表示中のみ編集可能です', 'error');
         return;
     }
 
     const currentMonth = getCurrentMonth();
-    const currentValue = personalSettings.monthlyProfitActuals[currentMonth] || 0;
+
+    // ✅ 修正：地域別設定から安全に値を取得
+    const settings = getActiveSettings();
+    const monthlyActuals = settings.monthlyProfitActuals || {};
+    const currentValue = monthlyActuals[currentMonth] ?? 0;  // ?? で0を正しく処理
     
     const newValue = prompt('月別粗利実績を入力してください（円）\n\n例: 500000', currentValue);
     if (newValue === null) return;
     
     const parsedValue = parseNumberSafely(newValue);
 
-    // 1) データ更新
-    personalSettings.monthlyProfitActuals[currentMonth] = parsedValue;
+    // ✅ 修正：Manager役職の場合は地域別に保存
+    if (currentUserRole === 'manager') {
+        // 地域別設定の初期化確認
+        if (!personalSettings.kansai) personalSettings.kansai = getDefaultSettings();
+        if (!personalSettings.shikoku) personalSettings.shikoku = getDefaultSettings();
+        
+        // 対象地域のmonthlyProfitActualsを初期化（存在しない場合）
+        if (!personalSettings[region].monthlyProfitActuals) {
+            personalSettings[region].monthlyProfitActuals = {};
+        }
+        
+        // データ更新（地域別）
+        personalSettings[region].monthlyProfitActuals[currentMonth] = parsedValue;
+        
+        console.log(`💾 Manager月別実績更新: ${region}/${currentMonth}月 = ${parsedValue}`);
+    } else {
+        // 通常ユーザー（Admin/Staff）
+        if (!personalSettings.monthlyProfitActuals) {
+            personalSettings.monthlyProfitActuals = {};
+        }
+        personalSettings.monthlyProfitActuals[currentMonth] = parsedValue;
+    }
 
-    // 2) UI即時反映
+    // UI即時反映
     element.textContent = formatAmount(parsedValue);
 
-    // 3) 再計算を即時反映（キャッシュ無効化→再描画）
+    // 再計算を即時反映
     progressCache = null;
     updateDashboard();
 
-    // 4) 保存はアイドル時間に遅延実行（体感速度を最優先）
+    // 保存処理
     scheduleSavePersonalSettings();
 
     showToast('月別粗利実績を更新しました', 'success');
 }
-
 function editCumulativeProfitInline(element) {
-    // 修正：サフィックスを除去して本人確認
-    const { uid: targetUid } = parseViewTarget(currentViewTarget);
+    // ✅ 権限チェック修正
+    const { uid: targetUid, region } = parseViewTarget(currentViewTarget || '');
     if (!currentUser || targetUid !== currentUser.uid) {
         showToast('自分のデータ表示中のみ編集可能です', 'error');
         return;
     }
 
-    // 🆕 グローバル月セレクターに連動した対象月を取得
+    // ✅ 修正：現在アクティブな設定を取得
+    const settings = getActiveSettings();
     const { months } = getFiscalYearStructure();
     const activeMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
     const activeMonthInfo = months.find(m => m.key === activeMonthKey);
     const targetMonth = activeMonthInfo ? activeMonthInfo.month : getCurrentMonth();
     
-    // 🆕 月ごとの累積粗利実績データ構造を確実に初期化
-    if (!personalSettings.monthlyCumulativeProfitActuals) {
-        personalSettings.monthlyCumulativeProfitActuals = {
-            10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
-            4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
-        };
-    }
-
-    const currentValue = personalSettings.monthlyCumulativeProfitActuals[targetMonth] || 0;
+    // ✅ 修正：安全なアクセス
+    const monthlyCumulativeActuals = settings.monthlyCumulativeProfitActuals || {};
+    const currentValue = monthlyCumulativeActuals[targetMonth] ?? 0;  // ?? で0を正しく処理
     
     const newValue = prompt(
         `累積粗利実績を入力してください（円）\n対象月: ${targetMonth}月\n※${targetMonth}月時点での累積粗利の数値を直接入力\n\n例: 5,000,000\n（空欄で削除）`, 
@@ -4309,40 +4326,60 @@ function editCumulativeProfitInline(element) {
     );
     if (newValue === null) return;
     
-    // 🆕 空欄入力で該当月の値を削除（未設定化）
+    // 空欄入力で削除処理
     if (String(newValue).trim() === '') {
-        delete personalSettings.monthlyCumulativeProfitActuals[targetMonth];
+        // Manager役職の場合は地域別に削除
+        if (currentUserRole === 'manager') {
+            if (!personalSettings[region].monthlyCumulativeProfitActuals) {
+                personalSettings[region].monthlyCumulativeProfitActuals = {};
+            }
+            delete personalSettings[region].monthlyCumulativeProfitActuals[targetMonth];
+        } else {
+            if (!personalSettings.monthlyCumulativeProfitActuals) {
+                personalSettings.monthlyCumulativeProfitActuals = {};
+            }
+            delete personalSettings.monthlyCumulativeProfitActuals[targetMonth];
+        }
+        
         element.textContent = formatAmount(0);
-        progressCache = null;
-        updateDashboard();
-        scheduleSavePersonalSettings();
         showToast(`${targetMonth}月の累積粗利実績を削除しました`, 'success');
-        return;
+    } else {
+        const parsedValue = parseNumberSafely(newValue);
+        
+        // Manager役職の場合は地域別に保存
+        if (currentUserRole === 'manager') {
+            if (!personalSettings[region].monthlyCumulativeProfitActuals) {
+                personalSettings[region].monthlyCumulativeProfitActuals = {};
+            }
+            personalSettings[region].monthlyCumulativeProfitActuals[targetMonth] = Number(parsedValue);
+            
+            // 後方互換性（現在月の場合のみ旧フィールドも更新）
+            if (targetMonth === getCurrentMonth()) {
+                personalSettings[region].cumulativeProfitActual = Number(parsedValue);
+            }
+            
+            console.log(`💾 Manager累積実績更新: ${region}/${targetMonth}月 = ${parsedValue}`);
+        } else {
+            // 通常ユーザー
+            if (!personalSettings.monthlyCumulativeProfitActuals) {
+                personalSettings.monthlyCumulativeProfitActuals = {};
+            }
+            personalSettings.monthlyCumulativeProfitActuals[targetMonth] = Number(parsedValue);
+            
+            if (targetMonth === getCurrentMonth()) {
+                personalSettings.cumulativeProfitActual = Number(parsedValue);
+            }
+        }
+        
+        element.textContent = formatAmount(parsedValue);
+        showToast(`${targetMonth}月の累積粗利実績を更新しました`, 'success');
     }
     
-    const parsedValue = parseNumberSafely(newValue);
-    
-    // 🆕 選択月の累積粗利実績を直接保存（月別管理）
-    personalSettings.monthlyCumulativeProfitActuals[targetMonth] = Number(parsedValue);
-    
-    // 後方互換性のため旧フィールドも更新（現在月の場合のみ）
-    if (targetMonth === getCurrentMonth()) {
-        personalSettings.cumulativeProfitActual = Number(parsedValue);
-    }
-    
-    // UIを即時更新
-    element.textContent = formatAmount(parsedValue);
-    
-    // 再計算と描画更新
+    // 再計算と保存
     progressCache = null;
     updateDashboard();
-    
-    // 保存処理
     scheduleSavePersonalSettings();
-    
-    showToast(`${targetMonth}月の累積粗利実績を更新しました`, 'success');
 }
-
 
 function formatDateForDisplay(s) {
     if (!s) return '—';

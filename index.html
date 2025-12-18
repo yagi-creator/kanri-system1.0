@@ -3520,39 +3520,48 @@ if (newTargetId === 'master-kansai' || newTargetId === 'master-shikoku' || newTa
     
     // 通常ビューへの切り替え
     if (newTargetId && newTargetId !== currentViewTarget) {
-        // 🆕 プロファイル切り替え前に完全クリア
+        // ✅ 追加：プロファイル切り替えログ
         console.log(`🔄 プロファイル切り替え: ${currentViewTarget} → ${newTargetId}`);
         
-        // データとキャッシュの完全クリア
+        // ✅ 追加：完全なデータクリア（キャッシュ混入防止）
         cardsData = [];
         progressCache = null;
         
-        // UI表示の即座リセット
-        resetDashboardUI();
+        // ✅ 追加：地域切り替え時のキャッシュクリア
+        const { uid: oldUid, region: oldRegion } = parseViewTarget(currentViewTarget || '');
+        const { uid: newUid, region: newRegion } = parseViewTarget(newTargetId);
+        
+        if (oldUid === newUid && currentUserRole === 'manager') {
+            // 同じユーザーの地域切り替え：対象地域のキャッシュをクリア
+            const oldCacheKey = `${oldUid}_${oldRegion}`;
+            const newCacheKey = `${newUid}_${newRegion}`;
+            delete userSettingsCache[oldCacheKey];
+            delete userSettingsCache[newCacheKey];
+            console.log(`🗑️ 地域切り替えキャッシュクリア: ${oldCacheKey}, ${newCacheKey}`);
+        }
         
         currentViewTarget = newTargetId;
+        currentProfileRegion = newRegion;
         
-        // IDから地域情報を解析
-        const { uid, region } = parseViewTarget(newTargetId);
-        currentProfileRegion = region;
-
         updateViewSelector();
         
         // マスタービューから戻る場合
-        if (masterContent.style.display === 'block') {
+        const masterContent = document.getElementById('masterViewContent');
+        const normalContent = document.getElementById('normalDashboardContent');
+        if (masterContent && masterContent.style.display === 'block') {
             masterContent.style.display = 'none';
             normalContent.style.display = 'block';
         }
         
-    // ★重要：自分のプロファイル切替時は personalSettings を再読み込み★
-    if (uid === currentUser.uid && currentUserRole === 'manager') {
-        await reloadOwnManagerSettings(region);
-    } else {
-        await loadSettingsForTarget(uid);
-    }
-    
-// 修正：すでに取得済みのuidを再利用
-await loadCardsDataForTarget(uid);
+        // 自分のプロファイル切替時は personalSettings を再読み込み
+        if (newUid === currentUser.uid && currentUserRole === 'manager') {
+            await reloadOwnManagerSettings(newRegion);
+        } else {
+            await loadSettingsForTarget(newUid);
+        }
+        
+        // ✅ 重要な修正：newTargetIdを渡すことで地域情報を保持
+        await loadCardsDataForTarget(newTargetId);
         
         progressCache = null;
         renderCardsOptimized();
@@ -5388,7 +5397,6 @@ function updateMiddleCards() {
     const pr = Number(settings.profitRate || 0);
     elPersonal.innerHTML = `個人設定売上増目標 <span class="value-emphasis">${formatManPlain(manualTarget)}</span> | 粗利率 ${pr.toFixed(1)}%`;
 }
-
 function updateDashboard() {
     // 売上フィールドの編集機能を無効化
     lockAutoCalculatedFields();
@@ -5398,19 +5406,36 @@ function updateDashboard() {
         return;
     }
 
+    // ✅ 重要：現在アクティブな設定を確実に取得
     const settings = getActiveSettings();
-    const { months, currentMonthIndex } = getFiscalYearStructure();
-    const profitRate = (settings.profitRate || 0) / 100;
+    
+    // デバッグ用：どの地域のデータを取得したかを確認
+    const { region: displayRegion } = parseViewTarget(currentViewTarget);
+    console.log(`📊 ダッシュボード更新: 地域=${displayRegion}, 12月実績=${settings.monthlyProfitActuals?.[12]}`);
 
-    // アクティブ月の取得（グローバル月セレクターに連動）
+    const { months, currentMonthIndex } = getFiscalYearStructure();
+    
+    // ✅ 修正：?? 演算子を使用して0を有効な値として扱う
+    const profitRate = (settings.profitRate ?? 0) / 100;
+
+    // アクティブ月の取得
     const activeMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
     const activeMonthInfo = months.find(m => m.key === activeMonthKey);
     const activeMonth = activeMonthInfo ? activeMonthInfo.month : months[currentMonthIndex].month;
     const activeIndex = activeMonthInfo ? months.indexOf(activeMonthInfo) : currentMonthIndex;
 
-    // 1. 月別粗利（選択月に対応）
-    const monthlyProfitTarget = settings.monthlyProfitTargets[activeMonth] || 0;
-    const monthlyProfitActual = settings.monthlyProfitActuals[activeMonth] || 0;
+    // データ参照用の安全なオブジェクト
+    const monthlyTargets = settings.monthlyProfitTargets || {};
+    const monthlyActuals = settings.monthlyProfitActuals || {};
+    const monthlyCumulativeActuals = settings.monthlyCumulativeProfitActuals || {};
+
+    // ==========================================
+    // 🔧 核心修正：|| ではなく ?? を使用して0を正しく処理
+    // ==========================================
+
+    // 1. 月別粗利（選択月）
+    const monthlyProfitTarget = monthlyTargets[activeMonth] ?? 0;  // 修正
+    const monthlyProfitActual = monthlyActuals[activeMonth] ?? 0;   // 修正
 
     const monthlyProfitDiff = monthlyProfitActual - monthlyProfitTarget;
     const monthlyProfitRate = monthlyProfitTarget > 0 ? (monthlyProfitActual / monthlyProfitTarget) * 100 : 0;
@@ -5420,7 +5445,7 @@ function updateDashboard() {
     updateCardDifference('monthlyProfitDiff', monthlyProfitDiff);
     updateCardValue('monthlyProfitRate', `${monthlyProfitRate.toFixed(1)}%`);
 
-    // 2. 月別売上（円表記）
+    // 2. 月別売上（粗利から逆算）
     const monthlySalesTarget = profitRate > 0 ? monthlyProfitTarget / profitRate : 0;
     const monthlySalesActual = profitRate > 0 ? monthlyProfitActual / profitRate : 0;
     const monthlySalesDiff = monthlySalesActual - monthlySalesTarget;
@@ -5431,20 +5456,24 @@ function updateDashboard() {
     updateCardDifference('monthlySalesDiff', monthlySalesDiff);
     updateCardValue('monthlySalesRate', `${monthlySalesRate.toFixed(1)}%`);
 
-    // 3. 累積粗利（目標：選択月まで合算、実績：選択月の手入力値）
+    // 3. 累積粗利（最重要な修正箇所）
     let cumulativeProfitTarget = 0;
     for (let i = 0; i <= activeIndex; i++) {
         const monthNum = months[i].month;
-        cumulativeProfitTarget += settings.monthlyProfitTargets[monthNum] || 0;
+        cumulativeProfitTarget += (monthlyTargets[monthNum] ?? 0);  // 修正
     }
     
-    // 月ごとの累積粗利実績から選択月の値を取得（後方互換性あり）
-    // 🆕 0を正しい値として扱う：undefined/nullの場合のみフォールバック
-const monthCumulativeValue = settings.monthlyCumulativeProfitActuals?.[activeMonth];
-const cumulativeProfitActual = (monthCumulativeValue !== undefined && monthCumulativeValue !== null)
-    ? monthCumulativeValue
-    : (settings.cumulativeProfitActual ?? 0);
-
+    // ✅ 最重要修正：0を正しく扱う累積実績の取得
+    let cumulativeProfitActual = 0;
+    
+    // 月別累積データの存在確認（undefined/nullのみをチェック）
+    if (monthlyCumulativeActuals[activeMonth] !== undefined && 
+        monthlyCumulativeActuals[activeMonth] !== null) {
+        cumulativeProfitActual = monthlyCumulativeActuals[activeMonth];
+    } else {
+        // フォールバック：全体累積設定を使用（それもなければ0）
+        cumulativeProfitActual = settings.cumulativeProfitActual ?? 0;
+    }
 
     const cumulativeProfitDiff = cumulativeProfitActual - cumulativeProfitTarget;
     const cumulativeProfitRate = cumulativeProfitTarget > 0 ? (cumulativeProfitActual / cumulativeProfitTarget) * 100 : 0;
@@ -5454,7 +5483,7 @@ const cumulativeProfitActual = (monthCumulativeValue !== undefined && monthCumul
     updateCardDifference('cumulativeProfitDiff', cumulativeProfitDiff);
     updateCardValue('cumulativeProfitRate', `${cumulativeProfitRate.toFixed(1)}%`);
 
-    // 4. 累積売上（円表記）
+    // 4. 累積売上
     const cumulativeSalesTarget = profitRate > 0 ? cumulativeProfitTarget / profitRate : 0;
     const cumulativeSalesActual = profitRate > 0 ? cumulativeProfitActual / profitRate : 0;
     const cumulativeSalesDiff = cumulativeSalesActual - cumulativeSalesTarget;

@@ -3396,10 +3396,9 @@ function changeRegionFilter() {
     return;
 }
 
-async function reloadOwnManagerSettings(targetRegion) {
+// ログイン時同期関数（修正版）
+async function syncPersonalSettingsOnLogin() {
     if (!currentUser || !window.db) return;
-    
-    console.log(`🔄 Manager設定再読み込み: 地域=${targetRegion}`);
     
     try {
         const userDoc = await window.firebaseImports.getDoc(
@@ -3407,35 +3406,78 @@ async function reloadOwnManagerSettings(targetRegion) {
         );
         
         if (userDoc.exists() && userDoc.data().personalSettings) {
-            const cloudSettings = userDoc.data().personalSettings;
+            const cloudData = userDoc.data().personalSettings;
             
-            if (cloudSettings.kansai || cloudSettings.shikoku) {
-                // 🆕 地域別設定構造全体を保持
-                personalSettings = {
-                    kansai: cloudSettings.kansai || getDefaultSettings(),
-                    shikoku: cloudSettings.shikoku || getDefaultSettings()
+            console.log('🔄 ログイン時設定同期:', {
+                role: currentUserRole,
+                cloudData構造: Object.keys(cloudData),
+                入れ子構造か: !!(cloudData.kansai || cloudData.shikoku)
+            });
+            
+            // ✅ 修正ポイント：Manager特有の階層構造（kansai/shikoku）を検知して正しく展開
+            if (currentUserRole === 'manager' && (cloudData.kansai || cloudData.shikoku)) {
+                // Managerはデフォルトで関西を読み込む
+                const defaultRegion = 'kansai';
+                const regionSettings = cloudData[defaultRegion];
+                
+                if (!regionSettings) {
+                    console.error('❌ 関西データが存在しません！');
+                    personalSettings = getDefaultSettings();
+                } else {
+                    personalSettings = {
+                        ...getDefaultSettings(),
+                        ...regionSettings
+                    };
+                    
+                    console.log('✅ Manager用設定同期完了（関西デフォルト）:', {
+                        粗利率: personalSettings.profitRate,
+                        ユーザー名: personalSettings.userName,
+                        年間目標: personalSettings.yearlyProfitTarget
+                    });
+                }
+                
+                // キャッシュに両地域を保存
+                userSettingsCache[`${currentUser.uid}_kansai`] = { ...cloudData.kansai };
+                userSettingsCache[`${currentUser.uid}_shikoku`] = { ...cloudData.shikoku };
+                
+            } else {
+                // 通常ユーザーまたは古いデータ構造
+                personalSettings = { 
+                    ...getDefaultSettings(),
+                    ...cloudData 
+                };
+            }
+            
+            // 後方互換性処理
+            if (!personalSettings.monthlyCumulativeProfitActuals) {
+                personalSettings.monthlyCumulativeProfitActuals = {
+                    10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
+                    4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
                 };
                 
-                // キャッシュも更新
-                const cacheKey = `${currentUser.uid}_${targetRegion}`;
-                userSettingsCache[cacheKey] = cloudSettings[targetRegion] || getDefaultSettings();
-                
-                console.log(`✅ ${targetRegion}設定切り替え完了`);
-                
-                progressCache = null;
-                updateDashboard();
-                
-                showToast(`${targetRegion === 'kansai' ? '関西' : '四国'}設定を読み込みました`, 'success');
-            } else {
-                console.warn('地域別設定が未構築です');
-                showToast('地域別設定が未登録です', 'error');
+                if (personalSettings.cumulativeProfitActual && personalSettings.cumulativeProfitActual > 0) {
+                    const currentMonth = getCurrentMonth();
+                    personalSettings.monthlyCumulativeProfitActuals[currentMonth] = personalSettings.cumulativeProfitActual;
+                    console.log(`古い累積粗利データ(${personalSettings.cumulativeProfitActual})を${currentMonth}月に移行しました`);
+                }
             }
+            
+            savePersonalSettings();
+            updatePersonalSalesTarget();
+            updateDashboard();
+
+            showToast('クラウドから個人設定を同期しました', 'info');
+        } else {
+            // 初回保存処理
+            await savePersonalSettingsComplete();
+            showToast('個人設定をクラウドに初期保存しました', 'success');
         }
     } catch (error) {
-        console.error('Manager設定再読み込みエラー:', error);
-        showToast('設定の読み込みに失敗しました', 'error');
+        console.error('個人設定同期エラー:', error);
+        showToast('設定同期に失敗（ローカル設定を使用）', 'error');
     }
 }
+
 
 // 🆕 ダッシュボード表示値を即座にリセットする関数
 function resetDashboardUI() {
@@ -4831,82 +4873,112 @@ function savePersonalSettings() {
 }
         
 async function savePersonalSettingsComplete() {
-    // ローカル保存
     savePersonalSettings();
 
-    // キャッシュ即時更新（自分表示中の反映遅延を解消）
-    // キャッシュ即時更新（地域別キーで保存）
-    if (currentUser?.uid) {
-        const { region } = parseViewTarget(currentViewTarget);
-        const cacheKey = `${currentUser.uid}_${region || 'kansai'}`;
-        userSettingsCache[cacheKey] = { ...personalSettings };
-        console.log(`💾 設定保存時にキャッシュを更新: ${cacheKey}`);
-    }
-
-    
-    // Firebase保存
     if (currentUser && window.db && window.firebaseImports) {
         try {
-let dataToSave = {};
-
-// Manager用地域別保存
-if (currentUserRole === 'manager') {
-    const { region } = parseViewTarget(currentViewTarget);
-    
-    // 既存の地域別設定を取得
-    const userDoc = await window.firebaseImports.getDoc(
-        window.firebaseImports.doc(window.db, 'users', currentUser.uid)
-    );
-    
-    let existingSettings = {};
-    if (userDoc.exists() && userDoc.data().personalSettings) {
-        const cloudData = userDoc.data().personalSettings;
-        if (cloudData.kansai || cloudData.shikoku) {
-            existingSettings = cloudData;
-        }
-    }
-    
-            // 🆕 多重ネスト防止：保存前にクリーンアップ
-            const cleanPersonalSettings = {
-                userName: personalSettings.userName || '梨木',
-                profitRate: Number(personalSettings.profitRate || 0),
-                yearlyProfitTarget: Number(personalSettings.yearlyProfitTarget || 0),
-                yearlyProfitIncreaseTarget: Number(personalSettings.yearlyProfitIncreaseTarget || 0),
-                yearlySalesIncreaseTarget: Number(personalSettings.yearlySalesIncreaseTarget || 0),
-                personalSalesIncreaseTarget: Number(personalSettings.personalSalesIncreaseTarget || 0),
-                monthlyProfitActuals: personalSettings.monthlyProfitActuals || {},
-                monthlyProfitTargets: personalSettings.monthlyProfitTargets || {},
-                monthlyCumulativeProfitActuals: personalSettings.monthlyCumulativeProfitActuals || {},
-                cumulativeProfitActual: Number(personalSettings.cumulativeProfitActual || 0)
-            };
+            let dataToSave = {};
             
-            // 地域キーの混入を防止
-            delete cleanPersonalSettings.kansai;
-            delete cleanPersonalSettings.shikoku;
-            
-            // 現在の地域の設定のみ更新
-            dataToSave = {
-                personalSettings: {
-                    ...existingSettings,
-                    [region]: cleanPersonalSettings
+            if (currentUserRole === 'manager') {
+                const { region } = parseViewTarget(currentViewTarget);
+                
+                // ✅ 保存前にpersonalSettingsの構造を確認
+                console.log('💾 保存前チェック:', {
+                    地域: region,
+                    personalSettings構造: Object.keys(personalSettings),
+                    入れ子構造か: !!(personalSettings.kansai || personalSettings.shikoku),
+                    粗利率: personalSettings.profitRate,
+                    関西粗利率: personalSettings.kansai?.profitRate,
+                    四国粗利率: personalSettings.shikoku?.profitRate
+                });
+                
+                // ✅ 重要：入れ子構造の場合は対象地域のデータを抽出
+                let settingsToSave;
+                if (personalSettings.kansai || personalSettings.shikoku) {
+                    // 入れ子構造が混入している場合
+                    console.warn('⚠️ 入れ子構造を検出。対象地域のデータを抽出します');
+                    settingsToSave = personalSettings[region];
+                    
+                    if (!settingsToSave) {
+                        console.error('❌ 対象地域のデータが存在しません！');
+                        showToast('保存エラー：地域データが見つかりません', 'error');
+                        return;
+                    }
+                } else {
+                    // 正常なフラット構造
+                    settingsToSave = personalSettings;
                 }
-            };
+                
+                // 既存の地域別設定を取得
+                const userDoc = await window.firebaseImports.getDoc(
+                    window.firebaseImports.doc(window.db, 'users', currentUser.uid)
+                );
+                
+                let existingSettings = {};
+                if (userDoc.exists() && userDoc.data().personalSettings) {
+                    const cloudData = userDoc.data().personalSettings;
+                    if (cloudData.kansai || cloudData.shikoku) {
+                        existingSettings = cloudData;
+                    }
+                }
+                
+                // クリーンなデータ構造を作成（抽出したデータを使用）
+                const cleanPersonalSettings = {
+                    userName: settingsToSave.userName || '梨木',
+                    profitRate: Number(settingsToSave.profitRate || 0),
+                    yearlyProfitTarget: Number(settingsToSave.yearlyProfitTarget || 0),
+                    yearlyProfitIncreaseTarget: Number(settingsToSave.yearlyProfitIncreaseTarget || 0),
+                    yearlySalesIncreaseTarget: Number(settingsToSave.yearlySalesIncreaseTarget || 0),
+                    personalSalesIncreaseTarget: Number(settingsToSave.personalSalesIncreaseTarget || 0),
+                    monthlyProfitActuals: settingsToSave.monthlyProfitActuals || {},
+                    monthlyProfitTargets: settingsToSave.monthlyProfitTargets || {},
+                    monthlyCumulativeProfitActuals: settingsToSave.monthlyCumulativeProfitActuals || {},
+                    cumulativeProfitActual: Number(settingsToSave.cumulativeProfitActual || 0)
+                };
+                
+                // 地域キーの混入を防止
+                delete cleanPersonalSettings.kansai;
+                delete cleanPersonalSettings.shikoku;
+                
+                console.log('✅ 保存データ確認:', {
+                    地域: region,
+                    粗利率: cleanPersonalSettings.profitRate,
+                    ユーザー名: cleanPersonalSettings.userName,
+                    年間目標: cleanPersonalSettings.yearlyProfitTarget
+                });
+                
+                // 現在の地域の設定のみ更新
+                dataToSave = {
+                    personalSettings: {
+                        ...existingSettings,
+                        [region]: cleanPersonalSettings
+                    }
+                };
+                
+            } else {
+                // 通常ユーザー
+                dataToSave = { personalSettings };
+            }
             
-            console.log(`💾 クリーン保存: 地域=${region}`, dataToSave);
-
-    
-    console.log(`${region}設定を保存:`, dataToSave);
-} else {
-    // 通常ユーザー
-    dataToSave = { personalSettings };
-}
-
-await window.firebaseImports.setDoc(
-    window.firebaseImports.doc(window.db, 'users', currentUser.uid),
-    dataToSave,
-    { merge: true }
-);
-
+            await window.firebaseImports.setDoc(
+                window.firebaseImports.doc(window.db, 'users', currentUser.uid),
+                dataToSave,
+                { merge: true }
+            );
+            
+            // キャッシュも正しい構造で更新
+            if (currentUser?.uid && currentUserRole === 'manager') {
+                const { region } = parseViewTarget(currentViewTarget);
+                const cacheKey = `${currentUser.uid}_${region}`;
+                
+                // 入れ子構造の場合は対象地域のデータを抽出してキャッシュ
+                if (personalSettings.kansai || personalSettings.shikoku) {
+                    userSettingsCache[cacheKey] = { ...personalSettings[region] };
+                } else {
+                    userSettingsCache[cacheKey] = { ...personalSettings };
+                }
+            }
+            
             showToast('個人設定をクラウドに保存しました', 'success');
         } catch (error) {
             console.error('Firebase個人設定保存エラー:', error);
@@ -4914,6 +4986,7 @@ await window.firebaseImports.setDoc(
         }
     }
 }
+
         // 保存処理をブラウザのアイドル時間に遅延実行（重複をまとめる）
 let scheduledSaveToken = null;
 
@@ -4940,53 +5013,62 @@ function scheduleSavePersonalSettings() {
     }
 }
 
-// ログイン時同期関数
-async function syncPersonalSettingsOnLogin() {
+// Manager設定再読み込み関数（修正版）
+async function reloadOwnManagerSettings(targetRegion) {
     if (!currentUser || !window.db) return;
+    
+    console.log(`🔄 Manager設定再読み込み: 地域=${targetRegion}`);
     
     try {
         const userDoc = await window.firebaseImports.getDoc(
             window.firebaseImports.doc(window.db, 'users', currentUser.uid)
         );
         
-                if (userDoc.exists() && userDoc.data().personalSettings) {
-    // 🆕 クラウド優先：ローカル設定を完全に置き換え
-    personalSettings = { 
-        ...getDefaultSettings(),
-        ...userDoc.data().personalSettings 
-    };
-    
-    // 🆕 後方互換性の強化：古いcumulativeProfitActualを現在月に移行
-if (!personalSettings.monthlyCumulativeProfitActuals) {
-    personalSettings.monthlyCumulativeProfitActuals = {
-        10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
-        4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
-    };
-    
-    // 古いデータがある場合は現在月に移行
-    if (personalSettings.cumulativeProfitActual && personalSettings.cumulativeProfitActual > 0) {
-        const currentMonth = getCurrentMonth();
-        personalSettings.monthlyCumulativeProfitActuals[currentMonth] = personalSettings.cumulativeProfitActual;
-        console.log(`古い累積粗利データ(${personalSettings.cumulativeProfitActual})を${currentMonth}月に移行しました`);
-    }
-}
-
-    
-    // 🆕 ローカルストレージを最新クラウドデータで強制更新
-    savePersonalSettings();
-    updatePersonalSalesTarget();
-    updateDashboard();
-
-    showToast('クラウドから個人設定を同期し、ローカルを更新しました', 'info');
-
-        } else {
-            // 初回：ローカル設定をクラウドに保存
-            await savePersonalSettingsComplete();
-            showToast('個人設定をクラウドに初期保存しました', 'success');
+        if (userDoc.exists() && userDoc.data().personalSettings) {
+            const cloudSettings = userDoc.data().personalSettings;
+            
+            if (cloudSettings.kansai || cloudSettings.shikoku) {
+                // ✅ 修正ポイント：対象地域のデータのみをフラットに展開
+                const targetSettings = cloudSettings[targetRegion];
+                
+                if (!targetSettings) {
+                    console.error(`❌ ${targetRegion}設定が存在しません！`);
+                    personalSettings = getDefaultSettings();
+                    showToast(`${targetRegion}設定が見つかりません`, 'error');
+                    return;
+                }
+                
+                personalSettings = {
+                    ...getDefaultSettings(),
+                    ...targetSettings
+                };
+                
+                // キャッシュも更新
+                const cacheKey = `${currentUser.uid}_${targetRegion}`;
+                userSettingsCache[cacheKey] = { ...personalSettings };
+                
+                console.log(`✅ ${targetRegion}設定切り替え完了:`, {
+                    粗利率: personalSettings.profitRate,
+                    ユーザー名: personalSettings.userName,
+                    年間目標: personalSettings.yearlyProfitTarget
+                });
+                
+                progressCache = null;
+                updateDashboard();
+                
+                showToast(`${targetRegion === 'kansai' ? '関西' : '四国'}設定を読み込みました`, 'success');
+            } else {
+                console.warn('地域別設定が未構築です');
+                personalSettings = {
+                    ...getDefaultSettings(),
+                    ...cloudSettings
+                };
+                showToast('旧形式の設定を読み込みました', 'info');
+            }
         }
     } catch (error) {
-        console.error('個人設定同期エラー:', error);
-        showToast('設定同期に失敗（ローカル設定を使用）', 'error');
+        console.error('Manager設定再読み込みエラー:', error);
+        showToast('設定の読み込みに失敗しました', 'error');
     }
 }
 

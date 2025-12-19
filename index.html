@@ -6544,17 +6544,40 @@ function closeNewCardModal() {
 }
 
 function openPersonalSettingsModal() {
-    // ✅ 修正：現在アクティブな設定（地域別）を取得
-    const settings = getActiveSettings();
+    // ✅ Manager用の入れ子構造を検知して正しく展開
+    let settings;
     
-    console.log('⚙️ 個人設定モーダルを開きます:', settings);
-
+    if (currentUserRole === 'manager' && (personalSettings.kansai || personalSettings.shikoku)) {
+        const { region } = parseViewTarget(currentViewTarget);
+        settings = personalSettings[region];
+        
+        if (!settings) {
+            console.error('❌ 地域データが存在しません:', {
+                region,
+                personalSettingsKeys: Object.keys(personalSettings)
+            });
+            showToast('設定の読み込みに失敗しました', 'error');
+            return;
+        }
+        
+        console.log('✅ Manager設定モーダル開始:', {
+            地域: region,
+            粗利率: settings.profitRate,
+            ユーザー名: settings.userName,
+            年間目標: settings.yearlyProfitTarget
+        });
+    } else {
+        settings = getActiveSettings();
+        console.log('⚙️ 通常設定モーダル開始:', settings);
+    }
+    
+    // ✅ 安全な値設定（Number.isFiniteで確実にチェック）
     document.getElementById('userName').value = settings.userName || '';
-    document.getElementById('profitRate').value = settings.profitRate || 0;
-    document.getElementById('yearlyProfitTarget').value = settings.yearlyProfitTarget || 0;
-    document.getElementById('yearlyProfitIncreaseTarget').value = settings.yearlyProfitIncreaseTarget || 0;
-    document.getElementById('yearlySalesIncreaseTarget').value = settings.yearlySalesIncreaseTarget || 0;
-    document.getElementById('personalSalesIncreaseTarget').value = settings.personalSalesIncreaseTarget || 0;
+    document.getElementById('profitRate').value = Number.isFinite(settings.profitRate) ? settings.profitRate : 0;
+    document.getElementById('yearlyProfitTarget').value = Number.isFinite(settings.yearlyProfitTarget) ? settings.yearlyProfitTarget : 0;
+    document.getElementById('yearlyProfitIncreaseTarget').value = Number.isFinite(settings.yearlyProfitIncreaseTarget) ? settings.yearlyProfitIncreaseTarget : 0;
+    document.getElementById('yearlySalesIncreaseTarget').value = Number.isFinite(settings.yearlySalesIncreaseTarget) ? settings.yearlySalesIncreaseTarget : 0;
+    document.getElementById('personalSalesIncreaseTarget').value = Number.isFinite(settings.personalSalesIncreaseTarget) ? settings.personalSalesIncreaseTarget : 0;
     
     const monthlyContainer = document.getElementById('monthlyProfitContainer');
     const fiscalMonths = getFiscalYearStructure().months;
@@ -7412,51 +7435,89 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+    
 document.getElementById('personalSettingsForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    // 1. フォームの入力値を取得
+    // ✅ 現在の設定を取得（Manager用の入れ子構造も考慮）
+    let currentSettings;
+    if (currentUserRole === 'manager' && (personalSettings.kansai || personalSettings.shikoku)) {
+        const { region } = parseViewTarget(currentViewTarget);
+        currentSettings = personalSettings[region];
+        
+        if (!currentSettings) {
+            console.error('❌ 現在の設定が取得できません');
+            showToast('設定の保存に失敗しました', 'error');
+            return;
+        }
+    } else {
+        currentSettings = getActiveSettings();
+    }
+    
+    console.log('💾 フォーム送信開始:', {
+        role: currentUserRole,
+        現在の粗利率: currentSettings.profitRate,
+        現在のユーザー名: currentSettings.userName
+    });
+    
+    // ✅ 空欄の場合は既存値を保持（0での上書きを防止）
+    const rawUserName = document.getElementById('userName').value.trim();
+    const rawProfitRate = document.getElementById('profitRate').value;
+    const rawYearlyTarget = document.getElementById('yearlyProfitTarget').value;
+    const rawYearlyIncrease = document.getElementById('yearlyProfitIncreaseTarget').value;
+    const rawYearlySales = document.getElementById('yearlySalesIncreaseTarget').value;
+    const rawPersonalSales = document.getElementById('personalSalesIncreaseTarget').value;
+    
     const newSettings = {
-        userName: document.getElementById('userName').value,
-        profitRate: Math.max(0, Math.min(100, parseFloat(document.getElementById('profitRate').value) || 0)),
-        yearlyProfitTarget: parseNumberSafely(document.getElementById('yearlyProfitTarget').value),
-        yearlyProfitIncreaseTarget: parseNumberSafely(document.getElementById('yearlyProfitIncreaseTarget').value),
-        yearlySalesIncreaseTarget: parseNumberSafely(document.getElementById('yearlySalesIncreaseTarget').value),
-        personalSalesIncreaseTarget: parseNumberSafely(document.getElementById('personalSalesIncreaseTarget').value),
+        userName: rawUserName || currentSettings.userName || '担当者',
+        profitRate: rawProfitRate !== '' ? Math.max(0, Math.min(100, parseFloat(rawProfitRate) || 0)) : (currentSettings.profitRate || 0),
+        yearlyProfitTarget: rawYearlyTarget !== '' ? parseNumberSafely(rawYearlyTarget) : (currentSettings.yearlyProfitTarget || 0),
+        yearlyProfitIncreaseTarget: rawYearlyIncrease !== '' ? parseNumberSafely(rawYearlyIncrease) : (currentSettings.yearlyProfitIncreaseTarget || 0),
+        yearlySalesIncreaseTarget: rawYearlySales !== '' ? parseNumberSafely(rawYearlySales) : (currentSettings.yearlySalesIncreaseTarget || 0),
+        personalSalesIncreaseTarget: rawPersonalSales !== '' ? parseNumberSafely(rawPersonalSales) : (currentSettings.personalSalesIncreaseTarget || 0),
         monthlyProfitActuals: {},
         monthlyProfitTargets: {},
         // 既存の累積データを保持（フォームにはないため）
-        monthlyCumulativeProfitActuals: getActiveSettings().monthlyCumulativeProfitActuals || {},
-        cumulativeProfitActual: getActiveSettings().cumulativeProfitActual || 0
+        monthlyCumulativeProfitActuals: currentSettings.monthlyCumulativeProfitActuals || {},
+        cumulativeProfitActual: currentSettings.cumulativeProfitActual || 0
     };
 
     const fiscalMonths = getFiscalYearStructure().months;
     fiscalMonths.forEach(monthInfo => {
         const actualInput = document.getElementById(`monthlyProfitActual${monthInfo.month}`);
         const targetInput = document.getElementById(`monthlyProfitTarget${monthInfo.month}`);
+        
         if (actualInput) {
-            newSettings.monthlyProfitActuals[monthInfo.month] = parseNumberSafely(actualInput.value);
+            const actualValue = actualInput.value.trim();
+            newSettings.monthlyProfitActuals[monthInfo.month] = actualValue !== '' ? parseNumberSafely(actualValue) : (currentSettings.monthlyProfitActuals?.[monthInfo.month] || 0);
         }
         if (targetInput) {
-            newSettings.monthlyProfitTargets[monthInfo.month] = parseNumberSafely(targetInput.value);
+            const targetValue = targetInput.value.trim();
+            newSettings.monthlyProfitTargets[monthInfo.month] = targetValue !== '' ? parseNumberSafely(targetValue) : (currentSettings.monthlyProfitTargets?.[monthInfo.month] || 0);
         }
     });
+    
+    console.log('✅ 保存する設定:', {
+        粗利率: newSettings.profitRate,
+        ユーザー名: newSettings.userName,
+        年間目標: newSettings.yearlyProfitTarget
+    });
 
-    // 2. グローバル変数 personalSettings を更新
-    // Managerの場合、現在の地域（kansai/shikoku）の配下を更新する必要がある
+    // ✅ グローバル変数 personalSettings を更新
     if (currentUserRole === 'manager') {
-         const { region } = parseViewTarget(currentViewTarget);
-         // 初期化されていない場合は作成
-         if (!personalSettings.kansai) personalSettings.kansai = getDefaultSettings();
-         if (!personalSettings.shikoku) personalSettings.shikoku = getDefaultSettings();
-         
-         // 対象地域のみ更新
-         personalSettings[region] = {
-             ...personalSettings[region],
-             ...newSettings
-         };
-         
-         console.log(`💾 Manager設定保存: ${region}`, newSettings);
+        const { region } = parseViewTarget(currentViewTarget);
+        
+        // 初期化されていない場合は作成
+        if (!personalSettings.kansai) personalSettings.kansai = getDefaultSettings();
+        if (!personalSettings.shikoku) personalSettings.shikoku = getDefaultSettings();
+        
+        // 対象地域のみ更新
+        personalSettings[region] = {
+            ...personalSettings[region],
+            ...newSettings
+        };
+        
+        console.log(`💾 Manager設定保存: ${region}`, personalSettings[region]);
     } else {
         // 通常ユーザー
         personalSettings = {
@@ -7473,6 +7534,7 @@ document.getElementById('personalSettingsForm').addEventListener('submit', async
     showToast('個人設定を保存しました！', 'success');
     closePersonalSettingsModal();
 });
+
 
     document.getElementById('newCardForm').addEventListener('submit', async function(e) {
     e.preventDefault();

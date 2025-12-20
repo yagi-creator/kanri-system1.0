@@ -3396,7 +3396,6 @@ function changeRegionFilter() {
     return;
 }
 
-// ログイン時同期関数（修正版）
 async function syncPersonalSettingsOnLogin() {
     if (!currentUser || !window.db) return;
     
@@ -3408,40 +3407,37 @@ async function syncPersonalSettingsOnLogin() {
         if (userDoc.exists() && userDoc.data().personalSettings) {
             const cloudData = userDoc.data().personalSettings;
             
-            console.log('🔄 ログイン時設定同期:', {
-                role: currentUserRole,
-                cloudData構造: Object.keys(cloudData),
-                入れ子構造か: !!(cloudData.kansai || cloudData.shikoku)
-            });
+            // ★修正の核心：データ構造の自動判別
+            const isNestedStructure = cloudData.kansai || cloudData.shikoku;
             
-            // ✅ 修正ポイント：Manager特有の階層構造（kansai/shikoku）を検知して正しく展開
-            if (currentUserRole === 'manager' && (cloudData.kansai || cloudData.shikoku)) {
-                // Managerはデフォルトで関西を読み込む
+            if (isNestedStructure) {
+                // --- Manager（梨木）パターン ---
+                console.log('🔄 Manager構造（入れ子）を検出');
+                
                 const defaultRegion = 'kansai';
                 const regionSettings = cloudData[defaultRegion];
                 
-                if (!regionSettings) {
-                    console.error('❌ 関西データが存在しません！');
-                    personalSettings = getDefaultSettings();
-                } else {
+                if (regionSettings && typeof regionSettings === 'object') {
+                    // ✅ 重要：フラット化して画面用変数にセット
                     personalSettings = {
                         ...getDefaultSettings(),
                         ...regionSettings
                     };
                     
-                    console.log('✅ Manager用設定同期完了（関西デフォルト）:', {
-                        粗利率: personalSettings.profitRate,
-                        ユーザー名: personalSettings.userName,
-                        年間目標: personalSettings.yearlyProfitTarget
-                    });
+                    // キャッシュに両地域を保存（切り替え用）
+                    if (cloudData.kansai) userSettingsCache[`${currentUser.uid}_kansai`] = { ...cloudData.kansai };
+                    if (cloudData.shikoku) userSettingsCache[`${currentUser.uid}_shikoku`] = { ...cloudData.shikoku };
+                    
+                    console.log('✅ Manager設定同期完了（関西デフォルト）');
+                } else {
+                    console.error('❌ 関西データが無効です');
+                    showToast('設定の読み込みに失敗しました', 'error');
+                    return;
                 }
-                
-                // キャッシュに両地域を保存
-                userSettingsCache[`${currentUser.uid}_kansai`] = { ...cloudData.kansai };
-                userSettingsCache[`${currentUser.uid}_shikoku`] = { ...cloudData.shikoku };
-                
             } else {
-                // 通常ユーザーまたは古いデータ構造
+                // --- Staff（八木）パターン ---
+                console.log('🔄 Staff構造（フラット）を検出');
+                
                 personalSettings = { 
                     ...getDefaultSettings(),
                     ...cloudData 
@@ -3454,30 +3450,22 @@ async function syncPersonalSettingsOnLogin() {
                     10: 0, 11: 0, 12: 0, 1: 0, 2: 0, 3: 0,
                     4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0
                 };
-                
-                if (personalSettings.cumulativeProfitActual && personalSettings.cumulativeProfitActual > 0) {
-                    const currentMonth = getCurrentMonth();
-                    personalSettings.monthlyCumulativeProfitActuals[currentMonth] = personalSettings.cumulativeProfitActual;
-                    console.log(`古い累積粗利データ(${personalSettings.cumulativeProfitActual})を${currentMonth}月に移行しました`);
-                }
             }
             
             savePersonalSettings();
             updatePersonalSalesTarget();
             updateDashboard();
 
-            showToast('クラウドから個人設定を同期しました', 'info');
+            showToast('クラウドから設定を同期しました', 'info');
         } else {
-            // 初回保存処理
             await savePersonalSettingsComplete();
-            showToast('個人設定をクラウドに初期保存しました', 'success');
+            showToast('初期設定を作成しました', 'success');
         }
     } catch (error) {
         console.error('個人設定同期エラー:', error);
-        showToast('設定同期に失敗（ローカル設定を使用）', 'error');
+        showToast('設定同期に失敗しました', 'error');
     }
 }
-
 
 // 🆕 ダッシュボード表示値を即座にリセットする関数
 function resetDashboardUI() {
@@ -4288,136 +4276,86 @@ function updateCardDifference(elementId, amount, formatter = formatAmount) {
         console.warn(`Element with id '${elementId}' not found`);
     }
 }
+        
 function editMonthlyProfitInline(element) {
-    // ✅ 権限チェック：現在表示中プロファイルが自分かどうか
-    const { uid: targetUid, region } = parseViewTarget(currentViewTarget || '');
+    // 権限チェック
+    const { uid: targetUid } = parseViewTarget(currentViewTarget || '');
     if (!currentUser || targetUid !== currentUser.uid) {
         showToast('自分のデータ表示中のみ編集可能です', 'error');
         return;
     }
 
     const currentMonth = getCurrentMonth();
-
-    // ✅ 修正：地域別設定から安全に値を取得
-    const settings = getActiveSettings();
-    const monthlyActuals = settings.monthlyProfitActuals || {};
-    const currentValue = monthlyActuals[currentMonth] ?? 0;  // ?? で0を正しく処理
+    
+    // 安全な値取得
+    if (!personalSettings.monthlyProfitActuals) {
+        personalSettings.monthlyProfitActuals = {};
+    }
+    const currentValue = personalSettings.monthlyProfitActuals[currentMonth] ?? 0;
     
     const newValue = prompt('月別粗利実績を入力してください（円）\n\n例: 500000', currentValue);
     if (newValue === null) return;
     
     const parsedValue = parseNumberSafely(newValue);
 
-    // ✅ 修正：Manager役職の場合は地域別に保存
-    if (currentUserRole === 'manager') {
-        // 地域別設定の初期化確認
-        if (!personalSettings.kansai) personalSettings.kansai = getDefaultSettings();
-        if (!personalSettings.shikoku) personalSettings.shikoku = getDefaultSettings();
-        
-        // 対象地域のmonthlyProfitActualsを初期化（存在しない場合）
-        if (!personalSettings[region].monthlyProfitActuals) {
-            personalSettings[region].monthlyProfitActuals = {};
-        }
-        
-        // データ更新（地域別）
-        personalSettings[region].monthlyProfitActuals[currentMonth] = parsedValue;
-        
-        console.log(`💾 Manager月別実績更新: ${region}/${currentMonth}月 = ${parsedValue}`);
-    } else {
-        // 通常ユーザー（Admin/Staff）
-        if (!personalSettings.monthlyProfitActuals) {
-            personalSettings.monthlyProfitActuals = {};
-        }
-        personalSettings.monthlyProfitActuals[currentMonth] = parsedValue;
-    }
+    // ✅ 修正：シンプルに現在の設定を更新（入れ子構造を作らない）
+    personalSettings.monthlyProfitActuals[currentMonth] = parsedValue;
+
+    console.log(`💾 月別実績更新: ${currentMonth}月 = ${parsedValue}`);
 
     // UI即時反映
     element.textContent = formatAmount(parsedValue);
-
-    // 再計算を即時反映
     progressCache = null;
     updateDashboard();
 
     // 保存処理
     scheduleSavePersonalSettings();
-
     showToast('月別粗利実績を更新しました', 'success');
 }
+
 function editCumulativeProfitInline(element) {
-    // ✅ 権限チェック修正
-    const { uid: targetUid, region } = parseViewTarget(currentViewTarget || '');
+    const { uid: targetUid } = parseViewTarget(currentViewTarget || '');
     if (!currentUser || targetUid !== currentUser.uid) {
         showToast('自分のデータ表示中のみ編集可能です', 'error');
         return;
     }
 
-    // ✅ 修正：現在アクティブな設定を取得
-    const settings = getActiveSettings();
     const { months } = getFiscalYearStructure();
     const activeMonthKey = activeDashboardMonthKey || getFiscalYearStructure().currentMonthKey;
     const activeMonthInfo = months.find(m => m.key === activeMonthKey);
     const targetMonth = activeMonthInfo ? activeMonthInfo.month : getCurrentMonth();
     
-    // ✅ 修正：安全なアクセス
-    const monthlyCumulativeActuals = settings.monthlyCumulativeProfitActuals || {};
-    const currentValue = monthlyCumulativeActuals[targetMonth] ?? 0;  // ?? で0を正しく処理
+    if (!personalSettings.monthlyCumulativeProfitActuals) {
+        personalSettings.monthlyCumulativeProfitActuals = {};
+    }
+    const currentValue = personalSettings.monthlyCumulativeProfitActuals[targetMonth] ?? 0;
     
     const newValue = prompt(
-        `累積粗利実績を入力してください（円）\n対象月: ${targetMonth}月\n※${targetMonth}月時点での累積粗利の数値を直接入力\n\n例: 5,000,000\n（空欄で削除）`, 
+        `累積粗利実績を入力してください（円）\n対象月: ${targetMonth}月\n※${targetMonth}月時点での累積粗利\n\n例: 5,000,000\n（空欄で削除）`, 
         currentValue
     );
     if (newValue === null) return;
     
-    // 空欄入力で削除処理
     if (String(newValue).trim() === '') {
-        // Manager役職の場合は地域別に削除
-        if (currentUserRole === 'manager') {
-            if (!personalSettings[region].monthlyCumulativeProfitActuals) {
-                personalSettings[region].monthlyCumulativeProfitActuals = {};
-            }
-            delete personalSettings[region].monthlyCumulativeProfitActuals[targetMonth];
-        } else {
-            if (!personalSettings.monthlyCumulativeProfitActuals) {
-                personalSettings.monthlyCumulativeProfitActuals = {};
-            }
-            delete personalSettings.monthlyCumulativeProfitActuals[targetMonth];
-        }
-        
+        // 削除処理
+        delete personalSettings.monthlyCumulativeProfitActuals[targetMonth];
         element.textContent = formatAmount(0);
         showToast(`${targetMonth}月の累積粗利実績を削除しました`, 'success');
     } else {
         const parsedValue = parseNumberSafely(newValue);
         
-        // Manager役職の場合は地域別に保存
-        if (currentUserRole === 'manager') {
-            if (!personalSettings[region].monthlyCumulativeProfitActuals) {
-                personalSettings[region].monthlyCumulativeProfitActuals = {};
-            }
-            personalSettings[region].monthlyCumulativeProfitActuals[targetMonth] = Number(parsedValue);
-            
-            // 後方互換性（現在月の場合のみ旧フィールドも更新）
-            if (targetMonth === getCurrentMonth()) {
-                personalSettings[region].cumulativeProfitActual = Number(parsedValue);
-            }
-            
-            console.log(`💾 Manager累積実績更新: ${region}/${targetMonth}月 = ${parsedValue}`);
-        } else {
-            // 通常ユーザー
-            if (!personalSettings.monthlyCumulativeProfitActuals) {
-                personalSettings.monthlyCumulativeProfitActuals = {};
-            }
-            personalSettings.monthlyCumulativeProfitActuals[targetMonth] = Number(parsedValue);
-            
-            if (targetMonth === getCurrentMonth()) {
-                personalSettings.cumulativeProfitActual = Number(parsedValue);
-            }
+        // ✅ 修正：シンプルに現在の設定を更新
+        personalSettings.monthlyCumulativeProfitActuals[targetMonth] = parsedValue;
+        
+        // 現在月の場合は互換用フィールドも更新
+        if (targetMonth === getCurrentMonth()) {
+            personalSettings.cumulativeProfitActual = parsedValue;
         }
         
         element.textContent = formatAmount(parsedValue);
         showToast(`${targetMonth}月の累積粗利実績を更新しました`, 'success');
     }
     
-    // 再計算と保存
     progressCache = null;
     updateDashboard();
     scheduleSavePersonalSettings();
@@ -4875,115 +4813,81 @@ function savePersonalSettings() {
 async function savePersonalSettingsComplete() {
     savePersonalSettings();
 
-    if (currentUser && window.db && window.firebaseImports) {
-        try {
-            let dataToSave = {};
-            
-            if (currentUserRole === 'manager') {
-                const { region } = parseViewTarget(currentViewTarget);
-                
-                // ✅ 保存前にpersonalSettingsの構造を確認
-                console.log('💾 保存前チェック:', {
-                    地域: region,
-                    personalSettings構造: Object.keys(personalSettings),
-                    入れ子構造か: !!(personalSettings.kansai || personalSettings.shikoku),
-                    粗利率: personalSettings.profitRate,
-                    関西粗利率: personalSettings.kansai?.profitRate,
-                    四国粗利率: personalSettings.shikoku?.profitRate
-                });
-                
-                // ✅ 重要：入れ子構造の場合は対象地域のデータを抽出
-                let settingsToSave;
-                if (personalSettings.kansai || personalSettings.shikoku) {
-                    // 入れ子構造が混入している場合
-                    console.warn('⚠️ 入れ子構造を検出。対象地域のデータを抽出します');
-                    settingsToSave = personalSettings[region];
-                    
-                    if (!settingsToSave) {
-                        console.error('❌ 対象地域のデータが存在しません！');
-                        showToast('保存エラー：地域データが見つかりません', 'error');
-                        return;
-                    }
-                } else {
-                    // 正常なフラット構造
-                    settingsToSave = personalSettings;
-                }
-                
-                // 既存の地域別設定を取得
-                const userDoc = await window.firebaseImports.getDoc(
-                    window.firebaseImports.doc(window.db, 'users', currentUser.uid)
-                );
-                
-                let existingSettings = {};
-                if (userDoc.exists() && userDoc.data().personalSettings) {
-                    const cloudData = userDoc.data().personalSettings;
-                    if (cloudData.kansai || cloudData.shikoku) {
-                        existingSettings = cloudData;
-                    }
-                }
-                
-                // クリーンなデータ構造を作成（抽出したデータを使用）
-                const cleanPersonalSettings = {
-                    userName: settingsToSave.userName || '梨木',
-                    profitRate: Number(settingsToSave.profitRate || 0),
-                    yearlyProfitTarget: Number(settingsToSave.yearlyProfitTarget || 0),
-                    yearlyProfitIncreaseTarget: Number(settingsToSave.yearlyProfitIncreaseTarget || 0),
-                    yearlySalesIncreaseTarget: Number(settingsToSave.yearlySalesIncreaseTarget || 0),
-                    personalSalesIncreaseTarget: Number(settingsToSave.personalSalesIncreaseTarget || 0),
-                    monthlyProfitActuals: settingsToSave.monthlyProfitActuals || {},
-                    monthlyProfitTargets: settingsToSave.monthlyProfitTargets || {},
-                    monthlyCumulativeProfitActuals: settingsToSave.monthlyCumulativeProfitActuals || {},
-                    cumulativeProfitActual: Number(settingsToSave.cumulativeProfitActual || 0)
-                };
-                
-                // 地域キーの混入を防止
-                delete cleanPersonalSettings.kansai;
-                delete cleanPersonalSettings.shikoku;
-                
-                console.log('✅ 保存データ確認:', {
-                    地域: region,
-                    粗利率: cleanPersonalSettings.profitRate,
-                    ユーザー名: cleanPersonalSettings.userName,
-                    年間目標: cleanPersonalSettings.yearlyProfitTarget
-                });
-                
-                // 現在の地域の設定のみ更新
-                dataToSave = {
-                    personalSettings: {
-                        ...existingSettings,
-                        [region]: cleanPersonalSettings
-                    }
-                };
-                
-            } else {
-                // 通常ユーザー
-                dataToSave = { personalSettings };
-            }
-            
-            await window.firebaseImports.setDoc(
-                window.firebaseImports.doc(window.db, 'users', currentUser.uid),
-                dataToSave,
-                { merge: true }
-            );
-            
-            // キャッシュも正しい構造で更新
-            if (currentUser?.uid && currentUserRole === 'manager') {
-                const { region } = parseViewTarget(currentViewTarget);
-                const cacheKey = `${currentUser.uid}_${region}`;
-                
-                // 入れ子構造の場合は対象地域のデータを抽出してキャッシュ
-                if (personalSettings.kansai || personalSettings.shikoku) {
-                    userSettingsCache[cacheKey] = { ...personalSettings[region] };
-                } else {
-                    userSettingsCache[cacheKey] = { ...personalSettings };
-                }
-            }
-            
-            showToast('個人設定をクラウドに保存しました', 'success');
-        } catch (error) {
-            console.error('Firebase個人設定保存エラー:', error);
-            showToast('クラウド保存でエラーが発生しました', 'error');
+    if (!currentUser || !window.db || !window.firebaseImports) return;
+
+    try {
+        let dataToSave = {};
+        
+        // 現在の画面データ（常にフラット状態）
+        const currentFlatSettings = { ...personalSettings };
+        
+        // 保存用データのクリーンアップ
+        const cleanSettings = {
+            userName: currentFlatSettings.userName || '担当者',
+            profitRate: Number(currentFlatSettings.profitRate || 0),
+            yearlyProfitTarget: Number(currentFlatSettings.yearlyProfitTarget || 0),
+            yearlyProfitIncreaseTarget: Number(currentFlatSettings.yearlyProfitIncreaseTarget || 0),
+            yearlySalesIncreaseTarget: Number(currentFlatSettings.yearlySalesIncreaseTarget || 0),
+            personalSalesIncreaseTarget: Number(currentFlatSettings.personalSalesIncreaseTarget || 0),
+            monthlyProfitActuals: currentFlatSettings.monthlyProfitActuals || {},
+            monthlyProfitTargets: currentFlatSettings.monthlyProfitTargets || {},
+            monthlyCumulativeProfitActuals: currentFlatSettings.monthlyCumulativeProfitActuals || {},
+            cumulativeProfitActual: Number(currentFlatSettings.cumulativeProfitActual || 0)
+        };
+
+        // 既存データ構造の確認
+        const userDoc = await window.firebaseImports.getDoc(
+            window.firebaseImports.doc(window.db, 'users', currentUser.uid)
+        );
+        
+        let isNestedStructure = false;
+        let existingCloudData = {};
+        
+        if (userDoc.exists() && userDoc.data().personalSettings) {
+            existingCloudData = userDoc.data().personalSettings;
+            isNestedStructure = existingCloudData.kansai || existingCloudData.shikoku;
+        } else {
+            // 新規作成時、Managerなら入れ子構造にする
+            isNestedStructure = (currentUserRole === 'manager');
         }
+
+        if (isNestedStructure) {
+            // --- Manager（梨木）パターン ---
+            const { region } = parseViewTarget(currentViewTarget);
+            const targetRegion = region || 'kansai';
+            
+            // ✅ 重要：他方の地域データを消さないようにマージ
+            dataToSave = {
+                personalSettings: {
+                    ...existingCloudData, // 既存データを保持
+                    [targetRegion]: cleanSettings // 現在の地域のみ更新
+                }
+            };
+            
+            // キャッシュ更新
+            userSettingsCache[`${currentUser.uid}_${targetRegion}`] = { ...cleanSettings };
+            
+            console.log(`✅ Manager保存完了: ${targetRegion}地域`);
+        } else {
+            // --- Staff（八木）パターン ---
+            dataToSave = {
+                personalSettings: cleanSettings
+            };
+            
+            console.log('✅ Staff保存完了');
+        }
+        
+        await window.firebaseImports.setDoc(
+            window.firebaseImports.doc(window.db, 'users', currentUser.uid),
+            dataToSave,
+            { merge: true }
+        );
+        
+        showToast('個人設定をクラウドに保存しました', 'success');
+        
+    } catch (error) {
+        console.error('保存エラー:', error);
+        showToast(`保存エラー: ${error.message}`, 'error');
     }
 }
 
@@ -5013,64 +4917,7 @@ function scheduleSavePersonalSettings() {
     }
 }
 
-// Manager設定再読み込み関数（修正版）
 async function reloadOwnManagerSettings(targetRegion) {
-    if (!currentUser || !window.db) return;
-    
-    console.log(`🔄 Manager設定再読み込み: 地域=${targetRegion}`);
-    
-    try {
-        const userDoc = await window.firebaseImports.getDoc(
-            window.firebaseImports.doc(window.db, 'users', currentUser.uid)
-        );
-        
-        if (userDoc.exists() && userDoc.data().personalSettings) {
-            const cloudSettings = userDoc.data().personalSettings;
-            
-            if (cloudSettings.kansai || cloudSettings.shikoku) {
-                // ✅ 修正ポイント：対象地域のデータのみをフラットに展開
-                const targetSettings = cloudSettings[targetRegion];
-                
-                if (!targetSettings) {
-                    console.error(`❌ ${targetRegion}設定が存在しません！`);
-                    personalSettings = getDefaultSettings();
-                    showToast(`${targetRegion}設定が見つかりません`, 'error');
-                    return;
-                }
-                
-                personalSettings = {
-                    ...getDefaultSettings(),
-                    ...targetSettings
-                };
-                
-                // キャッシュも更新
-                const cacheKey = `${currentUser.uid}_${targetRegion}`;
-                userSettingsCache[cacheKey] = { ...personalSettings };
-                
-                console.log(`✅ ${targetRegion}設定切り替え完了:`, {
-                    粗利率: personalSettings.profitRate,
-                    ユーザー名: personalSettings.userName,
-                    年間目標: personalSettings.yearlyProfitTarget
-                });
-                
-                progressCache = null;
-                updateDashboard();
-                
-                showToast(`${targetRegion === 'kansai' ? '関西' : '四国'}設定を読み込みました`, 'success');
-            } else {
-                console.warn('地域別設定が未構築です');
-                personalSettings = {
-                    ...getDefaultSettings(),
-                    ...cloudSettings
-                };
-                showToast('旧形式の設定を読み込みました', 'info');
-            }
-        }
-    } catch (error) {
-        console.error('Manager設定再読み込みエラー:', error);
-        showToast('設定の読み込みに失敗しました', 'error');
-    }
-}
 
 function loadPersonalSettings() {
     try {

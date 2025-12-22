@@ -4822,19 +4822,19 @@ async function savePersonalSettingsComplete() {
         // 現在の画面データ（常にフラット状態）
         const currentFlatSettings = { ...personalSettings };
         
-        // 保存用データのクリーンアップ
-        const cleanSettings = {
-            userName: currentFlatSettings.userName || '担当者',
-            profitRate: Number(currentFlatSettings.profitRate || 0),
-            yearlyProfitTarget: Number(currentFlatSettings.yearlyProfitTarget || 0),
-            yearlyProfitIncreaseTarget: Number(currentFlatSettings.yearlyProfitIncreaseTarget || 0),
-            yearlySalesIncreaseTarget: Number(currentFlatSettings.yearlySalesIncreaseTarget || 0),
-            personalSalesIncreaseTarget: Number(currentFlatSettings.personalSalesIncreaseTarget || 0),
-            monthlyProfitActuals: currentFlatSettings.monthlyProfitActuals || {},
-            monthlyProfitTargets: currentFlatSettings.monthlyProfitTargets || {},
-            monthlyCumulativeProfitActuals: currentFlatSettings.monthlyCumulativeProfitActuals || {},
-            cumulativeProfitActual: Number(currentFlatSettings.cumulativeProfitActual || 0)
-        };
+const cleanSettings = {
+    userName: currentFlatSettings.userName || '担当者',
+    profitRate: Number(currentFlatSettings.profitRate || 0),
+    yearlyProfitTarget: Number(currentFlatSettings.yearlyProfitTarget || 0),
+    yearlyProfitIncreaseTarget: Number(currentFlatSettings.yearlyProfitIncreaseTarget || 0),
+    yearlySalesIncreaseTarget: Number(currentFlatSettings.yearlySalesIncreaseTarget || 0),
+    personalSalesIncreaseTarget: Number(currentFlatSettings.personalSalesIncreaseTarget || 0), // ✅ 追加
+    monthlyProfitActuals: currentFlatSettings.monthlyProfitActuals || {},
+    monthlyProfitTargets: currentFlatSettings.monthlyProfitTargets || {},
+    monthlyCumulativeProfitActuals: currentFlatSettings.monthlyCumulativeProfitActuals || {},
+    cumulativeProfitActual: Number(currentFlatSettings.cumulativeProfitActual || 0)
+};
+
 
         // 既存データ構造の確認
         const userDoc = await window.firebaseImports.getDoc(

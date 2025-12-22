@@ -4504,7 +4504,8 @@ function getMonthKeyFromTimestamp(ts, fallbackKey) {
 }
         
 function getProbabilityLabel(value) {
-    if (value === 0 || value === 40) return '50未満';  // ← この条件を変更
+    if (value === 0) return '不明';      // 0の場合は「不明」
+    if (value === 40) return '50未満';   // 40の場合は「50未満」
     return `${value}%`;
 }
 
@@ -5403,15 +5404,20 @@ function updateMiddleCards() {
     elTotal.innerHTML = `売上見込合計 <span class="value-emphasis">${formatAmount(totalSalesProspect50Plus)}</span>`;
     
     // 既存カードも更新
-    const salesTarget = settings.yearlySalesIncreaseTarget || 0;
+    // ★修正：個人設定売上増目標は計算に使わず、粗利増目標から粗利率で逆算して計算
     const profitTarget = settings.yearlyProfitIncreaseTarget || 0;
+    const profitRateDecimal = (settings.profitRate || 0) / 100;
+    const salesTarget = profitRateDecimal > 0 ? Math.round(profitTarget / profitRateDecimal) : 0;
+    
     const salesRate = salesTarget > 0 ? (totalSalesProspect80Plus / salesTarget) * 100 : 0;
     const profitRate = profitTarget > 0 ? (totalProfitProspect80Plus / profitTarget) * 100 : 0;
     
     elSales.innerHTML = `売上増見込 <span class="value-emphasis">${formatAmount(totalSalesProspect80Plus)}</span>/${formatAmount(salesTarget)} (${salesRate.toFixed(1)}%)`;
     elProfit.innerHTML = `粗利増見込 <span class="value-emphasis">${formatAmount(totalProfitProspect80Plus)}</span>/${formatAmount(profitTarget)} (${profitRate.toFixed(1)}%)`;
 
-    const manualTarget = settings.personalSalesIncreaseTarget || settings.yearlySalesIncreaseTarget || 0;
+    // 個人設定売上増目標は表示専用（計算には使用しない）
+    const manualTarget = settings.personalSalesIncreaseTarget || 0;
+
     const pr = Number(settings.profitRate || 0);
     elPersonal.innerHTML = `個人設定売上増目標 <span class="value-emphasis">${formatManPlain(manualTarget)}</span> | 粗利率 ${pr.toFixed(1)}%`;
 }
